@@ -1,0 +1,17 @@
+{
+  "name": "naturaldao",
+  "version": "1.0.0",
+  "description": "a decentrialized exchange of ERC20 tokens",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "ethers": "^4.0.29"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "compile": "node scripts/compile.js",
+    "deploy": "source .env  && node scripts/deploy.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "radarzhhua@gmail.com",
+  "license": "ISC"
+}

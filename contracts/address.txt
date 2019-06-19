@@ -1,0 +1,4 @@
+//记录所有合约地址
+kovan测试网
+1、稳定币合约地址:
+NDAOToken.py: 0xE3E77b621435795f14AEf9Fbea655E088211Be37
