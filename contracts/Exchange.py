@@ -58,26 +58,9 @@ def getInputPrice(input_amount: uint256, input_reserve: uint256, output_reserve:
     # @return Amount of NDAO or Tokens bought.
     """
     assert input_reserve > 0 and output_reserve > 0
-    input_amount_with_fee: uint256 = input_amount * 997
-    numerator: uint256 = input_amount_with_fee * output_reserve
-    denominator: uint256 = (input_reserve * 1000) + input_amount_with_fee
+    numerator: uint256 = input_amount * output_reserve
+    denominator: uint256 = input_reserve + input_amount
     return numerator / denominator
-
-
-@private
-@constant
-def getOutputPrice(output_amount: uint256, input_reserve: uint256, output_reserve: uint256) -> uint256:
-    """
-    # @dev Pricing function for converting between ETH and Tokens.
-    # @param output_amount Amount of ETH or Tokens being bought.
-    # @param input_reserve Amount of ETH or Tokens (input type) in exchange reserves.
-    # @param output_reserve Amount of ETH or Tokens (output type) in exchange reserves.
-    # @return Amount of ETH or Tokens sold.
-    """
-    assert input_reserve > 0 and output_reserve > 0
-    numerator: uint256 = input_reserve * output_amount * 1000
-    denominator: uint256 = (output_reserve - output_amount) * 997
-    return numerator / denominator + 1
 
 
 #买入token
