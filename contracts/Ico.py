@@ -1,43 +1,58 @@
-# @dev Implementation of ERC-20 token standard.
-# @author Takayuki Jimba (@yudetamago)
-# https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
+# @dev Implementation of ico ERC-20 token .
+# @author radarzhhua@gmail.com
+# @refernce https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
 from vyper.interfaces import ERC20
 implements: ERC20
 
 
-#代币相关事件
+#define the Factory contract
+contract Factory:
+    def createExchange() -> address: modifying
+    def endIco(): modifying
+
+
+# event of ERC-20
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
-Approval: event({_owner: indexed(address), _spender: indexed(address), _value: uint256})
-#ICO相关事件
-GoalReached:event({_goalTime:timestamp,_depositGoal:wei_value})
-RefundTransfer:event({_owner:indexed(address),_amount:wei_value})
+Approval: event({_owner: indexed(address),_spender: indexed(address), _value: uint256})
+# event of ICO
+GoalReached: event({_goalTime: timestamp, _depositGoal: wei_value})
+RefundTransfer: event({_owner: indexed(address), _amount: wei_value})
+ICOSuccess: event({_token: indexed(address), _sucTimme: timestamp})
 
 
-ETHER_WEI:public(uint256)                                   #ETH=WEI
-#ERC20代币相关
-name: public(string[64])                                    #代币名称
-symbol: public(string[32])                                  #代币简称
-decimals: public(uint256)                                   #代币精度
-balanceOf: public(map(address, uint256))                    #账号余额
-allowances: map(address, map(address, uint256))             #授权额度
-total_supply: uint256                                       #发行总量
+ETHER_WEI: public(uint256)
+# ERC20 state varialbes
+name: public(string[64])
+symbol: public(string[32])
+decimals: public(uint256)
+balanceOf: public(map(address, uint256))
+allowances: map(address, map(address, uint256))
+total_supply: uint256
+# ICO state varialbes
+depositGoal: public(wei_value)
+depositStart: public(timestamp)
+depositEnd: public(timestamp)
+ended: public(bool)
+goalReached: public(bool)
+price: public(uint256)
+depositAmount: public(wei_value)
+depositBalanceOfUser: public(map(address, wei_value))
+factory: public(address)
 
-#ICO相关
-depositGoal:public(wei_value)                               #计划募资额度,以WEI为单位
-depositStart:public(timestamp)                              #募资开始时间，10位时间戳，以秒为单位
-depositEnd:public(timestamp)                                #募资截止期,10位时间戳，以秒为单位
-ended:public(bool)                                          #募资是否到期
-goalReached:public(bool)                                    #募资额度是否完成，完成后不可再募资
-price:public(uint256)                                       #代币价格，先简化为1个ETH对应多少代币，使用恒定价格
-depositAmount:public(wei_value)                             #当前募资总额
-depositBalanceOfUser:public(map(address, wei_value))        #每个账号的募资额，用来失败时返还资金
 
-
-
-#被创建后立刻调用且仅调用一次,相当于构造器
 @public
-def setup(_name: string[64], _symbol: string[32], _decimals:uint256,_depositGoal:uint256,_delta:timedelta,_price:uint256):
-    assert self.depositGoal == 0 and _depositGoal != 0
+def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256, _delta: timedelta, _price: uint256):
+    """
+    @dev init the contract.
+    @notice the method is called once right after the contract is deployed
+    @param _name the name string of token
+    @param _symbol the symbol string of token
+    @param _decimals the decimals of token
+    @param _depositGoal the amout of Ethers(WEI) that can deposit in the ICO
+    @param _delta the duration of ICO (second)
+    @param _price the amount of token that one ether can exchange
+    """
+    assert self.factory == ZERO_ADDRESS
     self.name = _name
     self.symbol = _symbol
     self.decimals = _decimals
@@ -45,7 +60,9 @@ def setup(_name: string[64], _symbol: string[32], _decimals:uint256,_depositGoal
     self.depositStart = block.timestamp
     self.depositEnd = self.depositStart + _delta
     self.price = _price
-    self.ETHER_WEI =  10 ** 18
+    self.ETHER_WEI = 10 ** 18
+    self.factory = msg.sender
+
 
 @public
 @constant
@@ -55,9 +72,10 @@ def totalSupply() -> uint256:
     """
     return self.total_supply
 
+
 @public
 @constant
-def allowance(_owner : address, _spender : address) -> uint256:
+def allowance(_owner: address, _spender: address) -> uint256:
     """
     @dev Function to check the amount of tokens that an owner allowed to a spender.
     @param _owner The address which owns the funds.
@@ -68,23 +86,20 @@ def allowance(_owner : address, _spender : address) -> uint256:
 
 
 @public
-def transfer(_to : address, _value : uint256) -> bool:
+def transfer(_to: address, _value: uint256) -> bool:
     """
     @dev Transfer token for a specified address
     @param _to The address to transfer to.
     @param _value The amount to be transferred.
     """
-    # NOTE: vyper does not allow underflows
-    #       so the following subtraction would revert on insufficient balance
     self.balanceOf[msg.sender] -= _value
     self.balanceOf[_to] += _value
     log.Transfer(msg.sender, _to, _value)
     return True
 
 
-
 @public
-def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
+def transferFrom(_from: address, _to: address, _value: uint256) -> bool:
     """
      @dev Transfer tokens from one address to another.
           Note that while this function emits a Transfer event, this is not required as per the specification,
@@ -93,19 +108,15 @@ def transferFrom(_from : address, _to : address, _value : uint256) -> bool:
      @param _to address The address which you want to transfer to
      @param _value uint256 the amount of tokens to be transferred
     """
-    # NOTE: vyper does not allow underflows
-    #       so the following subtraction would revert on insufficient balance
     self.balanceOf[_from] -= _value
     self.balanceOf[_to] += _value
-    # NOTE: vyper does not allow underflows
-    #      so the following subtraction would revert on insufficient allowance
     self.allowances[_from][msg.sender] -= _value
     log.Transfer(_from, _to, _value)
     return True
 
 
 @public
-def approve(_spender : address, _value : uint256) -> bool:
+def approve(_spender: address, _value: uint256) -> bool:
     """
     @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
          Beware that changing an allowance with this method brings the risk that someone may use both the old
@@ -120,14 +131,14 @@ def approve(_spender : address, _value : uint256) -> bool:
     return True
 
 
-# can only be called internal at depositing or the end of a successful ico
-# when the ico is not ended
 @private
 def mint(_to: address, _value: uint256):
     """
     @dev Mint an amount of the token and assigns it to an account.
          This encapsulates the modification of balances such that the
          proper events are emitted.
+    @notice It can only be called internally at depositing or at the ending of a successful ico
+            when the ico is not ended
     @param _to The account that will receive the created tokens.
     @param _value The amount that will be created.
     """
@@ -138,51 +149,66 @@ def mint(_to: address, _value: uint256):
 
 
 @private
-def _deposit(amount:wei_value,sender:address):
-     assert not self.goalReached, 'the ico has completed'
-     if self.depositAmount + amount >=  self.depositGoal :
-         self.goalReached = True
-         _refund:wei_value = self.depositAmount + amount - self.depositGoal
-         _deposit_amount:wei_value = self.depositGoal - self.depositAmount
-         self.depositBalanceOfUser[sender] += _deposit_amount
-         _token_amount:uint256 = as_unitless_number(_deposit_amount) * self.price / self.ETHER_WEI
-         self.mint(sender,_token_amount)
-         send(sender,_refund)
-         log.GoalReached(block.timestamp,self.depositGoal)
-     else :
-         self.depositBalanceOfUser[sender] += amount
-         _token_amount:uint256 = as_unitless_number(amount) * self.price / self.ETHER_WEI
-         self.mint(sender,_token_amount)
+def _deposit(amount: wei_value, sender: address):
+    """
+    @dev Receive the ether and mint proper tokens
+    @param amount The account of the ether.
+    @param sender The address that prepare to be minted .
+    """
+    assert not self.goalReached, 'the ico has completed'
+    if self.depositAmount + amount >= self.depositGoal:
+        self.goalReached = True
+        _refund: wei_value = self.depositAmount + amount - self.depositGoal
+        _deposit_amount: wei_value = self.depositGoal - self.depositAmount
+        self.depositBalanceOfUser[sender] += _deposit_amount
+        _token_amount: uint256 = as_unitless_number(
+            _deposit_amount) * self.price / self.ETHER_WEI
+        self.mint(sender, _token_amount)
+        send(sender, _refund)
+        log.GoalReached(block.timestamp, self.depositGoal)
+    else:
+        self.depositBalanceOfUser[sender] += amount
+        _token_amount: uint256 = as_unitless_number(
+            amount) * self.price / self.ETHER_WEI
+        self.mint(sender, _token_amount)
 
-#判断是否成功，成功和NDAO交互创建交易对，失败返还投注额度
+
 @private
 def _endDeposit():
-    pass
+    if self.goalReached:
+        self.mint(self.factory, self.total_supply)
+        Factory(self.factory).createExchange(value=self.balance)
+        log.ICOSuccess(self, block.timestamp)
+    else:
+        Factory(self.factory).endIco()
 
 
 @public
 @payable
 def __default__():
-    assert not self.ended ,'the ico has ended'
+    """
+    @dev this function is executed whenever the contract is sent Ether (without data).
+    """
+    assert not self.ended, 'the ico has ended'
     if block.timestamp <= self.depositEnd:
-        self._deposit(msg.value,msg.sender)
+        self._deposit(msg.value, msg.sender)
     else:
         self.ended = True
         self._endDeposit()
 
+
 @public
 def safeWithdrawal():
-    assert self.ended ,'the ico has not ended'
-    assert not self.goalReached ,'the ico has completed'
-    amount:wei_value = self.depositBalanceOfUser[msg.sender]
+    """
+    @dev when ico is failed,the user withdraws their deposit ether.
+          this function is using the withdrawal pattern.
+    """
+    assert self.ended, 'the ico has not ended'
+    assert not self.goalReached, 'the ico has completed'
+    amount: wei_value = self.depositBalanceOfUser[msg.sender]
     self.depositBalanceOfUser[msg.sender] = 0
-    send(msg.sender,amount)
-    log.RefundTransfer(msg.sender,amount)
-
-
-
-
-
+    send(msg.sender, amount)
+    log.RefundTransfer(msg.sender, amount)
 
 
 @private
