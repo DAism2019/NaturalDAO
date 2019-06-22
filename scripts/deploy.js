@@ -76,10 +76,11 @@ async function readAbi(filename) {
 async function deploy(constructor, filename) {
     //开始部署进程
     try {
-        console.log(`start deploying \x1b[31m ${filename}\x1b[0m,my address is \x1b[32m${myWallet.address}\x1b[0m`);
+        // console.log(`My address is \x1b[32m${myWallet.address}\x1b[0m`);
+        console.log(`start deploying \x1b[35m ${filename}\x1b[0m`);
         let contract = await factory.deploy(...constructor);
-        console.log(`\x1b[31mcontract.address:\x1b[32m${contract.address}\x1b[0m`);
-        console.log(`\x1b[31mcontract.deployTransaction.hash:\x1b[32m${contract.deployTransaction.hash}\x1b[0m`);
+        console.log(`\x1b[35mcontract.address:\x1b[32m${contract.address}\x1b[0m`);
+        console.log(`\x1b[35mcontract.deployTransaction.hash:\x1b[32m${contract.deployTransaction.hash}\x1b[0m`);
         console.log('waiting ........');
         await contract.deployed();
         console.log(`Congratulation! The contract is deployed on \x1b[32m${process.env.NET_WORK}.\x1b[0m`)
