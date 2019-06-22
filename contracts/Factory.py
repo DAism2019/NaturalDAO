@@ -43,7 +43,7 @@ def __init__():
 
 # 设置模板地址和接收ETH地址
 @public
-def initializeFactory(template: address, _beneficiary: address, _ndaoAddress, _queryAddress: address):
+def initializeFactory(template: address, _beneficiary: address, _ndaoAddress: address, _queryAddress: address):
     assert self.exchangeTemplate == ZERO_ADDRESS and self.beneficiary == ZERO_ADDRESS
     assert self.ndaoAddress == ZERO_ADDRESS and self.queryAddress == ZERO_ADDRESS
     assert template != ZERO_ADDRESS and _beneficiary != ZERO_ADDRESS
@@ -54,12 +54,39 @@ def initializeFactory(template: address, _beneficiary: address, _ndaoAddress, _q
     self.queryAddress = _queryAddress
 
 
+# 设置最小发行ETH数量，先保留
 @public
 def setMinFrozenEth(amount: uint256):
     assert msg.sender == self.setter
     log.NewMinEth(self.minFrozenEth, amount)
     self.minFrozenEth = amount
 
+
+# 计算ETH对应的NDAO数量
+@private
+@constant
+def _calNdaoAmount(eth_amount: wei_value) -> uint256:
+    price: uint256 = QueryEthPrice(self.queryAddress).getEthPrice()
+    result: uint256 = as_unitless_number(eth_amount) / price
+    result = result * 10**(NDAO(self.ndaoAddress).decimals() - 2)
+    return result
+
+
+@private
+def _createExchange(token: address, exchange: address, eth_amount: wei_value) -> uint256:
+    # 发送ETH到固定地址
+    send(self.beneficiary,eth_amount)
+    # 增发稳定币
+    ndao_amount: uint256 = self._calNdaoAmount(eth_amount)
+    NDAO(self.ndaoAddress).mint(exchange, ndao_amount)
+    # token和对应的合约相互绑定
+    self.token_to_exchange[token] = exchange
+    self.exchange_to_token[exchange] = token
+    # 编号并保存token
+    token_id: uint256 = self.tokenCount + 1
+    self.tokenCount = token_id
+    self.id_to_token[token_id] = token
+    return ndao_amount
 
 # 为一个token创建交易对合约,需要事先授权
 @public
@@ -74,38 +101,14 @@ def createExchange(token: address, token_amount: uint256) -> address:
     # 创建交易合约并设置token
     exchange: address = create_forwarder_to(self.exchangeTemplate)
     # 验证token数量
-    assert ERC20(address).transferFrom(msg.sender, exchange, token_amount)
+    assert ERC20(token).transferFrom(msg.sender, exchange, token_amount)
     # 开始创建
-    self._createExchange(token, exchange, msg.value)
+    ndao_amount: uint256 = self._createExchange(token, exchange, msg.value)
     # 设置交易对合约
     Exchange(exchange).setup(token, self.ndaoAddress, token_amount)
-    log.NewExchange(token, exchange)
+    log.NewExchange(token, exchange, ndao_amount)
     return exchange
 
-
-@private
-def _createExchange(token: address, exchange: address, eth_amount: wei_value):
-    # 发送ETH到固定地址
-    self.beneficiary.transfer(eth_amount)
-    # 增发稳定币
-    uint daoAmount = self._calNdaoAmount(eth_amount)
-    NDAO(self.ndaoAddress).mint(exchange, daoAmount)
-    # token和对应的合约相互绑定
-    self.token_to_exchange[token] = exchange
-    self.exchange_to_token[exchange] = token
-    # 编号并保存token
-    token_id: uint256 = self.tokenCount + 1
-    self.tokenCount = token_id
-    self.id_to_token[token_id] = token
-
-
-@private
-@constant
-def _calNdaoAmount(eth_amount: wei_value) -> uint256:
-    uint256 price = QueryEthPrice(self.queryAddress).getEthPrice()
-    uint256 result = as_unitless_number(eth_amount) / price
-    result = result * 10**(NDAO(ndaoAddress).decimals - 2)
-    return result
 
 # 获取一个token对应的交易对合约地址
 @public
