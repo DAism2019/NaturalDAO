@@ -30,7 +30,7 @@ minter: address
 def __init__():
     self.name = 'NaturalDAOCoins'
     self.symbol = 'NDAO'
-    self.decimals = 6
+    self.decimals = 8
 
 @public
 def setupMinter(_minter:address):

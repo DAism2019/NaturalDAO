@@ -4,7 +4,6 @@
   Author: zhanghua     Version:   1.0     Date: 2019.06.02
   Description:  此JS是使用node.js脚本自动部署Vper合约
                 所需要的私钥和网络配置在.env中
-                目前只能处理单一合约的情况
                 需要node.js 7.6以上
   email:radarzhhua@gmail.com
   qq:316855125
@@ -74,19 +73,19 @@ async function readAbi(filename) {
 * @param constructor 构造器参数
 * @return ABI字符串
 */
-async function deploy(constructor,filename) {
+async function deploy(constructor, filename) {
     //开始部署进程
     try {
         console.log(`start deploying \x1b[31m ${filename}\x1b[0m,my address is \x1b[32m${myWallet.address}\x1b[0m`);
         let contract = await factory.deploy(...constructor);
         console.log(`\x1b[31mcontract.address:\x1b[32m${contract.address}\x1b[0m`);
         console.log(`\x1b[31mcontract.deployTransaction.hash:\x1b[32m${contract.deployTransaction.hash}\x1b[0m`);
+        console.log('waiting ........');
         await contract.deployed();
         console.log(`Congratulation! The contract is deployed on \x1b[32m${process.env.NET_WORK}.\x1b[0m`)
     } catch (err) {
         console.log("deploy error:", err);
     }
-
 }
 
 /**
@@ -96,10 +95,10 @@ async function deploy(constructor,filename) {
 */
 async function begin(filename, constructor) {
     await init(filename);
-    deploy(constructor,filename);
+    deploy(constructor, filename);
 }
 
-function getProvider(network){
+function getProvider(network) {
     let _myProvider = null;
     switch (network) {
         case 'localhost':
@@ -117,7 +116,6 @@ function getProvider(network){
     return _myProvider
 }
 
-
 //程序入口,检测输入的文件名和构造器参数
 function start() {
     if (process.argv.length > 2) {
@@ -128,7 +126,7 @@ function start() {
         }
         begin(filename, constructor);
     } else {
-        process.stdout.write("Enter a filename for deploy:");
+        process.stdout.write("Enter a filename (exclude path) for deploy:");
         process.stdin.resume();
         process.stdin.once("data", function(data) {
             process.stdin.pause();

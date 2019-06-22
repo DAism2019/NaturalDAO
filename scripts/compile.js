@@ -16,7 +16,7 @@ let bytecodePath = 'bytecode';
 let contractPath = 'contracts';
 //字义子进程
 let spawn = require("child_process").spawn;
-//定义缓冲区大小，可能不同系统不一样
+//定义缓冲区大小，可能不同系统不一样，这里可以进一步优化
 let MAX_SIZE = 8192;
 // let WORK_DIR = '..'; 默认当前工作路径
 
@@ -38,10 +38,10 @@ function compile(filename) {
     );
     cp.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
+        console.log(`\x1b[31mCompile ${filename} Failed!\x1b[0m`);
     });
     cp.on('close', (code) => {
-        console.log("success!");
-        // console.log(`exit：${code}`);
+        console.log(`exit：${code}`);
     });
 }
 
@@ -55,6 +55,7 @@ function dealData(filename, data) {
     let datas = data.split('\n');
     saveAbi(_files[0], datas[0]);
     saveBytecode(_files[0], datas[1]);
+    console.log(`\x1b[32mCompile ${filename} Success!\x1b[0m`)
 }
 
 /**

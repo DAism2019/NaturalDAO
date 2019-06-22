@@ -1,4 +1,13 @@
 //记录所有合约地址
-kovan测试网
-1、稳定币合约地址:
-NDAOToken.py: 0xE3E77b621435795f14AEf9Fbea655E088211Be37
+ropsten测试网
+1、稳定币合约地址（是一个ERC20代币）:
+NDAOToken.py:
+
+
+2、获得ETH价格合约，返回的是 $0.01 => ETH wei
+EthPrice.py:
+0xf0F59785F9bbBB120082f234E91F57cd13DD1bC0
+
+3、自己写的一个获取ETH价格的合约的地址，作为备份
+MyFiat.py:
+0x08154c06805101F248389644Ab3E18560Ff3D433
