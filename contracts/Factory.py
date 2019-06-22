@@ -61,7 +61,7 @@ def setMinFrozenEth(amount: uint256):
     self.minFrozenEth = amount
 
 
-# 为一个token创建交易对合约
+# 为一个token创建交易对合约,需要事先授权
 @public
 @payable
 def createExchange(token: address, token_amount: uint256) -> address:
