@@ -10,6 +10,7 @@ contract Factory:
     def createExchange() -> address: modifying
     def endIco(): modifying
 
+ETHER_WEI: constant(uint256) = 10 ** 18
 
 # event of ERC-20
 Transfer: event({_from: indexed(address), _to: indexed(address), _value: uint256})
@@ -19,8 +20,6 @@ GoalReached: event({_goalTime: timestamp, _depositGoal: wei_value})
 RefundTransfer: event({_owner: indexed(address), _amount: wei_value})
 ICOSuccess: event({_token: indexed(address), _sucTimme: timestamp})
 
-
-ETHER_WEI: public(uint256)
 # ERC20 state varialbes
 name: public(string[64])
 symbol: public(string[32])
@@ -60,7 +59,6 @@ def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGo
     self.depositStart = block.timestamp
     self.depositEnd = self.depositStart + _delta
     self.price = _price
-    self.ETHER_WEI = 10 ** 18
     self.factory = msg.sender
 
 
@@ -162,14 +160,14 @@ def _deposit(amount: wei_value, sender: address):
         _deposit_amount: wei_value = self.depositGoal - self.depositAmount
         self.depositBalanceOfUser[sender] += _deposit_amount
         _token_amount: uint256 = as_unitless_number(
-            _deposit_amount) * self.price / self.ETHER_WEI
+            _deposit_amount) * self.price / ETHER_WEI
         self.mint(sender, _token_amount)
         send(sender, _refund)
         log.GoalReached(block.timestamp, self.depositGoal)
     else:
         self.depositBalanceOfUser[sender] += amount
         _token_amount: uint256 = as_unitless_number(
-            amount) * self.price / self.ETHER_WEI
+            amount) * self.price / ETHER_WEI
         self.mint(sender, _token_amount)
 
 

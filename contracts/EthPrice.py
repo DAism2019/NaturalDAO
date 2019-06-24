@@ -23,7 +23,7 @@ def setFiator(_faitor:address):
     assert msg.sender == self.owner
     self.fiator = FiatContract(_faitor)
 
-# @returns $0.01   ETH wei 假设返回值是 x ,对应的eth 就是 msg.value/return
+# @returns $0.01  => wei 假设返回值是 x ,对应的eth 就是 msg.value/return
 
 @public
 @constant

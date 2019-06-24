@@ -18,25 +18,18 @@ decimals: public(uint256)
 #       See: https://vyper.readthedocs.io/en/v0.1.0-beta.8/types.html?highlight=getter#mappings
 
 balanceOf: public(map(address, uint256))
-
 allowances: map(address, map(address, uint256))
-
 total_supply: uint256
-
 minter: address
 
 
 @public
-def __init__():
+def __init__(_minter:address):
+    assert _minter != ZERO_ADDRESS
+    self.minter = _minter
     self.name = 'NaturalDAOCoins'
     self.symbol = 'NDAO'
     self.decimals = 8
-
-@public
-def setupMinter(_minter:address):
-    assert self.minter == ZERO_ADDRESS and _minter!= ZERO_ADDRESS
-    self.minter = _minter
-
 
 
 @public
