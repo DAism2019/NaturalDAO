@@ -16,7 +16,6 @@ def createIco():
     contract_address = allAddress['Factory.py']
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
     nonce = w3.eth.getTransactionCount(myAddress)
-    print("nonce",nonce)
     goal = w3.toWei(0.1, 'ether')
     unicorn_txn = myContract.functions.createICO('KHCoins','KHC',3,goal,3600,1000000).buildTransaction({
         'nonce': nonce

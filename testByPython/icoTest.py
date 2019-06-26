@@ -6,6 +6,7 @@ from os.path import dirname, abspath
 
 myAddress = '0x18DaA5EC886325cD011F4278e39C18BE75C0E314'
 # contract_address = '0xf249015Aeb625D459a3612770437439Ce7685E8E'
+depositAddress = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
 
 
 def getIcoAddress(_user):
@@ -45,6 +46,7 @@ def test(_icoAddress):
     price = myContract.functions.price().call()
     depositAmount = myContract.functions.depositAmount().call()
     factoryAddress = myContract.functions.factory().call()
+    myDeposit = myContract.functions.depositBalanceOfUser(depositAddress).call()
     print("ICO详情:")
     print("代币名称:", name)
     print("代币符号:", symbol)
@@ -55,6 +57,7 @@ def test(_icoAddress):
     print("开始时间:", depositStart)
     print("结束时间:", depositEnd)
     print("当前募集金额:", depositAmount / 10 ** 18, "ETH")
+    print("我的投资总额度:",myDeposit)
     print("是否结束:", isEnd)
     print("目标是否达成:", isReached)
     print("创建合约地址:", factoryAddress)
