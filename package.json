@@ -10,6 +10,7 @@
   "scripts": {
     "compile": "node scripts/compile.js",
     "deploy": "source .env  && node scripts/deploy.js",
+    "deployAll": "source .env  && node scripts/deployAll.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "radarzhhua@gmail.com",

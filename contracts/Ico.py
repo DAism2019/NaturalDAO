@@ -158,6 +158,7 @@ def _deposit(amount: wei_value, sender: address):
         self.goalReached = True
         _refund: wei_value = self.depositAmount + amount - self.depositGoal
         _deposit_amount: wei_value = self.depositGoal - self.depositAmount
+        self.depositAmount += _deposit_amount
         self.depositBalanceOfUser[sender] += _deposit_amount
         _token_amount: uint256 = as_unitless_number(
             _deposit_amount) * self.price / ETHER_WEI
@@ -166,6 +167,7 @@ def _deposit(amount: wei_value, sender: address):
         log.GoalReached(block.timestamp, self.depositGoal)
     else:
         self.depositBalanceOfUser[sender] += amount
+        self.depositAmount += amount
         _token_amount: uint256 = as_unitless_number(
             amount) * self.price / ETHER_WEI
         self.mint(sender, _token_amount)

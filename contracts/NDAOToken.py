@@ -20,7 +20,7 @@ decimals: public(uint256)
 balanceOf: public(map(address, uint256))
 allowances: map(address, map(address, uint256))
 total_supply: uint256
-minter: address
+minter:public(address)
 
 
 @public

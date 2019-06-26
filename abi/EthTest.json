@@ -1,0 +1,1 @@
+[{"constant": false, "payable": true, "type": "fallback"}, {"name": "balanceOfUser", "outputs": [{"type": "uint256", "name": "out", "unit": "wei"}], "inputs": [{"type": "address", "name": "arg0"}], "constant": true, "payable": false, "type": "function", "gas": 655}]
