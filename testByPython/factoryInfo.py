@@ -17,6 +17,7 @@ def test():
     ndaoAddress = myContract.functions.ndaoAddress().call()
     queryAddress = myContract.functions.queryAddress().call()
     tokenCount = myContract.functions.tokenCount().call()
+    print("本合约地址:",contract_address)
     print("交易对模板地址:", exchangeTemplate)
     print("ICO模板地址:", icoTemplate)
     print("ETH仓库地址:", beneficiary)

@@ -16,13 +16,15 @@ def createIco():
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
     nonce = w3.eth.getTransactionCount(myAddress)
     goal = w3.toWei(0.1, 'ether')
-    unicorn_txn = myContract.functions.createICO('KHCoins', 'KHC', 3, goal, 3600, 1000000).buildTransaction({
-        'nonce': nonce
+    unicorn_txn = myContract.functions.createICO('KHCoins', 'KHC', 3, goal, 120, 1000000).buildTransaction({
+        'nonce': nonce,
+        'gas': 400000
+
     })
     signed_txn = w3.eth.account.signTransaction(
         unicorn_txn, private_key=private_key)
-    w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    print("创建交易已经发送，请耐心等待")
+    hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    print("创建交易已经发送，请耐心等待并查询,hash值为:",w3.toHex(hash))
 
 
 createIco()

@@ -7,7 +7,7 @@ implements: ERC20
 
 #define the Factory contract
 contract Factory:
-    def createExchange() -> address: modifying
+    def createExchange(): modifying
     def endIco(): modifying
 
 ETHER_WEI: constant(uint256) = 10 ** 18
@@ -18,7 +18,7 @@ Approval: event({_owner: indexed(address),_spender: indexed(address), _value: ui
 # event of ICO
 GoalReached: event({_goalTime: timestamp, _depositGoal: wei_value})
 RefundTransfer: event({_owner: indexed(address), _amount: wei_value})
-ICOSuccess: event({_token: indexed(address), _sucTimme: timestamp})
+
 
 # ERC20 state varialbes
 name: public(string[64])
@@ -177,8 +177,7 @@ def _deposit(amount: wei_value, sender: address):
 def _endDeposit():
     if self.goalReached:
         self.mint(self.factory, self.total_supply)
-        Factory(self.factory).createExchange(value=self.balance)
-        log.ICOSuccess(self, block.timestamp)
+        Factory(self.factory).createExchange(value=self.depositGoal)
     else:
         Factory(self.factory).endIco()
 

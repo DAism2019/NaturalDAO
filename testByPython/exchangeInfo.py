@@ -3,18 +3,8 @@ from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
 
+
 myAddress = '0x18DaA5EC886325cD011F4278e39C18BE75C0E314'
-
-
-def convertStatus(status):
-    result = '不存在'
-    if status == 1:
-        result = '募集中'
-    elif status == 2:
-        result = '成功'
-    elif status == 3:
-        result = '失败'
-    return result
 
 
 def getExchangeAddress(_user):
@@ -25,9 +15,7 @@ def getExchangeAddress(_user):
     contract_address = allAddress['Factory.py']
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
     lastIco = myContract.functions.getLatestIco().call({'from': _user})
-    status = myContract.functions.allIcoStatus(lastIco).call()
     exchange = myContract.functions.getExchange(lastIco).call()
-    print("当前交易对状态:", convertStatus(status))
     print('ico的地址为:', lastIco)
     print('交易对地址为:', exchange)
     return exchange
@@ -57,10 +45,10 @@ def test(_exchange):
     print("代币地址:", address)
     print("控制合约地址:", facAddress)
     print("稳定币地址:", ndaoAddress)
-    print("交易对代币上限:", maxPool)
+    print("交易对代币上限:", maxPool/ 10 ** token_des)
     print("当前交易对代币数量:", tokenBalance / 10 ** token_des)
     print("当前交易对稳定币数量:", ndaoBalance / 10 ** ndao_des)
 
 
 exchange = getExchangeAddress(myAddress)
-# test(exchange)
+test(exchange)

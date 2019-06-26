@@ -109,11 +109,9 @@ let util = {
             let tx = await contract.setPrice(result);
             await tx.wait();
             console.log("The price of ETH is update to $",price);
-            // console.log("交易已经成功发送,哈希值为:",tx.hash);
         } catch (err) {
             console.log("写入合约错误:", err);
         }
-
     }
 }
 

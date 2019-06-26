@@ -20,7 +20,6 @@ let abiPath = 'abi';
 let bytecodePath = 'bytecode';
 let contractPath = 'contract';
 let addressPath = 'address'
-
 //定义ethers框架相关变量
 let myWallet,factory;
 

@@ -7,6 +7,18 @@ from os.path import dirname, abspath
 
 myAddress = '0x18DaA5EC886325cD011F4278e39C18BE75C0E314'
 depositAddress = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
+ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+
+def convertStatus(status):
+    result = '不存在'
+    if status == 1:
+        result = '募集中'
+    elif status == 2:
+        result = '成功'
+    elif status == 3:
+        result = '失败'
+    return result
 
 
 def getIcoAddress(_user):
@@ -18,8 +30,15 @@ def getIcoAddress(_user):
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
     lastIco = myContract.functions.getLatestIco().call({'from': _user})
     creater = myContract.functions.allIcoCreater(lastIco).call()
-    print('地址:',myAddress,'最新创建的ICO地址为:', lastIco)
-    print('ICO创建者地址为:',creater)
+    status = myContract.functions.allIcoStatus(lastIco).call()
+    exchange = myContract.functions.getExchange(lastIco).call()
+    print("ICO详情:")
+    print("-----------------------------------------------------")
+    print('ICO地址为:', lastIco)
+    print('ICO申请者地址为:', creater)
+    print("当前ICO状态:", convertStatus(status))
+    if exchange != ZERO_ADDRESS:
+        print("ICO对应的交易对地址为:", exchange)
     return lastIco
 
 
@@ -50,7 +69,6 @@ def test(_icoAddress):
     factoryAddress = myContract.functions.factory().call()
     myDeposit = myContract.functions.depositBalanceOfUser(
         depositAddress).call()
-    print("ICO详情:")
     print("代币名称:", name)
     print("代币符号:", symbol)
     print("代币精度:", decimals)
@@ -67,5 +85,5 @@ def test(_icoAddress):
 
 
 ico = getIcoAddress(myAddress)
-if ico != '0x0000000000000000000000000000000000000000':
+if ico != ZERO_ADDRESS:
     test(ico)

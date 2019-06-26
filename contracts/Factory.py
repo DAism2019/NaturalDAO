@@ -35,7 +35,7 @@ MAX_NUMBER: constant(int128) = 128
 
 # 定义对应事件
 NewExchange: event(
-    {_token: indexed(address), _exchange: indexed(address), _amount: uint256})
+    {_token: indexed(address), _exchange: indexed(address), _amount: uint256, _tokenAmount: uint256})
 ICOCreated: event({_creater: indexed(address), _ico: address})
 ICOUpdate: event({_token: indexed(address), _status: uint256})
 
@@ -54,7 +54,7 @@ allIcoStatus: public(map(address, uint256))  # 所有通过本合约发行的ICO
 allIcoAddressOfUser: public(map(address, address[MAX_NUMBER]))
 # the ico amount of each account
 allIcoCountsOfUser: public(map(address, int128))
-allIcoCreater:public(map(address,address))  #所有ICO创建者的地址，用来发给它稳定币
+allIcoCreater: public(map(address, address))  # 所有ICO创建者的地址，用来发给它稳定币
 
 
 # 设置模板地址和接收ETH地址
@@ -115,42 +115,40 @@ def _calNdaoAmount(eth_amount: wei_value) -> uint256:
 
 
 @private
-def _createExchange(token: address, exchange: address, eth_amount: wei_value, token_amount: uint256) -> uint256:
-    # 验证token数量
-    assert ERC20(token).transfer(exchange, token_amount)
-    # 发送ETH到固定地址
-    send(self.beneficiary, eth_amount)
-    # 增发稳定币,创建得和交易对各1倍
-    ndao_amount: uint256 = self._calNdaoAmount(eth_amount)
-    NDAO(self.ndaoAddress).mint(exchange, ndao_amount)
-    NDAO(self.ndaoAddress).mint(self.allIcoCreater[token], ndao_amount)
-    # token和对应的合约相互绑定
+def _saveExchangeInfo(token: address, exchange: address):
+    # token和对应的合约相互map
     self.token_to_exchange[token] = exchange
     self.exchange_to_token[exchange] = token
     # 编号并保存token
     token_id: uint256 = self.tokenCount + 1
     self.tokenCount = token_id
     self.id_to_token[token_id] = token
-    return ndao_amount
 
 
 @public
 @payable
-def createExchange() -> address:
+def createExchange():
     assert self.exchangeTemplate != ZERO_ADDRESS
     assert self.token_to_exchange[msg.sender] == ZERO_ADDRESS
     assert self.allIcoStatus[msg.sender] == STATUS_STARTED
+    assert self.allIcoCreater[msg.sender] != ZERO_ADDRESS
     self.allIcoStatus[msg.sender] = STATUS_SUCCESS
-    token_amount: uint256 = ERC20(msg.sender).balanceOf(self)
     # 创建交易合约并设置token
     exchange: address = create_forwarder_to(self.exchangeTemplate)
+    token_amount: uint256 = ERC20(msg.sender).balanceOf(self)
+    #发送代币
+    flag:bool = ERC20(msg.sender).transfer(exchange, token_amount)
+    assert flag
+    # 发送ETH到仓库地址
+    send(self.beneficiary, msg.value)
     # 设置交易对合约
     Exchange(exchange).setup(msg.sender, self.ndaoAddress, token_amount)
-    # 开始创建
-    ndao_amount: uint256 = self._createExchange(
-        msg.sender, exchange, msg.value, token_amount)
-    log.NewExchange(msg.sender, exchange, ndao_amount)
-    return exchange
+    # 增发稳定币,创建得和交易对各1倍
+    ndao_amount: uint256 = self._calNdaoAmount(msg.value)
+    NDAO(self.ndaoAddress).mint(exchange, ndao_amount)
+    NDAO(self.ndaoAddress).mint(self.allIcoCreater[msg.sender], ndao_amount)
+    self._saveExchangeInfo(msg.sender, exchange)
+    log.NewExchange(msg.sender, exchange, ndao_amount, token_amount)
 
 
 # 获取一个token对应的交易对合约地址
