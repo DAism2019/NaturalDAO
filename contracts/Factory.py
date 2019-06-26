@@ -54,6 +54,7 @@ allIcoStatus: public(map(address, uint256))  # 所有通过本合约发行的ICO
 allIcoAddressOfUser: public(map(address, address[MAX_NUMBER]))
 # the ico amount of each account
 allIcoCountsOfUser: public(map(address, int128))
+allIcoCreater:public(map(address,address))  #所有ICO创建者的地址，用来发给它稳定币
 
 
 # 设置模板地址和接收ETH地址
@@ -83,6 +84,7 @@ def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depos
     self.allIcoCountsOfUser[msg.sender] = index + 1
     self.allIcoAddressOfUser[msg.sender][index] = ico
     self.allIcoStatus[ico] = STATUS_STARTED
+    self.allIcoCreater[ico] = msg.sender
     log.ICOCreated(msg.sender, ico)
 
 
@@ -118,9 +120,10 @@ def _createExchange(token: address, exchange: address, eth_amount: wei_value, to
     assert ERC20(token).transfer(exchange, token_amount)
     # 发送ETH到固定地址
     send(self.beneficiary, eth_amount)
-    # 增发稳定币
+    # 增发稳定币,创建得和交易对各1倍
     ndao_amount: uint256 = self._calNdaoAmount(eth_amount)
     NDAO(self.ndaoAddress).mint(exchange, ndao_amount)
+    NDAO(self.ndaoAddress).mint(self.allIcoCreater[token], ndao_amount)
     # token和对应的合约相互绑定
     self.token_to_exchange[token] = exchange
     self.exchange_to_token[exchange] = token

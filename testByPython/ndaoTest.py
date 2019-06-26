@@ -3,12 +3,7 @@ from json import loads
 from os.path import dirname, abspath
 
 
-network = 'https://api.infura.io/v1/jsonrpc/kovan'
-
-
 def test():
-    # my_provider = Web3.HTTPProvider(network)
-    # w3 = Web3(my_provider)
     path = dirname(dirname(abspath(__file__))) + '/abi/NDaoToken.json'
     contract_abi = loads(open(path).read())
     contract_abi = loads(open(path).read())
@@ -24,8 +19,8 @@ def test():
     print("代币名称:", name)
     print("代币符号:", symbol)
     print("代币精度:", decimals)
-    print("发行总量:", totalSupply/10 ** decimals)
-    print("增发合约地址:",minter)
+    print("发行总量:", totalSupply / 10 ** decimals)
+    print("增发合约地址:", minter)
 
 
 test()

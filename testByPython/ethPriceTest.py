@@ -3,9 +3,6 @@ from json import loads
 from os.path import dirname, abspath
 
 
-#https://kovan.infura.io/Ug2W9nZzjwN4lITvvLT0
-
-
 def test():
     path = dirname(dirname(abspath(__file__))) + '/abi/EthPrice.json'
     contract_abi = loads(open(path).read())
