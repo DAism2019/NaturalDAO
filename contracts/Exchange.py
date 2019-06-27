@@ -67,11 +67,11 @@ def ndaoToTokenInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestam
     ndao_reserve: uint256 = self.ndao.balanceOf(self)
     tokens_bought: uint256 = self.getInputPrice(
         ndao_sold, ndao_reserve, token_reserve)
-    assert tokens_bought >= min_tokens
+    assert tokens_bought >= min_tokens , 'little than min_tokens'
     flag: bool = self.ndao.transferFrom(buyer, self, ndao_sold)
-    assert flag
+    assert flag ,'transfer ndao failed'
     flag = self.token.transfer(recipient, tokens_bought)
-    assert flag
+    assert flag ,'transfer token failed'
     log.TokenPurchase(buyer, ndao_sold, tokens_bought)
     return tokens_bought
 

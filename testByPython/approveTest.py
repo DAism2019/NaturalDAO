@@ -3,11 +3,12 @@ from json import loads
 from os.path import dirname, abspath
 
 
-token_address = None
-my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
-private_key = 'c86f5fff8f4df47012f78d5c0766366847735b9e08e614277cd8ba0a92ce33ac'
-approve_amount = 10 ** 20
+token_address = ''
 exchange_address = ''
+my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
+private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
+approve_amount = 10 ** 20
+
 
 
 def approve():

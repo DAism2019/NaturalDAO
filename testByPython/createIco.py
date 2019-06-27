@@ -3,8 +3,8 @@ from json import loads
 from os.path import dirname, abspath
 
 
-private_key = 'ee073db770c1651355da09b83b241a65183eccca5ff4497aa35100c8080d9582'
-myAddress = '0x18DaA5EC886325cD011F4278e39C18BE75C0E314'
+my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
+private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
 
 
 def createIco():
@@ -14,7 +14,7 @@ def createIco():
     allAddress = loads(open(path).read())
     contract_address = allAddress['Factory.py']
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    nonce = w3.eth.getTransactionCount(myAddress)
+    nonce = w3.eth.getTransactionCount(my_address)
     goal = w3.toWei(0.1, 'ether')
     unicorn_txn = myContract.functions.createICO('KHCoins', 'KHC', 3, goal, 120, 1000000).buildTransaction({
         'nonce': nonce,

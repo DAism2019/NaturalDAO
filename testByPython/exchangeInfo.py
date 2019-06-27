@@ -4,7 +4,8 @@ from json import loads
 from os.path import dirname, abspath
 
 
-myAddress = '0x18DaA5EC886325cD011F4278e39C18BE75C0E314'
+my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
+private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
 
 
 def getExchangeAddress(_user):
@@ -50,5 +51,5 @@ def test(_exchange):
     print("当前交易对稳定币数量:", ndaoBalance / 10 ** ndao_des)
 
 
-exchange = getExchangeAddress(myAddress)
+exchange = getExchangeAddress(my_address)
 test(exchange)

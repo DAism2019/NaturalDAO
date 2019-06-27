@@ -5,8 +5,8 @@ import time
 from os.path import dirname, abspath
 
 
-myAddress = '0x18DaA5EC886325cD011F4278e39C18BE75C0E314'
-depositAddress = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
+my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
+private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 
@@ -68,7 +68,7 @@ def test(_icoAddress):
     depositAmount = myContract.functions.depositAmount().call()
     factoryAddress = myContract.functions.factory().call()
     myDeposit = myContract.functions.depositBalanceOfUser(
-        depositAddress).call()
+        my_address).call()
     print("代币名称:", name)
     print("代币符号:", symbol)
     print("代币精度:", decimals)
@@ -84,6 +84,6 @@ def test(_icoAddress):
     print("创建合约地址:", factoryAddress)
 
 
-ico = getIcoAddress(myAddress)
+ico = getIcoAddress(my_address)
 if ico != ZERO_ADDRESS:
     test(ico)
