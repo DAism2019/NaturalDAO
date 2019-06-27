@@ -68,15 +68,16 @@ def ndaoToTokenInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestam
     tokens_bought: uint256 = self.getInputPrice(
         ndao_sold, ndao_reserve, token_reserve)
     assert tokens_bought >= min_tokens
-    assert self.ndao.transferFrom(buyer, self, ndao_sold)
-    assert self.token.transfer(recipient, tokens_bought)
+    flag: bool = self.ndao.transferFrom(buyer, self, ndao_sold)
+    assert flag
+    flag = self.token.transfer(recipient, tokens_bought)
+    assert flag
     log.TokenPurchase(buyer, ndao_sold, tokens_bought)
     return tokens_bought
 
 
 # 给自己买
 @public
-@payable
 def ndaoToTokenSwapInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestamp) -> uint256:
     """
     # @notice Convert NDAO to Tokens.
@@ -92,7 +93,6 @@ def ndaoToTokenSwapInput(ndao_sold: uint256, min_tokens: uint256, deadline: time
 
 # 帮别人买，但是花钱是自己的
 @public
-@payable
 def ndaoToTokenTransferInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256:
     """
     # @notice Convert NDAO to Tokens and transfers Tokens to recipient.
@@ -118,8 +118,10 @@ def tokenToNdaoInput(tokens_sold: uint256, min_ndao: uint256, deadline: timestam
     ndao_bought: uint256 = self.getInputPrice(
         tokens_sold, token_reserve, ndao_reserve)
     assert ndao_bought >= min_ndao
-    assert self.token.transferFrom(buyer, self, tokens_sold)
-    assert self.ndao.transfer(recipient, ndao_bought)
+    flag: bool = self.token.transferFrom(buyer, self, tokens_sold)
+    assert flag
+    flag = self.ndao.transfer(recipient, ndao_bought)
+    assert flag
     log.NdaoPurchase(buyer, tokens_sold, ndao_bought)
     return ndao_bought
 
