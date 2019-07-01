@@ -2,10 +2,7 @@
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
-
-
-my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
-private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
+from privateKey import my_address,private_key
 
 
 def getExchangeAddress(_user):

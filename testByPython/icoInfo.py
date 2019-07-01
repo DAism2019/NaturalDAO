@@ -3,10 +3,9 @@ from web3.auto import w3
 from json import loads
 import time
 from os.path import dirname, abspath
+from privateKey import my_address,private_key
 
 
-my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
-private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 

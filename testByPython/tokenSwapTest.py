@@ -1,13 +1,14 @@
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
+from privateKey import my_address,private_key
 import time
 import math
 
 
-exchange_address = ''
-my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
-private_key = 'c86f5fff8f4df47012f78d5c0766366847735b9e08e614277cd8ba0a92ce33ac'
+token_address = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
+exchange_address = '0x0AF941876A9DA04876a15B6e770939368D6434a5'
+
 
 
 def buy():

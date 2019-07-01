@@ -1,12 +1,10 @@
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
+from privateKey import my_address,private_key
 
-
-token_address = ''
-exchange_address = ''
-my_address = '0xDD55634e1027d706a235374e01D69c2D121E1CCb'
-private_key = 'C86F5FFF8F4DF47012F78D5C0766366847735B9E08E614277CD8BA0A92CE33AC'
+token_address = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
+exchange_address = '0x0AF941876A9DA04876a15B6e770939368D6434a5'
 approve_amount = 10 ** 20
 
 
