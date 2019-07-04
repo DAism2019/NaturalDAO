@@ -1,3 +1,4 @@
+#对某一个交易对账户进行ndao和token授权,需要知道交易对地址和token地址
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath

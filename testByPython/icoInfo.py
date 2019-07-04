@@ -1,4 +1,4 @@
-# 每个ICO要单独设置地址
+# 查询某个ICO详情，默认查询当前账号创建的最后一个ICO详情
 from web3.auto import w3
 from json import loads
 import time

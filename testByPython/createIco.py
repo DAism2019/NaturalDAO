@@ -1,3 +1,4 @@
+#创建ICO测试，这里为了方便测试，将持续时间设置为了120秒
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
@@ -13,10 +14,13 @@ def createIco():
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
     nonce = w3.eth.getTransactionCount(my_address)
     goal = w3.toWei(0.1, 'ether')
-    unicorn_txn = myContract.functions.createICO('MMCoins', 'MMC', 3, goal, 120, 1100000).buildTransaction({
+    des = 3
+    timedelta = 120
+    #price : 1 eth => 1100000 tokens
+    price = 1100000
+    unicorn_txn = myContract.functions.createICO('MMCoins', 'MMC', des, goal, timedelta, price).buildTransaction({
         'nonce': nonce,
         'gas': 400000
-
     })
     signed_txn = w3.eth.account.signTransaction(
         unicorn_txn, private_key=private_key)

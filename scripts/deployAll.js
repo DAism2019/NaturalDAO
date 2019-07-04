@@ -1,16 +1,4 @@
-//一次性部署并设置我们该项目所有的合约
-
-/*************************************************
-  Copyright (C),2018-2022
-  Filename:  deploy.js
-  Author: zhanghua     Version:   1.0     Date: 2019.06.02
-  Description:  此JS是使用node.js脚本自动部署Vper合约
-                所需要的私钥和网络配置在.env中
-                需要node.js 7.6以上
-  email:radarzhhua@gmail.com
-  qq:316855125
-*************************************************/
-
+//一次性部署并设置该项目所有的合约，仅适用于本工程
 //导入模块
 const ethers = require('ethers');
 const fileService = require('../service/fileService');
@@ -19,18 +7,19 @@ const util = require('../service/utilService');
 let abiPath = 'abi';
 let bytecodePath = 'bytecode';
 let contractPath = 'contract';
-let addressPath = 'address'
+let addressPath = 'address';
 //定义ethers框架相关变量
-let myWallet,factory;
-
+let myWallet,
+    factory;
+//定义部署时相关变量
 let allAbi = {};
 let allBytecode = {};
 let allAddress = {}
-
-function initWallet(){
+//初始化钱包
+function initWallet() {
     let network = process.env.NET_WORK;
     let myPrivateKey = process.env.PRIVATE_KEY_MAINNET;
-    util.init(network,myPrivateKey);
+    util.init(network, myPrivateKey);
     myWallet = util.wallet;
 }
 
@@ -82,49 +71,51 @@ async function readAbi(filename) {
 * @param constructor 构造器参数
 * @return ABI字符串
 */
-async function deploy(filename,constructor) {
-    if(!constructor)
+async function deploy(filename, constructor) {
+    if (!constructor)
         constructor = [];
+
     //开始部署进程
     try {
         console.log(`start deploying \x1b[35m ${filename}\x1b[0m`);
         let contract = await factory.deploy(...constructor);
         console.log(`\x1b[35mcontract.address:\x1b[32m${contract.address}\x1b[0m`);
         console.log(`\x1b[35mcontract.deployTransaction.hash:\x1b[32m${contract.deployTransaction.hash}\x1b[0m`);
-        // console.log('waiting ........');
+        console.log('\x1b[32mwaiting ........\x1b[0m');
         await contract.deployed();
         console.log(`Congratulation! The contract is deployed on \x1b[32m${process.env.NET_WORK}.\x1b[0m`)
         allAddress[filename] = contract.address;
         console.log("------------------------------------------------------------------------------------------------")
     } catch (err) {
-        console.log("deploy error:", err);
+        console.log("\x1b[31mdeploy error:\x1b[0m", err);
     }
 }
 
 /**
-* begin work
-* @params filename 文件名
-* @params constructor 构造器参数
+* begin deploy
+* @param filename 文件名
+* @param constructor 构造器参数
 */
 async function beginDeploy(filename, constructor) {
     await init(filename);
-    await deploy(filename,constructor);
+    await deploy(filename, constructor);
 }
 
-
-
-function  saveAddress() {
+/**
+* 保存所有合约地址
+*/
+function saveAddress() {
     let _file = addressPath + '/address.json';
     fileService.writeJson(_file, allAddress);
 }
 
-
 //程序入口,检测输入的文件名和构造器参数
+//注意，这里没有优化来自动检测需要自动部署的合约,是手动处理的
 async function start() {
     initWallet();
     console.log(`Begin deploying! My address is \x1b[32m${myWallet.address}\x1b[0m`);
     await beginDeploy('Factory.py');
-    await beginDeploy('NDAOToken.py',[allAddress['Factory.py']]);
+    await beginDeploy('NDAOToken.py', [allAddress['Factory.py']]);
     await beginDeploy('Ico.py');
     await beginDeploy('Exchange.py');
     await beginDeploy('EthPrice.py');
@@ -134,30 +125,23 @@ async function start() {
     setContract();
 }
 
-
-
-async function setContract(){
+//合约设置
+//注意这里是手动处理，仅对本工程有效
+async function setContract() {
     //设置EthPrice
     let filename = 'EthPrice.py'
-    let contract = new ethers.Contract(allAddress[filename],allAbi[filename],myWallet);
+    let contract = new ethers.Contract(allAddress[filename], allAbi[filename], myWallet);
     console.log(`Start setup:${filename}`)
     let tx = await contract.setFiator(allAddress['MyFiat.py']);
     await tx.wait();
     filename = 'Factory.py'
-    contract = new ethers.Contract(allAddress[filename],allAbi[filename],myWallet);
+    contract = new ethers.Contract(allAddress[filename], allAbi[filename], myWallet);
     console.log(`Start setup:${filename}`)
-    tx = await contract.initializeFactory(
-        allAddress['Exchange.py'],
-        myWallet.address,
-        allAddress['NDAOToken.py'],
-        allAddress['EthPrice.py'],
-        allAddress['Ico.py'],
-    );
+    tx = await contract.initializeFactory(allAddress['Exchange.py'], myWallet.address, allAddress['NDAOToken.py'], allAddress['EthPrice.py'], allAddress['Ico.py'],);
     await tx.wait();
     console.log(`\x1b[32mall contracts setup over!\x1b[0m`)
     let price = await util.queryPrice1();
-    util.writeContract(allAddress['MyFiat.py'],price,true);
+    util.writeContract(allAddress['MyFiat.py'], price, true);
 }
-
 
 start();

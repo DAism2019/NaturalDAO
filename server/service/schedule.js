@@ -1,12 +1,11 @@
+//用来每隔一个小时查询ETH价格并写入自定义的价格合约
 const Schedule = require('node-schedule');
-
 const util = require('../../service/utilService');
 const fileService = require('../../service/fileService');
 
 let ruleQueryPrice;
 
 function init() {
-
     ruleQueryPrice = new Schedule.RecurrenceRule();
     ruleQueryPrice.second = 0;
     ruleQueryPrice.minute = 0;
@@ -28,7 +27,7 @@ async function start() {
 
 async function updatePrice(address) {
     let price = await util.queryPrice1();
-    util.writeContract(address, price,false);
+    util.writeContract(address, price, false);
 }
 
 module.exports = start;

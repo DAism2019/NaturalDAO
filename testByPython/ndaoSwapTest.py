@@ -1,3 +1,5 @@
+# ndao to toekn swap input 测试
+#需要知道对应的交易对地址
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
@@ -6,9 +8,8 @@ import math
 from privateKey import my_address,private_key
 
 
-token_address = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
+# token_address = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
 exchange_address = '0x0AF941876A9DA04876a15B6e770939368D6434a5'
-
 
 
 def buy():
@@ -17,7 +18,7 @@ def buy():
     myContract = w3.eth.contract(address=exchange_address, abi=contract_abi)
     nonce = w3.eth.getTransactionCount(my_address)
     deadline = math.floor(time.time()) + 10 * 60
-    unicorn_txn = myContract.functions.ndaoToTokenSwapInput(10**9, 100, deadline,).buildTransaction({
+    unicorn_txn = myContract.functions.ndaoToTokenSwapInput(10**9, 100, deadline).buildTransaction({
         'nonce': nonce,
         'gas': 400000
     })

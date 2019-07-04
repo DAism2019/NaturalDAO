@@ -16,13 +16,16 @@ let bytecodePath = 'bytecode';
 let contractPath = 'contracts';
 //字义子进程
 let spawn = require("child_process").spawn;
-//定义缓冲区大小，可能不同系统不一样，这里可以进一步优化
+/**
+* 定义缓冲区大小，可能不同系统不一样，这里可以进一步优化
+* 注意这里的值并不能确认，仅在自己电脑上有效
+*/
 let MAX_SIZE = 8192;
 // let WORK_DIR = '..'; 默认当前工作路径
 
 /**
 * 编译文件并处理编译输出
-* @param filename 文件名，这里不需要加上"contract/"，会自动加上
+* @param filename 文件名，这里不需要加上"contracts/"，会自动加上
 */
 function compile(filename) {
     let _file = contractPath + "/" + filename;
@@ -31,17 +34,18 @@ function compile(filename) {
     let _data = "";
     cp.stdout.on('data', (data) => {
         _data += data;
-        // console.log(`buffer size is :${data.length}`);
-        if (data.length < MAX_SIZE)
+        if (data.length < MAX_SIZE && data.length != 1) {
+            // console.log(`buffer size is :${data.length}`);
             dealData(filename, _data.toString());
         }
-    );
+
+    });
     cp.stderr.on('data', (data) => {
         console.log(`stderr: ${data}`);
         console.log(`\x1b[31mCompile ${filename} Failed!\x1b[0m`);
     });
     cp.on('close', (code) => {
-        console.log(`exit：${code}`);
+        console.log(`exit:${code}`);
     });
 }
 
@@ -52,7 +56,7 @@ function compile(filename) {
 */
 function dealData(filename, data) {
     let _files = filename.split('.');
-    let datas = data.split('\n');
+    let datas = data.trim().split('\n');
     saveAbi(_files[0], datas[0]);
     saveBytecode(_files[0], datas[1]);
     console.log(`\x1b[32mCompile ${filename} Success!\x1b[0m`)

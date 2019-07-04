@@ -1,4 +1,4 @@
-# 这个需要具体的交易对地址，不是模板地址
+# 查询当前账号创建的最新一个交易对的信息
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath

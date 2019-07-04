@@ -1,3 +1,4 @@
+#测试自定义的ETH价格查询合约
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath

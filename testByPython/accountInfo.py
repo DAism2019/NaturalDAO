@@ -1,3 +1,4 @@
+#查询某一个交易对账户授权信息,需要知道交易对地址和token地址
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath

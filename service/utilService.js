@@ -1,21 +1,24 @@
+//仅限本工程使用，不能通用
 const ethers = require('ethers');
 const fileService = require('./fileService');
 const etherscanProvider = new ethers.providers.EtherscanProvider();
+
 let util = {
-    priceContract: null,
-    network: null,
-    // provider:null,
-    wallet:null,
-    init: (network,myPrivateKey) => {
+    priceContract: null, //价格合约
+    network: null, //网络
+    wallet: null, //钱包，用来写入合约
+    //初始化
+    init: (network, myPrivateKey) => {
         util.network = network;
         let provider = util.getProvider(network);
-        util.wallet =  new ethers.Wallet(myPrivateKey, provider);
+        util.wallet = new ethers.Wallet(myPrivateKey, provider);
     },
+    //初始化provider,Rinkeby目前未测试
     getProvider: (network) => {
         let _myProvider = null;
         switch (network) {
             case 'localhost':
-                _myProvider = new ethers.providers.JsonRpcProvider(); //本地测试
+                _myProvider = new ethers.providers.JsonRpcProvider();
                 break;
             case 'homestead':
             case 'kovan':
@@ -23,12 +26,13 @@ let util = {
                 _myProvider = ethers.getDefaultProvider(network);
                 break;
             default:
+                //http://domain.com:8545
                 _myProvider = new ethers.providers.JsonRpcProvider(network);
                 break;
         }
         return _myProvider
     },
-    //http请求工具,需要提前知道返回的是json
+    //http请求工具,需要返回的是json
     doRequest: async options => {
         return new Promise((resolve, reject) => {
             try {
@@ -51,6 +55,7 @@ let util = {
             }
         });
     },
+    //价格转换 todo 优化选项:这里精度太高会超过js的处理能力，需要转成bigNumber进行处理
     convertPrice: async price => {
         try {
             let _str = price.toString();
@@ -64,9 +69,10 @@ let util = {
             return _result;
         } catch (err) {
             console.log("对ETH价格进行转换错误:", err);
+            return null
         }
     },
-    //方法1，使用ether自带查询 精度只有2位 309.33
+    //方法1，使用ether自带查询 精度只有2位 例如309.33
     queryPrice1: async () => {
         try {
             let price = await etherscanProvider.getEtherPrice();
@@ -74,10 +80,11 @@ let util = {
             return price;
         } catch (err) {
             console.log("err:", err);
+            return null
         }
 
     },
-    //方法2 查询coinbase接口
+    //方法2 查询coinbase接口，精度8位,实际使用2位
     queryPrice2: async () => {
         let options = {
             url: "https://api.pro.coinbase.com/products/ETH-USD/ticker",
@@ -89,28 +96,34 @@ let util = {
             return price;
         } catch (err) {
             console.log("err:", err);
+            return null
         }
     },
-    getPriceContract: async (address,isProject) => {
+    //注意：server端调用和直接工程要目录调用的相对路径不同
+    //获取价格合约
+    getPriceContract: async (address, isProject) => {
         if (!util.priceContract) {
-            let _file = isProject ? './abi/MyFiat.json' : '../abi/MyFiat.json';
+            let _file = isProject
+                ? './abi/MyFiat.json'
+                : '../abi/MyFiat.json';
             let abi = await fileService.readJson(_file);
-            util.priceContract = new ethers.Contract(address,abi,util.wallet);
+            util.priceContract = new ethers.Contract(address, abi, util.wallet);
         }
         return util.priceContract;
     },
     //这里的price是美元，最后要转化为0.01$对应的wei数量
-    writeContract: async (address, price,isProject) => {
+    //写入价格合约
+    writeContract: async (address, price, isProject) => {
         let result = util.convertPrice(price);
         if (!result || result < 0)
-            return;
+            return console.log("ETH价格获取失败");
         try {
-            let contract = await util.getPriceContract(address,isProject);
+            let contract = await util.getPriceContract(address, isProject);
             let tx = await contract.setPrice(result);
             await tx.wait();
-            console.log("The price of ETH is update to $",price);
+            console.log("The price of ETH is update to $", price);
         } catch (err) {
-            console.log("写入合约错误:", err);
+            console.log("ETH价格获写入合约错误:", err);
         }
     }
 }

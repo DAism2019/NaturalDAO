@@ -1,3 +1,4 @@
+#查询ndao代币的信息
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath

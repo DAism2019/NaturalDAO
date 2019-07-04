@@ -1,11 +1,14 @@
+#读取.env文件中的私钥和账户地址
 from os.path import dirname, abspath
-from json import loads
 
 
 def getInfo():
-    path = dirname(dirname(abspath(__file__))) + '/.key'
-    content = loads(open(path).read())
-    return (content['address'],content['privateKey'])
+    path = dirname(dirname(abspath(__file__))) + '/.env'
+    content = open(path).read()
+    strs = content.split('\n')
+    address = (strs[0].split('='))[1]
+    privateKey = (strs[1].split('='))[1]
+    return address,privateKey
 
 
-(my_address,private_key) = getInfo()
+my_address,private_key = getInfo()

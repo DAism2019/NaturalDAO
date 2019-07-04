@@ -1,3 +1,4 @@
+#查询当前ETH价格合约中的价格
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath

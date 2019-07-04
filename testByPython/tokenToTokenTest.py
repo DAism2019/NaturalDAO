@@ -1,3 +1,5 @@
+#token to toekn swap input test
+#需要知道两个交易对的地址和token地址
 from web3.auto import w3
 from json import loads
 from os.path import dirname, abspath
