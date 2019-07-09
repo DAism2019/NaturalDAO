@@ -125,6 +125,17 @@ let util = {
         } catch (err) {
             console.log("ETH价格获写入合约错误:", err);
         }
+    },
+    watchUpdate:async(address)=>{
+        try{
+            let contract = await util.getPriceContract(address);
+            contract.on("requestUpdate", async (id, event) => {
+                let price = await util.queryPrice1();
+                util.writeContract(address, price, false);
+            });
+        }catch(err){
+            console.log(err);
+        }
     }
 }
 

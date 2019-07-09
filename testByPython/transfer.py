@@ -14,7 +14,7 @@ def transfer():
     nonce = w3.eth.getTransactionCount(my_address)
     transaction = {
         'to': icoAddress,
-        'value': w3.toWei(0.1, 'ether'),
+        'value': w3.toWei(0.03, 'ether'),
         'gas': 500000,
         'gasPrice':w3.toWei(10, 'gwei'),
         'nonce': nonce

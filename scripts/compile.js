@@ -59,7 +59,7 @@ function dealData(filename, data) {
     let datas = data.trim().split('\n');
     saveAbi(_files[0], datas[0]);
     saveBytecode(_files[0], datas[1]);
-    console.log(`\x1b[32mCompile ${filename} Success!\x1b[0m`)
+    // console.log(`\x1b[32mCompile ${filename} Success!\x1b[0m`)
 }
 
 /**

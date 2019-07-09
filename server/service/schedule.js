@@ -2,7 +2,6 @@
 const Schedule = require('node-schedule');
 const util = require('../../service/utilService');
 const fileService = require('../../service/fileService');
-
 let ruleQueryPrice;
 
 function init() {
@@ -23,6 +22,7 @@ async function start() {
     Schedule.scheduleJob(ruleQueryPrice, () => {
         updatePrice(address);
     });
+
 }
 
 async function updatePrice(address) {

@@ -55,7 +55,9 @@ def test(_icoAddress):
         "%Y-%m-%d %H:%M:%S", time.localtime(depositStart))
     depositEnd = myContract.functions.depositEnd().call()
     depositEnd = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(depositEnd))
-    ended = myContract.functions.ended().call()
+    ended = myContract.functions.isEnd().call()
+    _isFailed = myContract.functions.isFailed().call()
+    _creater = myContract.functions.creater().call()
     isEnd = '否'
     if ended:
         isEnd = '是'
@@ -63,24 +65,29 @@ def test(_icoAddress):
     isReached = '否'
     if goalReached:
         isReached = '是'
-    price = myContract.functions.price().call()
+    isFailed = '否'
+    if _isFailed:
+        isFailed = '是'
+    tokenPrice = myContract.functions.tokenPrice().call()
     depositAmount = myContract.functions.depositAmount().call()
-    factoryAddress = myContract.functions.factory().call()
+    # factoryAddress = myContract.functions.factory().call()
     myDeposit = myContract.functions.depositBalanceOfUser(
         my_address).call()
     print("代币名称:", name)
     print("代币符号:", symbol)
     print("代币精度:", decimals)
-    print("发行总量:", totalSupply / 10 ** decimals)
+    print("已经发行代币数量:", totalSupply / 10 ** decimals)
     print("募集目标:", depositGoal / 10 ** 18, "ETH")
-    print("发行价格: 1EHT =", price / 10 ** decimals, symbol)
+    print("发行价格: 1EHT =", tokenPrice / 10 ** decimals, symbol)
     print("开始时间:", depositStart)
     print("结束时间:", depositEnd)
     print("当前募集金额:", depositAmount / 10 ** 18, "ETH")
     print("我的投资总额度:", myDeposit / 10 ** 18, "ETH")
     print("是否结束:", isEnd)
     print("目标是否达成:", isReached)
-    print("创建合约地址:", factoryAddress)
+    print("ICO是否失败:",isFailed)
+    # print("创建合约地址:", factoryAddress)
+    print("ICO申请者地址:",_creater)
 
 
 ico = getIcoAddress(my_address)

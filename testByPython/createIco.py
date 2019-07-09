@@ -15,7 +15,7 @@ def createIco():
     nonce = w3.eth.getTransactionCount(my_address)
     goal = w3.toWei(0.1, 'ether')
     des = 3
-    timedelta = 120
+    timedelta = 600
     #price : 1 eth => 1100000 tokens
     price = 1100000
     unicorn_txn = myContract.functions.createICO('MMCoins', 'MMC', des, goal, timedelta, price).buildTransaction({

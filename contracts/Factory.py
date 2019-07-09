@@ -17,8 +17,8 @@ contract Exchange:
 
 # the ICO contract
 contract ICO:
-    def setup(_name: string[64], _symbol: string[32], _decimals: uint256,
-              _depositGoal: uint256, _delta: timedelta, _price: uint256): modifying
+    def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256,
+              _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address): modifying
 
 
 # ETH价格查询合约
@@ -38,7 +38,8 @@ NewExchange: event(
     {_token: indexed(address), _exchange: indexed(address), _amount: uint256, _tokenAmount: uint256})
 ICOCreated: event({_creater: indexed(address), _ico: address})
 ICOUpdate: event({_token: indexed(address), _status: uint256})
-
+NewSetter: event({_from: indexed(address), _to: indexed(address)})
+NewSubmitDelta: event({_newDelta: timedelta})
 
 exchangeTemplate: public(address)  # 交易模板里面含有代码，可以创建新合约，方法为Exchange的setup方法
 icoTemplate: public(address)  # ICO模板
@@ -46,7 +47,7 @@ tokenCount: public(uint256)  # token编号
 token_to_exchange: public(map(address, address))  # token地址 =>根据模板创建的合约地址
 exchange_to_token: public(map(address, address))  # token对应的合约地址 => token地址
 id_to_token: public(map(uint256, address))  # token编号 => 地址
-beneficiary: public(address)  # 保存所有ETH的地址
+beneficiary: public(address)  # 保存锻造ETH的地址
 ndaoAddress: public(address)  # 稳定币地址
 queryAddress: public(address)  # ETH价格查询合约地址
 allIcoStatus: public(map(address, uint256))  # 所有通过本合约发行的ICO的状态
@@ -55,6 +56,30 @@ allIcoAddressOfUser: public(map(address, address[MAX_NUMBER]))
 # the ico amount of each account
 allIcoCountsOfUser: public(map(address, int128))
 allIcoCreater: public(map(address, address))  # 所有ICO创建者的地址，用来发给它稳定币
+submitssionDelta: public(timedelta)  # ICO结束后到最后提交时间间隔，可以设置，暂时定为72小时
+setter: public(address)  # 设定上述时间间隔的地址
+
+
+@public
+def __init__():
+    self.setter = msg.sender
+    self.submitssionDelta = 3 * 24 * 3600
+
+
+@public
+def setNewSetter(_newSetter: address):
+    assert _newSetter != ZERO_ADDRESS
+    assert msg.sender == self.setter
+    log.NewSetter(self.setter, _newSetter)
+    self.setter = _newSetter
+
+
+@public
+def setSubmitssionDelta(_newDelta: timedelta):
+    assert _newDelta > 0
+    assert msg.sender == self.setter
+    self.submitssionDelta = _newDelta
+    log.NewSubmitDelta(_newDelta)
 
 
 # 设置模板地址和接收ETH地址
@@ -79,7 +104,8 @@ def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depos
     assert self.allIcoCountsOfUser[msg.sender] < MAX_NUMBER
     ico: address = create_forwarder_to(self.icoTemplate)
     assert self.allIcoStatus[ico] == STATUS_NONE
-    ICO(ico).setup(_name, _symbol, _decimals, _depositGoal, _delta, _price)
+    ICO(ico).setup(_name, _symbol, _decimals, _depositGoal,
+                   _delta, self.submitssionDelta, _price, msg.sender)
     index: int128 = self.allIcoCountsOfUser[msg.sender]
     self.allIcoCountsOfUser[msg.sender] = index + 1
     self.allIcoAddressOfUser[msg.sender][index] = ico
@@ -114,6 +140,18 @@ def _calNdaoAmount(eth_amount: wei_value) -> uint256:
     return result
 
 
+
+# 直接通过ETH购买NDAO
+# todo 收益人未确定
+@public
+@payable
+def buyNdao() -> uint256:
+    send(self.beneficiary, msg.value)
+    amount = self._calNdaoAmount(msg.value)
+    NDAO(self.ndaoAddress).mint(msg.sender, amount)
+    return amount
+
+
 @private
 def _saveExchangeInfo(token: address, exchange: address):
     # token和对应的合约相互map
@@ -136,8 +174,8 @@ def createExchange():
     # 创建交易合约并设置token
     exchange: address = create_forwarder_to(self.exchangeTemplate)
     token_amount: uint256 = ERC20(msg.sender).balanceOf(self)
-    #发送代币
-    flag:bool = ERC20(msg.sender).transfer(exchange, token_amount)
+    # 发送代币
+    flag: bool = ERC20(msg.sender).transfer(exchange, token_amount)
     assert flag
     # 发送ETH到仓库地址
     send(self.beneficiary, msg.value)
