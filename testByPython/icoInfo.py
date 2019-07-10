@@ -3,7 +3,7 @@ from web3.auto import w3
 from json import loads
 import time
 from os.path import dirname, abspath
-from privateKey import my_address,private_key
+from privateKey import my_address, private_key
 
 
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
@@ -70,9 +70,11 @@ def test(_icoAddress):
         isFailed = '是'
     tokenPrice = myContract.functions.tokenPrice().call()
     depositAmount = myContract.functions.depositAmount().call()
-    # factoryAddress = myContract.functions.factory().call()
-    myDeposit = myContract.functions.depositBalanceOfUser(
-        my_address).call()
+    finalSubmissionTime = myContract.functions.finalSubmissionTime().call()
+    finalSubmissionTime = time.strftime(
+        "%Y-%m-%d %H:%M:%S", time.localtime(finalSubmissionTime))
+    myDeposit = myContract.functions.depositBalanceOfUser(my_address).call()
+    icoBalance = w3.eth.getBalance(_icoAddress)
     print("代币名称:", name)
     print("代币符号:", symbol)
     print("代币精度:", decimals)
@@ -81,13 +83,15 @@ def test(_icoAddress):
     print("发行价格: 1EHT =", tokenPrice / 10 ** decimals, symbol)
     print("开始时间:", depositStart)
     print("结束时间:", depositEnd)
+    print("确认结束时间:", finalSubmissionTime)
+    print("当前合约金额:", icoBalance / 10 ** 18, 'ETH')
     print("当前募集金额:", depositAmount / 10 ** 18, "ETH")
     print("我的投资总额度:", myDeposit / 10 ** 18, "ETH")
     print("是否结束:", isEnd)
     print("目标是否达成:", isReached)
-    print("ICO是否失败:",isFailed)
+    print("ICO是否失败:", isFailed)
     # print("创建合约地址:", factoryAddress)
-    print("ICO申请者地址:",_creater)
+    print("ICO申请者地址:", _creater)
 
 
 ico = getIcoAddress(my_address)

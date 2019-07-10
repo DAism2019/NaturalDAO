@@ -147,7 +147,7 @@ def _calNdaoAmount(eth_amount: wei_value) -> uint256:
 @payable
 def buyNdao() -> uint256:
     send(self.beneficiary, msg.value)
-    amount = self._calNdaoAmount(msg.value)
+    amount:uint256 = self._calNdaoAmount(msg.value)
     NDAO(self.ndaoAddress).mint(msg.sender, amount)
     return amount
 

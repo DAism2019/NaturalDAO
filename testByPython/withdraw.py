@@ -16,6 +16,7 @@ def withdraw():
     nonce = w3.eth.getTransactionCount(my_address)
     unicorn_txn = myContract.functions.safeWithdrawal().buildTransaction({
         'nonce': nonce,
+        'gasPrice': w3.toWei(10, 'gwei'),
         'gas': 400000
     })
     signed_txn = w3.eth.account.signTransaction(

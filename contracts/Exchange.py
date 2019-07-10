@@ -76,7 +76,7 @@ def getOutputPrice(output_amount: uint256, input_reserve: uint256, output_reserv
     assert input_reserve > 0 and output_reserve > 0 and output_reserve > output_amount
     numerator: uint256 = input_reserve * output_amount
     denominator: uint256 = output_reserve - output_amount
-    return numerator / denominator
+    return numerator / denominator + 1
 
 
 # buy tokens

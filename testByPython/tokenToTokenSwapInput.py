@@ -7,10 +7,13 @@ import math
 import time
 from privateKey import my_address,private_key
 
-# token1_address = '0xA43c2a8fC5a613F4156e911C363C19EdC78392d8'
-exchange1_address = '0x48ae9d29b3bB7537ec072f5219240DE3510a4105'
-token2_adddress = '0x82eB35Cb739f039f9b6973908969C66351Ac16C4'
-# exchange2_address = '0xdFc8E8f0fcBb73D78D5C025B75BEB9EB3D963584'
+
+token1_address = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
+exchange1_address = '0x0AF941876A9DA04876a15B6e770939368D6434a5'
+token2_adddress = '0x45BFeD742EE06d3AF0558f52dC8d451716D88029'
+exchange2_address = '0xE1aBf577f28E7C935Deddba1292B22D10Eb3D232'
+transfer_address = '0x93C89E9a0e105056f6F89c1dc7fb5F1e42e9660d'
+isTransfer = False
 
 
 def test():
@@ -19,10 +22,17 @@ def test():
     myContract = w3.eth.contract(address=exchange1_address, abi=contract_abi)
     nonce = w3.eth.getTransactionCount(my_address)
     deadline = math.floor(time.time()) + 10 * 60
-    unicorn_txn = myContract.functions.tokenToTokenSwapInput(10**5, 1, 1, deadline, token2_adddress).buildTransaction({
-        'nonce': nonce,
-        'gas': 400000
-    })
+    if isTransfer:
+        unicorn_txn = myContract.functions.tokenToTokenTransferInput(10**4, 1, 1, deadline,transfer_address,token2_adddress).buildTransaction({
+            'nonce': nonce,
+            'gas': 400000
+        })
+    else:
+        unicorn_txn = myContract.functions.tokenToTokenSwapInput(10**4, 1, 1, deadline, token2_adddress).buildTransaction({
+            'nonce': nonce,
+            'gas': 400000
+        })
+
     signed_txn = w3.eth.account.signTransaction(
         unicorn_txn, private_key=private_key)
     hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
