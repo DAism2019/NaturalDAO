@@ -5,7 +5,7 @@ from os.path import dirname, abspath
 from privateKey import my_address, private_key
 
 
-_icoAddress = '0x45BFeD742EE06d3AF0558f52dC8d451716D88029'
+_icoAddress = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
 
 
 def submit():

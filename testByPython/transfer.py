@@ -7,7 +7,7 @@ from os.path import dirname, abspath
 from privateKey import my_address, private_key
 
 
-icoAddress = '0x45BFeD742EE06d3AF0558f52dC8d451716D88029'
+icoAddress = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
 
 
 def deposit():
@@ -18,7 +18,7 @@ def deposit():
     nonce = w3.eth.getTransactionCount(my_address)
     unicorn_txn = myContract.functions.deposit().buildTransaction({
         'nonce': nonce,
-        'value': w3.toWei(0.1, 'ether'),
+        'value': w3.toWei(1000, 'ether'),
         'gasPrice': w3.toWei(10, 'gwei'),
         'gas': 500000
     })
