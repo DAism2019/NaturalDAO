@@ -80,5 +80,23 @@
   "symbol": "Symbol",
   "decimals": "Decimals",
   "enterTokenCont": "Enter a token address to continue",
-  "priceChange": "This trade will cause the price to change by"
+  "priceChange": "This trade will cause the price to change by",
+
+
+
+
+  "createIco":"CreateIco",
+  "queryIco":"QueryIco",
+  "IcoDetail":"IcoDetail",
+  "icoName":"input the name of ICO",
+  "icoSymbol":"input the symbol of ICO",
+  "icoDecimals":"select the decimals of ICO",
+  "icoGoal":"input the goal eth of ICO",
+  "icoTimedelta":"input the duriation of ICO depositing",
+  "icoDays":"days",
+  "icoTokens":"input the goal tokens of ICO",
+  "icoPrice":"the price of token exchange by ETH",
+  "create":"Create"
+
+
 }

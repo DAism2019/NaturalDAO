@@ -9,7 +9,7 @@ import { isAddress } from '../utils'
 
 const Swap = lazy(() => import('./Swap'))
 const Send = lazy(() => import('./Send'))
-const Pool = lazy(() => import('./Ico'))
+const Pool = lazy(() => import('./Pool'))
 
 const HeaderWrapper = styled.div`
   ${({ theme }) => theme.flexRowNoWrap}
@@ -46,7 +46,21 @@ export default function App() {
                 {/* this Suspense is for route code-splitting */}
                 <Suspense fallback={null}>
                   <Switch>
-                    <Route exact strict path="/swap" component={Swap} />
+                      {/* <Route path="/" exact component={Profile} /> */}
+                      <Route path="/swap" exact component={Swap} />
+                      <Route path="/send" component={Send} />
+                      {/* <Route path="/ico" component={Pool} /> */}
+                      <Route
+                        path={[
+                          '/create-ico',
+                          '/query-ico',
+                          '/ico-detail',
+                          '/ico-detail/:tokenAddress?'
+                        ]}
+                        component={Pool}
+                      />
+
+                    {/* <Route exact strict path="/swap" component={Swap} />
                     <Route
                       exact
                       strict
@@ -80,7 +94,7 @@ export default function App() {
                         '/create-exchange/:tokenAddress?'
                       ]}
                       component={Pool}
-                    />
+                    /> */}
                     <Redirect to="/swap" />
                   </Switch>
                 </Suspense>
