@@ -96,7 +96,10 @@
   "icoDays":"days",
   "icoTokens":"input the goal tokens of ICO",
   "icoPrice":"the price of token exchange by ETH",
-  "create":"Create"
+  "create":"Create",
+  "query":"Query",
+  "queryByIco":"Query the info of ico by ico-address",
+  "queryByCreater":"Query the info of ico by ico-creater"
 
 
 }

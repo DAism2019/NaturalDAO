@@ -2,15 +2,17 @@ import React, {useState, useEffect} from 'react'
 import {withRouter} from 'react-router'
 import {useWeb3Context} from 'web3-react'
 import {ethers} from 'ethers'
-import clsx from 'clsx';
 import {makeStyles} from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import {useTranslation} from 'react-i18next'
 import FormControl from '@material-ui/core/FormControl';
 import InputAdornment from '@material-ui/core/InputAdornment';
+import AddIcon from '@material-ui/icons/Add';
 import { Button } from '../../theme'
 import styled from 'styled-components'
+import { useFactoryContract } from '../../hooks'
+import { calculateGasMargin } from '../../utils'
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -18,6 +20,7 @@ const useStyles = makeStyles(theme => ({
         flexWrap: 'wrap',
         flexDirection: 'column',
         alignItems: 'center',
+        marginTop: theme.spacing(-3),
         width: 550
     },
     textField: {
@@ -40,7 +43,7 @@ const useStyles = makeStyles(theme => ({
 
 
 const decimals = [12, 18];
-
+const GAS_MARGIN = ethers.utils.bigNumberify(1000);
 function CreateIco({history, location}) {
     const {t} = useTranslation();
     const classes = useStyles();
@@ -54,9 +57,27 @@ function CreateIco({history, location}) {
         price:'',
         tokens:''
     });
-    function _createIco(event){
+    const contract = useFactoryContract()
+    async function _createIco(event){
         event.preventDefault();
-
+        let estimate = contract.estimate.createICO
+        let method = contract.createICO
+        let {name,symbol,decimals,goal,timedelta,price} = values;
+        if(decimals < 3 ||  decimals > 18){
+            return;
+        }
+        goal =  ethers.utils.parseEther(goal);
+        timedelta = + timedelta;
+        timedelta = timedelta * 24 * 3600;
+        price =  ethers.utils.bigNumberify( + _calPrice());
+        let _des = ethers.utils.parseUnits("1",decimals);
+        price = price.mul(_des);
+        let args = [name,symbol,decimals,goal,timedelta,price];
+        let value = ethers.constants.Zero;
+        const estimatedGasLimit = await estimate(...args, { value });
+        method(...args, { value, gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
+          // addTransaction(response)
+        });
     }
 
     function _calPrice(){
@@ -112,7 +133,7 @@ function CreateIco({history, location}) {
                             }}
                             margin="normal" type="number" variant="outlined"/>
                         <TextField required id="outlined-tokens-required"
-                                name="icoTokens" label={t('icoTokens')} value={values.tokens}
+                                name="icoTokens" label={t('icoTokens')} value={(values.tokens)}
                                 onChange={handleChange('tokens')} className={classes.textField}
                                 InputProps={{
                                      endAdornment: <InputAdornment position="end">{values.symbol}</InputAdornment>

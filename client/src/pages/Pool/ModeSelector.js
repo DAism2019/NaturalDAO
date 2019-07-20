@@ -44,6 +44,8 @@ const LiquidityContainer = styled.div`
 
 const LiquidityLabel = styled.span`
   flex: 1 0 auto;
+  margin-top: 1rem;
+  font-size:1rem;
 `
 
 const activeClassName = 'MODE'
@@ -108,7 +110,7 @@ function ModeSelector({ location: { pathname }, history }) {
         }}
       >
         <LiquidityLabel>{t(activeTabKey)}</LiquidityLabel>
-        <img src={Dropdown} alt="dropdown" />
+        <img src={Dropdown} alt="dropdown" style={{marginTop:"1rem"}}/>
       </LiquidityContainer>
       <Modal
         isOpen={modalIsOpen}
