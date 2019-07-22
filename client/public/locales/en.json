@@ -100,7 +100,7 @@
   "query":"Query",
   "queryByIco":"Query the info of ico by ico-address",
   "queryByCreater":"Query the info of ico by ico-creater",
-  "ico_not_exist":"ICO not existed!",
+  "ico_not_exist":"Please query the ico first",
   "ico_address":"ICO Address:",
   "ico_name":"ICO tokens name:",
   "ico_symbol":"ICO symbol:",

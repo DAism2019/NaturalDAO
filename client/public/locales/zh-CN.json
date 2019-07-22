@@ -90,7 +90,7 @@
     "query": "查询",
     "queryByIco":"输入ICO地址进行查询",
     "queryByCreater":"输入ICO创建者地址进行查询",
-    "ico_not_exist":"当前ICO不存在",
+    "ico_not_exist":"请先查询ICO",
     "ico_address":"ICO地址:",
     "ico_name":"ICO代币名称:",
     "ico_symbol":"ICO代币符号:",
