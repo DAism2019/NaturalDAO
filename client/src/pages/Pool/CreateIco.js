@@ -129,14 +129,14 @@ function CreateIco({history, location}) {
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">ETH</InputAdornment>
                             }}
-                            margin="normal" type="number" variant="outlined"/>
+                            margin="normal" type="float" variant="outlined"/>
                         <TextField required id="outlined-tokens-required"
                                 name="icoTokens" label={t('icoTokens')} value={(values.tokens)}
                                 onChange={handleChange('tokens')} className={classes.textField}
                                 InputProps={{
                                      endAdornment: <InputAdornment position="end">{values.symbol}</InputAdornment>
                                 }}
-                               margin="normal" type="number" variant="outlined"/>
+                               margin="normal" type="float" variant="outlined"/>
                          <TextField required id="outlined-timedelta-required" error
                                    name="icoPrice" label={t('icoPrice')} value={_calPrice()}
                                    className={classes.textField}
@@ -145,7 +145,7 @@ function CreateIco({history, location}) {
                                        startAdornment:<InputAdornment style={{width:100}} position="start">{"1 ETH = "}</InputAdornment>,
                                        endAdornment: <InputAdornment  position="end">{values.symbol}</InputAdornment>
                                    }}
-                         margin="normal" type="number" variant="outlined"/>
+                         margin="normal" type="float" variant="outlined"/>
                         <TextField required id="outlined-timedelta-required"
                             name="icoTimedelta" label={t('icoTimedelta')} value={values.timedelta}
                             onChange={handleChange('timedelta')} className={classes.textField}
@@ -153,11 +153,7 @@ function CreateIco({history, location}) {
                                  endAdornment: <InputAdornment position="end">{t('icoDays')}</InputAdornment>
                             }}
                            margin="normal" type="number" variant="outlined"/>
-
-
-
                 </FormControl>
-
                 <Button type="submit" variant="contained" disabled={!isValid} color="primary" className={classes.submit}>
                         {t('create')}
                     </Button>

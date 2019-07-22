@@ -100,10 +100,11 @@
   "query":"Query",
   "queryByIco":"Query the info of ico by ico-address",
   "queryByCreater":"Query the info of ico by ico-creater",
-  "ico_not_exist":"Please query the ico first",
+  "ico_query_exist":"Please query the ico first",
+  "ico_not_exist":"The ICO is not existed",
   "ico_address":"ICO Address:",
   "ico_name":"ICO tokens name:",
-  "ico_symbol":"ICO symbol:",
+  "ico_symbol":"ICO token symbol:",
   "ico_decimals":"ICO decimals:",
   "ico_goal":"ICO deposit goal:",
   "ico_startAt":"ICO start time:",
@@ -111,9 +112,10 @@
   "depositAmount":"ICO has deposit amount:",
   "ico_isEnd":"ICO is end:",
   "ico_goalReached":"The goal of ICO is touched:",
-  "ico_tokenPrice":"The price of ICO token({%symbol}):",
+  "ico_tokenPrice":"The price of ICO token:",
   "ico_creater":"The creater of ICO:",
   "ico_status":"The status of ICO:",
+  "ico_timer":"The left time of ICO:",
   "deposit":"Deposit",
   "deposit_amount":"Input the amount of ETH to deposit:",
   "cancelIco":"Cancel ICO",
@@ -121,7 +123,15 @@
   "withdraw":"Withdraw ETH",
   "submit_ico":"Submit ICO",
   "eth_price":"the price of ETH(refresh peer hour):",
-  "refreshPrice":"Refresh Price"
+  "refreshPrice":"Refresh Price",
+  "invalidAddress": "Not a valid  address",
+  "STATUS_STARTED":"has begin",
+  "STATUS_SUCCESS":"has successful",
+  "STATUS_FAILED":"has failed",
+  "STATUS_SUBMIT":"has end",
+  "STATUS_CANCEL":"Can Cancel",
+  "YES":"YES",
+  "NO":"NO"
 
 
 

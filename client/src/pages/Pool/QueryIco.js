@@ -2,17 +2,19 @@ import React, {useState, useEffect} from 'react'
 import {withRouter} from 'react-router'
 import {useWeb3Context} from 'web3-react'
 import {ethers} from 'ethers'
-import {makeStyles} from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
+import {makeStyles} from '@material-ui/core/styles'
+import TextField from '@material-ui/core/TextField'
 import {useTranslation} from 'react-i18next'
-import FormControl from '@material-ui/core/FormControl';
-import InputAdornment from '@material-ui/core/InputAdornment';
-import Divider from '@material-ui/core/Divider';
-import Button from '@material-ui/core/Button';
-import SearchIcon from '@material-ui/icons/Search';
-import Fab from '@material-ui/core/Fab';
+import FormControl from '@material-ui/core/FormControl'
+import InputAdornment from '@material-ui/core/InputAdornment'
+import Divider from '@material-ui/core/Divider'
+import Button from '@material-ui/core/Button'
+import SearchIcon from '@material-ui/icons/Search'
+import Fab from '@material-ui/core/Fab'
 import styled from 'styled-components'
+import { isAddress } from '../../utils'
 import { useFactoryContract } from '../../hooks'
+import CustomSnackbar from '../../components/Snackbar'
 
 
 const useStyles = makeStyles(theme => ({
@@ -51,9 +53,55 @@ function QueryIco({history, location}) {
         icoAddress: ''
 
     });
+    const [snacks,setSnacks] =  React.useState({
+        show: false,
+        type: 'success',
+        pos:"center",
+        message:''
+
+    });
     const contract = useFactoryContract()
+    async function _queryIcoByCreater(event){
+        event.preventDefault();
+        if (!isAddress(values.creater)){
+            return setSnacks({
+                 show:true,
+                 type:"error",
+                 message:t('invalidAddress'),
+                 pos:"left"
+
+             })
+        }else{
+            let amount = await contract.allIcoCountsOfUser(values.creater);
+            console.log( + amount);
+        }
+
+    }
     async function _queryIco(event){
         event.preventDefault();
+        if (!isAddress(values.icoAddress)){
+            return setSnacks({
+                 show:true,
+                 type:"error",
+                 message:t('invalidAddress'),
+                 pos:"left"
+
+             })
+        }else{
+           let status = await contract.allIcoStatus(values.icoAddress);
+           status = + status;
+           if (status == 0){
+               return setSnacks({
+                    show:true,
+                    type:"error",
+                    message:t('ico_not_exist'),
+                    pos:"left"
+
+                })
+           }else{
+               history.push("/ico-detail/" + values.icoAddress);
+           }
+        }
     }
     function createBtn(classes){
         return (
@@ -71,6 +119,13 @@ function QueryIco({history, location}) {
             </Fab>
         )
     }
+    function hideSnack(){
+        setSnacks({
+            show:false,
+            message:'',
+            type:""
+        })
+    }
 
     const handleChange = name => event => {
         setValues({
@@ -80,7 +135,7 @@ function QueryIco({history, location}) {
     };
     return (
         <>
-            <form className = {classes.container}  onSubmit={_queryIco} name="address" noValidate  autoComplete = "off" >
+            <form className = {classes.container}  onSubmit={_queryIco} name="address"   autoComplete = "off" >
                 <FormControl margin="normal" required fullWidth style={{ alignItems: 'center'}}>
                        <TextField required fullWidth id="outlined-icoAddress-required"
                            label={t('queryByIco')} value={values.icoAddress}
@@ -89,7 +144,7 @@ function QueryIco({history, location}) {
                           {createBtn(classes)}
                       </FormControl>
                   </form>
-                      <form className = {classes.container}  onSubmit={_queryIco} name="creater" noValidate  autoComplete = "off" >
+                      <form className = {classes.container}  onSubmit={_queryIcoByCreater} name="creater"   autoComplete = "off" >
                           <FormControl margin="normal" required fullWidth style={{ alignItems: 'center'}}>
                    <TextField required  fullWidth id="outlined-creater-required"
                        label={t('queryByCreater')} value={values.creater}
@@ -98,7 +153,9 @@ function QueryIco({history, location}) {
                        {createBtn(classes)}
                    </FormControl>
                </form>
+            {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
             <Divider />
+
     </>
    )
 }

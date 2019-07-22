@@ -129,6 +129,12 @@ def getLatestIco() -> address:
     else:
         return ZERO_ADDRESS
 
+@public
+@constant
+def getAllIco() -> address[MAX_NUMBER]:
+    return self.allIcoAddressOfUser[msg.sender]
+
+
 
 # 计算ETH对应的NDAO数量
 @private
