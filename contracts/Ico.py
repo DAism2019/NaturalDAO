@@ -223,7 +223,7 @@ def submitICO():
     """
     @dev  submit the ICO  only once by creater
     """
-    assert block.timestamp > self.depositEnd and  block.timestamp < self.finalSubmissionTime
+    assert block.timestamp > self.depositEnd and block.timestamp < self.finalSubmissionTime
     assert msg.sender == self.creater and (not self.isEnd)
     self.isEnd = True
     if self.goalReached:
@@ -279,3 +279,13 @@ def burnFrom(_to: address, _value: uint256):
     """
     self.allowances[_to][msg.sender] -= _value
     self._burn(_to, _value)
+
+
+@public
+@constant
+def icoInfo() -> (string[64], string[32], uint256, wei_value, timestamp, timestamp, timestamp, bool, bool, bool, uint256, wei_value, address):
+    """
+    @dev Function to return the detail of ICO.
+    """
+    return (self.name, self.symbol, self.decimals, self.depositGoal, self.depositStart, self.depositEnd, self.finalSubmissionTime,
+            self.isEnd, self.goalReached, self.isFailed, self.tokenPrice, self.depositAmount, self.creater)

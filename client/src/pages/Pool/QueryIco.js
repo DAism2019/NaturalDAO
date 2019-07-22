@@ -42,8 +42,6 @@ const useStyles = makeStyles(theme => ({
 }));
 
 
-const decimals = [12, 18];
-const GAS_MARGIN = ethers.utils.bigNumberify(1000);
 function QueryIco({history, location}) {
     const {t} = useTranslation();
     const classes = useStyles();

@@ -40,20 +40,26 @@ function tryToSetConnector(setConnector, setError) {
 export default function Web3ReactManager({ children }) {
   const { t } = useTranslation()
   const { active, error, setConnector, setError } = useWeb3Context()
+  console.log(active,error)
   // control whether or not we render the error, after parsing
   const blockRender = error && error.code && error.code === Connector.errorCodes.UNSUPPORTED_NETWORK
 
   useEffect(() => {
     if (!active && !error) {
       if (window.ethereum || window.web3) {
+          console.log("has web3")
         if (isMobile) {
+            console.log('mobile')
           tryToSetConnector(setConnector, setError)
         } else {
+            console.log("connect")
           const library = new ethers.providers.Web3Provider(window.ethereum || window.web3)
           library.listAccounts().then(accounts => {
+              console.log(accounts)
             if (accounts.length >= 1) {
               tryToSetConnector(setConnector, setError)
             } else {
+                console.log("account not ")
               setConnector('Network')
             }
           })

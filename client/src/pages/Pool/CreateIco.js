@@ -1,16 +1,14 @@
-import React, {useState, useEffect} from 'react'
+import React from 'react'
 import {withRouter} from 'react-router'
 import {useWeb3Context} from 'web3-react'
-import {ethers} from 'ethers'
+import {ethers,utils} from 'ethers'
 import {makeStyles} from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import {useTranslation} from 'react-i18next'
 import FormControl from '@material-ui/core/FormControl';
 import InputAdornment from '@material-ui/core/InputAdornment';
-import AddIcon from '@material-ui/icons/Add';
 import { Button } from '../../theme'
-import styled from 'styled-components'
 import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 
@@ -42,8 +40,8 @@ const useStyles = makeStyles(theme => ({
 
 
 
-const decimals = [12, 18];
-const GAS_MARGIN = ethers.utils.bigNumberify(1000);
+const decimals = [12,15, 18];
+const GAS_MARGIN = utils.bigNumberify(1000);
 function CreateIco({history, location}) {
     const {t} = useTranslation();
     const classes = useStyles();
@@ -66,11 +64,11 @@ function CreateIco({history, location}) {
         if(decimals < 3 ||  decimals > 18){
             return;
         }
-        goal =  ethers.utils.parseEther(goal);
+        goal =  utils.parseEther(goal);
         timedelta = + timedelta;
         timedelta = timedelta * 24 * 3600;
-        price =  ethers.utils.bigNumberify( + _calPrice());
-        let _des = ethers.utils.parseUnits("1",decimals);
+        price =  utils.bigNumberify( + _calPrice());
+        let _des = utils.parseUnits("1",decimals);
         price = price.mul(_des);
         let args = [name,symbol,decimals,goal,timedelta,price];
         let value = ethers.constants.Zero;
