@@ -126,6 +126,7 @@ export default function CustomPaginationActionsTable({headData,bodyData}) {
   const classes = useStyles2();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  // eslint-disable-next-line
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, bodyData.length - page * rowsPerPage);
 
   function handleChangePage(event, newPage) {

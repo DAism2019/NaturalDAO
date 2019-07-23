@@ -46,7 +46,6 @@ function QueryIco({history, location}) {
     const [values, setValues] = React.useState({
         creater: '',
         icoAddress: ''
-
     });
     const [bodyData,setBodyData] = React.useState([]);
     const [showTable,setShowTable] = React.useState(false);
@@ -55,7 +54,6 @@ function QueryIco({history, location}) {
         type: 'success',
         pos:"left",
         message:''
-
     });
     const contract = useFactoryContract();
     async function _queryIcoByCreater(event){
@@ -80,18 +78,39 @@ function QueryIco({history, location}) {
                     message:t("ico_not_find")
                 });
             }else{
-                //todo 改为一个方法全部获取，合约中保存，这样不用来回查询
+                //todo 设法优化一下，因为Vyper没法返回一次性所需的所有值
+                //可以试下Promise.all
+                let allAddress = await contract.getAllIco(values.creater);
                 let data = [];
                 for(let i=0;i<amount;i++){
-                    let _address = await contract.allIcoAddressOfUser(values.creater,i);
-                    data.push([_address,'KHC','进行中']);
+                    let _address = allAddress[i];
+                    let _symbol = await contract.allIcoSymbol(_address);
+                    let _status = await contract.allIcoStatus(_address);
+                    data.push([_address,_symbol,t(_calStatus(+ _status))]);
                 }
                 setBodyData(data);
                 setShowTable(true);
             }
         }
-
     }
+
+    function _calStatus(status){
+        let str = ''
+        switch (status) {
+            case 2:
+                str = 'STATUS_SUCCESS';
+                break;
+            case 3:
+                str = 'STATUS_FAILED';
+                break;
+            case 1:
+            default:
+                str = 'STATUS_STARTED'
+                break;
+        }
+        return str;
+    }
+
     async function _queryIco(event){
         event.preventDefault();
         setShowTable(false);

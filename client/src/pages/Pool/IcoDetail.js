@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {useTranslation} from 'react-i18next'
 import { withRouter } from 'react-router'
 import {useWeb3Context} from 'web3-react'
-
 import WithDrawIcon from '@material-ui/icons/AssignmentReturned'
 import InputAdornment from '@material-ui/core/InputAdornment'
 import TextField from '@material-ui/core/TextField'
@@ -12,20 +11,17 @@ import TouchIcon from '@material-ui/icons/TouchApp'
 import CancelIcon from '@material-ui/icons/Delete'
 import SubmitIcon from '@material-ui/icons/PresentToAll'
 import RefreshIcon from '@material-ui/icons/Refresh'
-import Fab from '@material-ui/core/Fab';
-
-import {utils} from 'ethers'
+import Fab from '@material-ui/core/Fab'
+import {ethers,utils} from 'ethers'
 import styled from 'styled-components'
-
+import CustomSnackbar from '../../components/Snackbar'
 import { isAddress,calculateGasMargin} from '../../utils'
 import { useFactoryContract,useTokenContract } from '../../hooks'
 import { Spinner } from '../../theme'
 import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
 
-
 const GAS_MARGIN = utils.bigNumberify(1000)
-
 const MessageWrapper = styled.div`
   display: flex;
   align-items: center;
@@ -43,7 +39,6 @@ const SpinnerWrapper = styled(Spinner)`
     }
   }
 `
-
 const useStyles = makeStyles(theme => ({
     container: {
         display: 'flex',
@@ -79,11 +74,13 @@ function  convertTimetoTimeString(_times) {
 
 function IcoDetail({history, location,icoAddress}) {
     const contract = useFactoryContract();
-    let icoContract = useTokenContract(icoAddress);
+    const icoContract = useTokenContract(icoAddress);
     const {t} = useTranslation();
     const classes = useStyles();
     const { active, account } = useWeb3Context()
-    const [myDeposit,setMyDeposit] = React.useState(0);
+    const [myDeposit,setMyDeposit] = useState(0);
+    const [showLoader, setShowLoader] = useState(true)
+    const [ethPrice,setEthPrice] = useState(227.34);
     const [infos, setInfos] = React.useState({
         address:icoAddress,
         status:"",
@@ -102,17 +99,81 @@ function IcoDetail({history, location,icoAddress}) {
         depositAmount:0,
         creater:'',
     });
-    const [showLoader, setShowLoader] = useState(true)
-    const [ethPrice,setEthPrice] = React.useState(227.34);
-    const [adminInfos,setAdminInfos] = React.useState({
-        isCreater:false,
+    const [adminInfos,setAdminInfos] = useState({
         canDeposit:false,
         canSubmit:false,
         canCanecl:false,
         canWithdraw:false
     });
+    const [snacks,setSnacks] = useState({
+        show: false,
+        type: 'success',
+        pos:"left",
+        message:''
+    });
+    //set listener
+    useEffect(()=>{
+        if(icoContract){
+            icoContract.on("Deposit", (_depositor, _amount, event) => {
+                if(judgeSender(_depositor)){
+                    //todo 通知
+                    setSnacks({
+                        show:true,
+                        pos:'left',
+                        message:'Deposit Success',
+                        type:'success'
+                    });
+                }
+                refreshInfos();
+            });
+            icoContract.on("CancelIco", (_cancer) => {
+                if(judgeSender(_cancer)){
+                    //todo 通知
+                    setSnacks({
+                        show:true,
+                        pos:'left',
+                        message:'Cancel ICO Success',
+                        type:'success'
+                    });
+                }
+                refreshInfos();
+            });
+            icoContract.on("SubmitIco", (_creater) => {
+                if(judgeSender(_creater)){
+                    //todo 通知
+                    setSnacks({
+                        show:true,
+                        pos:'left',
+                        message:'Sumbmit ICO Success',
+                        type:'success'
+                    });
+                }
+                refreshInfos();
+            });
+            let filter = icoContract.filters.RefundTransfer(account || ethers.constants.AddressZero);
+            icoContract.on(filter, (_drawer, _amount, event) => {
+               //todo 通知
+               setSnacks({
+                   show:true,
+                   pos:'left',
+                   message:'Withdraw Success',
+                   type:'success'
+               });
+               refreshInfos();
+            });
+        }
+        return function cleanup() {
+            if(icoContract){
+                icoContract.removeAllListeners("Deposit");
+                icoContract.removeAllListeners("CancelIco");
+                icoContract.removeAllListeners("SubmitIco");
+                icoContract.removeAllListeners("RefundTransfer");
+            }
+        };
+    },[]);
 
-    useEffect( () => {
+    //get ico info first
+    useEffect(() => {
         if (icoAddress && !isAddress(icoAddress)) {
           history.replace('/ico-detail');
         }else if(!icoAddress){
@@ -127,7 +188,7 @@ function IcoDetail({history, location,icoAddress}) {
                 if(status !== 0){
                     //ICO详情
                     if(icoContract){
-                        getIcoInfo(icoContract,status)
+                        getIcoInfo(status)
                     }
                 }else{
                     setInfos({
@@ -140,15 +201,8 @@ function IcoDetail({history, location,icoAddress}) {
        }
     }, []);
 
+    //get user deposit
     useEffect(() => {
-        if(active && account  && infos.creater && account.toLowerCase() === infos.creater.toLowerCase()){
-            setAdminInfos({
-                isCreater:true
-            });
-        }
-    }, [active,account,infos.creater]);
-
-     useEffect(() => {
          if(active && account && icoContract){
              async function getDeposit(){
                  let _deposit = await icoContract.depositBalanceOfUser(account);
@@ -159,7 +213,13 @@ function IcoDetail({history, location,icoAddress}) {
          }
      },[active,account,icoContract]);
 
-    function calStatusString(_status,isGoal,endAt,_submitTime){
+     //judge user
+     function judgeSender(_sender){
+         return active && account && _sender.toLowerCase() === account.toLowerCase()
+     }
+
+     //get the ico status string
+     function calStatusString(_status,isGoal,endAt,_submitTime){
         switch (_status) {
             case 2:
                 return 'STATUS_SUCCESS';
@@ -178,17 +238,23 @@ function IcoDetail({history, location,icoAddress}) {
                     return 'STATUS_SUBMIT';
                 else
                     return 'STATUS_CANCEL';
-
         }
     }
-    //todo 移到utils中去
-    async function getIcoInfo(icoContract,status){
+
+    // refresh ico info
+    async function refreshInfos(icoAddress){
+        let status  = await contract.allIcoStatus(icoAddress);
+        status = + status;
+        getIcoInfo(status);
+    }
+
+    //get ico info detail
+    async function getIcoInfo(status){
         let result = {
             address:icoContract.address
         };
-        let icoInfos;
         try{
-            icoInfos = await icoContract.icoInfo();
+            let icoInfos = await icoContract.icoInfo();
             let _endTime = + icoInfos[5];
             let _submitTime = + icoInfos[6];
             result['endAt'] = convertTimetoTimeString(_endTime * 1000);
@@ -213,18 +279,18 @@ function IcoDetail({history, location,icoAddress}) {
             result['timeLeft'] = _left;
             setInfos(result);
             setShowLoader(false);
-            calStatus(_status);
+            refreshStatus(_status);
         }catch(err){
             console.log(err);
             return ;
         }
     }
 
-    function calStatus(_status){
+    // refresh status UI by status string
+    function refreshStatus(_status){
         switch (_status) {
             case "STATUS_STARTED":
                 setAdminInfos({
-                    ...adminInfos,
                     canDeposit:true,
                     canSubmit:false,
                     canCanecl:false,
@@ -233,7 +299,6 @@ function IcoDetail({history, location,icoAddress}) {
                 break;
             case "STATUS_FAILED":
                 setAdminInfos({
-                    ...adminInfos,
                     canDeposit:false,
                     canSubmit:false,
                     canCanecl:false,
@@ -242,7 +307,6 @@ function IcoDetail({history, location,icoAddress}) {
                 break;
             case "STATUS_SUBMIT":
                 setAdminInfos({
-                    ...adminInfos,
                     canDeposit:false,
                     canSubmit:true,
                     canCanecl:false,
@@ -251,7 +315,6 @@ function IcoDetail({history, location,icoAddress}) {
                 break;
             case "STATUS_CANCEL":
                     setAdminInfos({
-                        ...adminInfos,
                         canDeposit:false,
                         canSubmit:false,
                         canCanecl:true,
@@ -262,7 +325,6 @@ function IcoDetail({history, location,icoAddress}) {
             case "STATUS_SUCCESS":
             default:
                  setAdminInfos({
-                        ...adminInfos,
                         canDeposit:false,
                         canSubmit:false,
                         canCanecl:false,
@@ -270,8 +332,9 @@ function IcoDetail({history, location,icoAddress}) {
                  });
                  break;
         }
-
     }
+
+    //get the base info of ICO
     function getBaseInfo(){
         return(
             <div>
@@ -326,6 +389,8 @@ function IcoDetail({history, location,icoAddress}) {
             </div>
         )
     }
+
+    // do deposit
     async function onDeposit(event){
         event.preventDefault();
         let estimate = icoContract.estimate.deposit
@@ -337,11 +402,18 @@ function IcoDetail({history, location,icoAddress}) {
         let estimatedGasLimit = await estimate(...args, { value });
         method(...args, { value, gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
             console.log(response);
-          // addTransaction(response)
+            setSnacks({
+                show:true,
+                pos:'left',
+                message:'Transaction has send,please wait!',
+                type:'success'
+            });
         });
     }
+
+    //show deposit UI
     function getDepositUI(classes){
-        let invalid = active && account
+        let valid = active && account
         return (
                 <form className = {classes.container}  onSubmit={onDeposit}  autoComplete = "off" >
                     <FormControl margin="normal" required fullWidth>
@@ -353,7 +425,6 @@ function IcoDetail({history, location,icoAddress}) {
                             }}
                             margin="normal" type="float" variant="outlined"/>
                     </FormControl>
-
                     <Fab
                         variant="extended"
                         size="medium"
@@ -361,21 +432,24 @@ function IcoDetail({history, location,icoAddress}) {
                         aria-label="Add"
                         className={classes.submit}
                         type = 'submit'
-                         disabled={!invalid}
+                         disabled={!valid}
                         style={{width:"30%"}}
                     >
                         <TouchIcon />
                         {t('deposit')}
                     </Fab>
-
             </form>
         )
     }
+
+    //do cancel
     function doCancel(){
 
     }
+
+    //show cancelUI
     function getCancelUI(classes){
-        let invalid = active && account
+        let valid = active && account
         return(
             <form className = {classes.container}  onSubmit={doCancel}  autoComplete = "off" >
             <Fab
@@ -385,7 +459,7 @@ function IcoDetail({history, location,icoAddress}) {
                 aria-label="Add"
                 className={classes.submit}
                 type='submit'
-                disabled={!invalid}
+                disabled={!valid}
                 style={{width:"30%",marginTop:30}}
             >
                 <CancelIcon />
@@ -393,15 +467,21 @@ function IcoDetail({history, location,icoAddress}) {
             </Fab>
         </form>
         )
-
     }
+
+    //do submit
     function doSubmit(){
 
     }
+
+    //refresh the price of eth
     function doRefreshPrice(){
 
     }
+
+    //show the submit UI
     function getSubmitUI(classes){
+        let valid = infos.goalReached;
         return(
             <>
             <h4>
@@ -428,35 +508,39 @@ function IcoDetail({history, location,icoAddress}) {
                             aria-label="Add"
                             className={classes.submit}
                             type='submit'
+                            disabled={!valid}
                             style={{width:"30%",margin:5}}
                         >
                             <SubmitIcon  />
                             {t('submit_ico')}
                         </Fab>
-                        {/* <Fab
+                        <Fab
                             variant="extended"
                             size="medium"
                             color="primary"
                             aria-label="Add"
                             className={classes.submit}
                             onClick = {doCancel}
+                            disabled={infos.isFailed}
                             type='button'
                             style={{width:"30%",margin:5}}
                         >
                             <CancelIcon />
                             {t('cancelIco')}
-                        </Fab> */}
-        </form>
+                        </Fab>
+                </form>
             </>
-
-
         )
     }
+
+    //do withdraw
     function doWithDraw(){
 
     }
+
+    //show withdraw UI
     function getWithDrawUI(classes){
-        let invalid = active && account
+        let valid = active && account && infos.myDeposit
         return(
             <form className = {classes.container}  onSubmit={doWithDraw}  autoComplete = "off" >
             <Fab
@@ -466,7 +550,7 @@ function IcoDetail({history, location,icoAddress}) {
                 aria-label="Add"
                 className={classes.submit}
                 type='submit'
-                disabled={!invalid}
+                disabled={!valid}
                 style={{width:"30%",marginTop:30}}
             >
                 <WithDrawIcon className={classes.extendedIcon} />
@@ -476,13 +560,22 @@ function IcoDetail({history, location,icoAddress}) {
         )
     }
 
+    //hide the Snack
+    function hideSnack(){
+        setSnacks({
+            show:false,
+            pos:'left',
+            message:'',
+            type:''
+        })
+    }
+
     if(infos.status === 0){
         return (
             <>
-                <h1>
+                <MessageWrapper>
                     {t('ico_query_exist')}
-                </h1>
-
+                </MessageWrapper>
             </>
         )
     }else if(showLoader){
@@ -491,13 +584,15 @@ function IcoDetail({history, location,icoAddress}) {
             <SpinnerWrapper src={Circle} />
           </MessageWrapper>)
     }else{
+        let flag = infos.creater && judgeSender(infos.creater)
         return (
             <>
             {getBaseInfo()}
             {adminInfos.canDeposit && getDepositUI(classes)}
-            {adminInfos.canSubmit && adminInfos.isCreater && getSubmitUI(classes)}
+            {adminInfos.canSubmit && flag && getSubmitUI(classes)}
             {adminInfos.canCanecl && getCancelUI(classes)}
             {adminInfos.canWithdraw && getWithDrawUI(classes)}
+            {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
             </>
         )
     }

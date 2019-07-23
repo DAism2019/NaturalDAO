@@ -51,6 +51,7 @@ beneficiary: public(address)  # 保存锻造ETH的地址
 ndaoAddress: public(address)  # 稳定币地址
 queryAddress: public(address)  # ETH价格查询合约地址
 allIcoStatus: public(map(address, uint256))  # 所有通过本合约发行的ICO的状态
+allIcoSymbol:public(map(address,string[32])) # 所有通过本合约发行的ICO的符号，用来返回给前端查询时使用
 # Vyper does not allow for dynamic arrays，we have limited the number of ICO
 allIcoAddressOfUser: public(map(address, address[MAX_NUMBER]))
 # the ico amount of each account
@@ -110,6 +111,7 @@ def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depos
     self.allIcoCountsOfUser[msg.sender] = index + 1
     self.allIcoAddressOfUser[msg.sender][index] = ico
     self.allIcoStatus[ico] = STATUS_STARTED
+    self.allIcoSymbol[ico] = _symbol
     self.allIcoCreater[ico] = msg.sender
     log.ICOCreated(msg.sender, ico)
 
@@ -120,19 +122,22 @@ def endIco():
         self.allIcoStatus[msg.sender] = STATUS_FAILED
 
 
-@public
-@constant
-def getLatestIco() -> address:
-    count: int128 = self.allIcoCountsOfUser[msg.sender]
-    if count > 0:
-        return self.allIcoAddressOfUser[msg.sender][count - 1]
-    else:
-        return ZERO_ADDRESS
+# @public
+# @constant
+# def getLatestIco(creater:address) -> address:
+#     '''
+#     this is a method of test!
+#     '''
+#     count: int128 = self.allIcoCountsOfUser[creater]
+#     if count > 0:
+#         return self.allIcoAddressOfUser[msg.sender][count - 1]
+#     else:
+#         return ZERO_ADDRESS
 
 @public
 @constant
-def getAllIco() -> address[MAX_NUMBER]:
-    return self.allIcoAddressOfUser[msg.sender]
+def getAllIco(creater:address) -> address[MAX_NUMBER]:
+    return self.allIcoAddressOfUser[creater]
 
 
 

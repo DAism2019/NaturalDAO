@@ -18,9 +18,10 @@ Transfer: event(
 Approval: event({_owner: indexed(address),
                  _spender: indexed(address), _value: uint256})
 # event of ICO
-GoalReached: event({_goalTime: timestamp, _depositGoal: wei_value})
-RefundTransfer: event({_owner: indexed(address), _amount: wei_value})
-
+Deposit:event({_depositor:address,_amount: wei_value})
+RefundTransfer: event({_drawer: indexed(address), _amount: wei_value})
+CancelIco:event({_cancer:address})
+SubmitIco:event({_creater:address})
 
 # ERC20 state varialbes
 name: public(string[64])  # 代币名称
@@ -176,13 +177,14 @@ def _checkDeposit(sender: address, value: wei_value):
             _deposit_amount) * self.tokenPrice / ETHER_TO_WEI
         self.mint(sender, _token_amount)
         send(sender, _refund)
-        log.GoalReached(block.timestamp, self.depositGoal)
+        log.Deposit(sender,_deposit_amount)
     else:
-        self.depositBalanceOfUser[sender] += value
         self.depositAmount += value
+        self.depositBalanceOfUser[sender] += value
         _token_amount: uint256 = as_unitless_number(
             value) * self.tokenPrice / ETHER_TO_WEI
         self.mint(sender, _token_amount)
+        log.Deposit(sender,value)
 
 
 @public
@@ -209,6 +211,7 @@ def cancelICO():
     @dev  cancel the ICO ,this is called only once by creater  before ended or by anyonde after finalSubmissionTime
     """
     assert block.timestamp > self.depositEnd and (not self.isFailed)
+    assert not self.isEnd
     self.isFailed = True
     self.isEnd = True
     if block.timestamp <= self.finalSubmissionTime:
@@ -216,6 +219,7 @@ def cancelICO():
         Factory(self.factory).endIco()
     else:
         Factory(self.factory).endIco()
+    log.CancelIco(msg.sender)
 
 
 @public
@@ -225,13 +229,12 @@ def submitICO():
     """
     assert block.timestamp > self.depositEnd and block.timestamp < self.finalSubmissionTime
     assert msg.sender == self.creater and (not self.isEnd)
+    assert self.goalReached
     self.isEnd = True
-    if self.goalReached:
-        self.mint(self.factory, self.total_supply)
-        Factory(self.factory).createExchange(value=self.depositGoal)
-    else:
-        self.isFailed = True
-        Factory(self.factory).endIco()
+    self.mint(self.factory, self.total_supply)
+    Factory(self.factory).createExchange(value=self.depositGoal)
+    log.SubmitIco(msg.sender)
+
 
 
 @public
