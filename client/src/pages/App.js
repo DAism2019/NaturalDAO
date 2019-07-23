@@ -5,7 +5,7 @@ import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
 import Web3ReactManager from '../components/Web3ReactManager'
 import Header from '../components/Header'
 import NavigationTabs from '../components/NavigationTabs'
-import { isAddress } from '../utils'
+// import { isAddress } from '../utils'
 
 const Swap = lazy(() => import('./Swap'))
 const Send = lazy(() => import('./Send'))

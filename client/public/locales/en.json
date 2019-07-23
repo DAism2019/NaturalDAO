@@ -109,12 +109,13 @@
   "ico_goal":"ICO deposit goal:",
   "ico_startAt":"ICO start time:",
   "ico_endAt":"ICO end time:",
+  "ico_submitAt":"Last time of ICO summit:",
   "depositAmount":"ICO has deposit amount:",
   "ico_isEnd":"ICO is end:",
   "ico_goalReached":"The goal of ICO is touched:",
   "ico_tokenPrice":"The price of ICO token:",
   "ico_creater":"The creater of ICO:",
-  "ico_status":"The status of ICO:",
+  "ico_status":"ICO status:",
   "ico_timer":"The left time of ICO:",
   "deposit":"Deposit",
   "deposit_amount":"Input the amount of ETH to deposit:",
@@ -125,13 +126,16 @@
   "eth_price":"the price of ETH(refresh peer hour):",
   "refreshPrice":"Refresh Price",
   "invalidAddress": "Not a valid  address",
-  "STATUS_STARTED":"has begin",
-  "STATUS_SUCCESS":"has successful",
-  "STATUS_FAILED":"has failed",
-  "STATUS_SUBMIT":"has end",
+  "STATUS_STARTED":"Has begin",
+  "STATUS_SUCCESS":"Has successful",
+  "STATUS_FAILED":"Has failed",
+  "STATUS_SUBMIT":"Has end",
   "STATUS_CANCEL":"Can Cancel",
+  "STATUS_COMPLETED":"Has completed",
   "YES":"YES",
-  "NO":"NO"
+  "NO":"NO",
+  "ico_not_find":"ICO NOT FOUND",
+  "status":"Status"
 
 
 

@@ -51,7 +51,7 @@ class CountDownLabel extends Component {
         if(this.state.curTime <= 0)
             return;
         this.timer = setInterval(() => {
-            var curTime = --this.state.curTime;
+            var curTime = this.state.curTime -1;
             this.setState({
                 timeStr: curTime <= 60
                     ? curTime
@@ -59,6 +59,9 @@ class CountDownLabel extends Component {
             })
             if (curTime <= 0) {
                 clearInterval(this.timer);
+                if(curTime ===0 ){
+                    this.setState({curTime});
+                }
                 // CountDownLabel.onOver.dispatch();
             } else {
                 // CountDownLabel.onTime.dispatch(curTime);
@@ -70,7 +73,7 @@ class CountDownLabel extends Component {
         clearInterval(this.timer);
     }
     render() {
-        const {classes} = this.props;
+        // const {classes} = this.props;
         var CountDownLabel = {
             fontSize: this.state.fontSize,
             fontWeight:700,

@@ -45,7 +45,7 @@ function IconLabelTabs({location: {
     }, history}) {
     const classes = useStyles();
     const {t} = useTranslation()
-    let [value, setValue] = useState(0);
+    let [value, ] = useState(0);
     value = calValue(pathname);
     function handleChange(event, newValue) {
         // setValue(newValue);

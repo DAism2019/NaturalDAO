@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import Button from '@material-ui/core/Button';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import InfoIcon from '@material-ui/icons/Info';
@@ -82,7 +81,7 @@ const useStyles2 = makeStyles(theme => ({
 
 export default function CustomizedSnackbars({type, message, pos,cb}) {
     const classes = useStyles2();
-    let [open, setOpen] = React.useState(true);
+    // let [open, setOpen] = React.useState(true);
     function handleClose(event, reason) {
         if (reason === 'clickaway') {
             return;
@@ -96,28 +95,28 @@ export default function CustomizedSnackbars({type, message, pos,cb}) {
             vertical: 'bottom',
             horizontal: pos
         }}
-        open={open}
-        autoHideDuration={5000} 
+        open={true}
+        autoHideDuration={5000}
         onClose={handleClose}>
         <>
-        { type == 'success' &&  <MySnackbarContentWrapper
+        { type === 'success' &&  <MySnackbarContentWrapper
                 className={classes.margin}
                onClose={handleClose}
                variant="success"
                message={message}
              />}
-        { type == 'error' && <MySnackbarContentWrapper
+        { type === 'error' && <MySnackbarContentWrapper
                  onClose={handleClose}
                  variant="error"
                  className={classes.margin}
                  message={message}
               />}
-        {type =='warning'  && <MySnackbarContentWrapper
+        {type ==='warning'  && <MySnackbarContentWrapper
                 onClose={handleClose}
                 variant="warning"
                 className={classes.margin}
                 message={message}/>}
-         {type == 'info' && <MySnackbarContentWrapper
+         {type === 'info' && <MySnackbarContentWrapper
                 onClose={handleClose}
                 variant="info"
                 className={classes.margin}

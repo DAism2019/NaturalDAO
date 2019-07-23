@@ -14,7 +14,7 @@ import SubmitIcon from '@material-ui/icons/PresentToAll'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import Fab from '@material-ui/core/Fab';
 
-import {ethers,utils} from 'ethers'
+import {utils} from 'ethers'
 import styled from 'styled-components'
 
 import { isAddress,calculateGasMargin} from '../../utils'
@@ -22,6 +22,7 @@ import { useFactoryContract,useTokenContract } from '../../hooks'
 import { Spinner } from '../../theme'
 import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
+
 
 const GAS_MARGIN = utils.bigNumberify(1000)
 
@@ -32,7 +33,7 @@ const MessageWrapper = styled.div`
   height: 20rem;
 `
 const ContentWrapper = styled.h4`
-    height: 0.8rem;
+    height: 0.6em;
 `
 const SpinnerWrapper = styled(Spinner)`
   font-size: 4rem;
@@ -81,24 +82,24 @@ function IcoDetail({history, location,icoAddress}) {
     let icoContract = useTokenContract(icoAddress);
     const {t} = useTranslation();
     const classes = useStyles();
-    const { active, account,error } = useWeb3Context()
+    const { active, account } = useWeb3Context()
     const [myDeposit,setMyDeposit] = React.useState(0);
     const [infos, setInfos] = React.useState({
         address:icoAddress,
-        status:'',
+        status:"",
         name: '',
         symbol: '',
-        decimals: '',
-        goal:'',
-        startAt:'',
-        endAt:'',
+        decimals: 0,
+        goal:0,
+        startAt:0,
+        endAt:0,
         timeLeft: 0,
-        submitAt:'',
-        isEnd:'',
-        goalReached:'',
-        isFailed:'',
-        price:'',
-        depositAmount:'',
+        submitAt:0,
+        isEnd:false,
+        goalReached:false,
+        isFailed:false,
+        price:0,
+        depositAmount:0,
         creater:'',
     });
     const [showLoader, setShowLoader] = useState(true)
@@ -158,20 +159,22 @@ function IcoDetail({history, location,icoAddress}) {
          }
      },[active,account,icoContract]);
 
-    function calStatusString(_status,endAt,_submitTime){
+    function calStatusString(_status,isGoal,endAt,_submitTime){
         switch (_status) {
             case 2:
                 return 'STATUS_SUCCESS';
-                break;
             case 3:
                 return 'STATUS_FAILED';
-                break;
             case 1:
             default:
                 let now =  Math.floor(Date.now()/1000);
-                if(now < endAt)
-                    return 'STATUS_STARTED';
-                else if(now < _submitTime)
+                if(now < endAt){
+                    if (isGoal){
+                        return 'STATUS_COMPLETED';
+                    }else{
+                        return 'STATUS_STARTED';
+                    }
+                }else if(now < _submitTime)
                     return 'STATUS_SUBMIT';
                 else
                     return 'STATUS_CANCEL';
@@ -189,7 +192,7 @@ function IcoDetail({history, location,icoAddress}) {
             let _endTime = + icoInfos[5];
             let _submitTime = + icoInfos[6];
             result['endAt'] = convertTimetoTimeString(_endTime * 1000);
-            let _status = calStatusString(status,_endTime,_submitTime);
+            let _status = calStatusString(status,icoInfos[8],_endTime,_submitTime);
             result['status'] = t(_status);
             result['name'] = icoInfos[0];
             result['symbol'] = icoInfos[1];
@@ -216,6 +219,7 @@ function IcoDetail({history, location,icoAddress}) {
             return ;
         }
     }
+
     function calStatus(_status){
         switch (_status) {
             case "STATUS_STARTED":
@@ -254,6 +258,7 @@ function IcoDetail({history, location,icoAddress}) {
                         canWithdraw:false
                     });
                  break;
+            case "STATUS_COMPLETED":
             case "STATUS_SUCCESS":
             default:
                  setAdminInfos({
@@ -296,6 +301,9 @@ function IcoDetail({history, location,icoAddress}) {
                 </ContentWrapper>
                 <ContentWrapper>
                     {t('ico_endAt') + infos.endAt}
+                </ContentWrapper>
+                <ContentWrapper>
+                    {t('ico_submitAt') + infos.submitAt}
                 </ContentWrapper>
                 <ContentWrapper>
                    <CustomTimer maxTime={infos.timeLeft}  color="black" label={t('ico_timer')} sstr=" " fontSize={16} />
@@ -425,7 +433,7 @@ function IcoDetail({history, location,icoAddress}) {
                             <SubmitIcon  />
                             {t('submit_ico')}
                         </Fab>
-                        <Fab
+                        {/* <Fab
                             variant="extended"
                             size="medium"
                             color="primary"
@@ -437,7 +445,7 @@ function IcoDetail({history, location,icoAddress}) {
                         >
                             <CancelIcon />
                             {t('cancelIco')}
-                        </Fab>
+                        </Fab> */}
         </form>
             </>
 

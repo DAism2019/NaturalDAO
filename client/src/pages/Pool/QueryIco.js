@@ -1,20 +1,16 @@
-import React, {useState, useEffect} from 'react'
+import React from 'react'
 import {withRouter} from 'react-router'
-import {useWeb3Context} from 'web3-react'
-import {ethers} from 'ethers'
 import {makeStyles} from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
 import {useTranslation} from 'react-i18next'
 import FormControl from '@material-ui/core/FormControl'
-import InputAdornment from '@material-ui/core/InputAdornment'
 import Divider from '@material-ui/core/Divider'
-import Button from '@material-ui/core/Button'
 import SearchIcon from '@material-ui/icons/Search'
 import Fab from '@material-ui/core/Fab'
-import styled from 'styled-components'
 import { isAddress } from '../../utils'
 import { useFactoryContract } from '../../hooks'
 import CustomSnackbar from '../../components/Snackbar'
+import CustomTable from '../../components/CustomTable'
 
 
 const useStyles = makeStyles(theme => ({
@@ -43,42 +39,62 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-
 function QueryIco({history, location}) {
     const {t} = useTranslation();
+    let headData = [t('ico_address'),t('symbol'),t('status')];
     const classes = useStyles();
-    const { active, account,error } = useWeb3Context()
     const [values, setValues] = React.useState({
         creater: '',
         icoAddress: ''
 
     });
+    const [bodyData,setBodyData] = React.useState([]);
+    const [showTable,setShowTable] = React.useState(false);
     const [snacks,setSnacks] =  React.useState({
         show: false,
         type: 'success',
-        pos:"center",
+        pos:"left",
         message:''
 
     });
-    const contract = useFactoryContract()
+    const contract = useFactoryContract();
     async function _queryIcoByCreater(event){
         event.preventDefault();
+        setShowTable(false);
         if (!isAddress(values.creater)){
-            return setSnacks({
+            setSnacks({
                  show:true,
                  type:"error",
                  message:t('invalidAddress'),
                  pos:"left"
 
-             })
+             });
         }else{
             let amount = await contract.allIcoCountsOfUser(values.creater);
-            console.log( + amount);
+            amount = + amount;
+            if(amount <= 0){
+                setSnacks({
+                    show: true,
+                    type: 'info',
+                    pos:"left",
+                    message:t("ico_not_find")
+                });
+            }else{
+                //todo 改为一个方法全部获取，合约中保存，这样不用来回查询
+                let data = [];
+                for(let i=0;i<amount;i++){
+                    let _address = await contract.allIcoAddressOfUser(values.creater,i);
+                    data.push([_address,'KHC','进行中']);
+                }
+                setBodyData(data);
+                setShowTable(true);
+            }
         }
 
     }
     async function _queryIco(event){
         event.preventDefault();
+        setShowTable(false);
         if (!isAddress(values.icoAddress)){
             return setSnacks({
                  show:true,
@@ -86,18 +102,18 @@ function QueryIco({history, location}) {
                  message:t('invalidAddress'),
                  pos:"left"
 
-             })
+             });
         }else{
            let status = await contract.allIcoStatus(values.icoAddress);
            status = + status;
-           if (status == 0){
+           if (status === 0){
                return setSnacks({
                     show:true,
                     type:"error",
                     message:t('ico_not_exist'),
                     pos:"left"
 
-                })
+                });
            }else{
                history.push("/ico-detail/" + values.icoAddress);
            }
@@ -142,19 +158,20 @@ function QueryIco({history, location}) {
                            onChange={handleChange('icoAddress')} className={classes.textField}
                            margin="normal" type="string" variant="outlined"/>
                           {createBtn(classes)}
-                      </FormControl>
-                  </form>
-                      <form className = {classes.container}  onSubmit={_queryIcoByCreater} name="creater"   autoComplete = "off" >
-                          <FormControl margin="normal" required fullWidth style={{ alignItems: 'center'}}>
-                   <TextField required  fullWidth id="outlined-creater-required"
-                       label={t('queryByCreater')} value={values.creater}
-                       onChange={handleChange('creater')} className={classes.textField}
-                       margin="normal" type="string" variant="outlined"/>
-                       {createBtn(classes)}
-                   </FormControl>
-               </form>
+                </FormControl>
+            </form>
+            <form className = {classes.container}  onSubmit={_queryIcoByCreater} name="creater"   autoComplete = "off" >
+                 <FormControl margin="normal" required fullWidth style={{ alignItems: 'center'}}>
+                     <TextField required  fullWidth id="outlined-creater-required"
+                         label={t('queryByCreater')} value={values.creater}
+                         onChange={handleChange('creater')} className={classes.textField}
+                         margin="normal" type="string" variant="outlined"/>
+                         {createBtn(classes)}
+                </FormControl>
+           </form>
             {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
             <Divider />
+            {showTable && <CustomTable headData={headData} bodyData={bodyData} />}
 
     </>
    )

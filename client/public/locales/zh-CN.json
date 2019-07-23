@@ -70,6 +70,7 @@
     "invalidDecimals": "小数位数无效",
     "tokenAddress": "通证地址",
     "label": "通证符号",
+    "symbol": "符号",
     "decimals": "小数位数",
     "enterTokenCont": "输入通证地址并继续",
 
@@ -99,6 +100,7 @@
     "ico_goal":"ICO募资目标:",
     "ico_startAt":"ICO开始时间:",
     "ico_endAt":"ICO结束时间:",
+    "ico_submitAt":"ICO确认截止时间:",
     "depositAmount":"ICO已募数量:",
     "ico_isEnd":"ICO是否结束:",
     "ico_goalReached":"ICO募资目标是否完成:",
@@ -120,7 +122,10 @@
     "STATUS_FAILED":"失败",
     "STATUS_SUBMIT":"已结束",
     "STATUS_CANCEL":"可取消",
+    "STATUS_COMPLETED":"已完成",
     "YES":"是",
-    "NO":"否"
+    "NO":"否",
+    "ico_not_find":"未查询到ICO",
+    "status":"状态"
 
 }
