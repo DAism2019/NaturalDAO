@@ -44,7 +44,7 @@ def setup(token_addr: address, ndao_address: address, token_amount: uint256):
     self.factory = Factory(msg.sender)
     self.token = ERC20(token_addr)
     self.ndao = ERC20(ndao_address)
-    self.maxPool = token_amount * 2
+    self.maxPool = token_amount
 
 
 @private
