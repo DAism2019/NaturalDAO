@@ -37,7 +37,7 @@ MAX_NUMBER: constant(int128) = 128
 NewExchange: event(
     {_token: indexed(address), _exchange: indexed(address), _amount: uint256, _tokenAmount: uint256})
 ICOCreated: event({_creater: indexed(address), _ico: address})
-ICOUpdate: event({_token: indexed(address), _status: uint256})
+# ICOUpdate: event({_token: indexed(address), _status: uint256})
 NewSetter: event({_from: indexed(address), _to: indexed(address)})
 NewSubmitDelta: event({_newDelta: timedelta})
 

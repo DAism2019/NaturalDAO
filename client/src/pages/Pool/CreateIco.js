@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {withRouter} from 'react-router'
 import {useWeb3Context} from 'web3-react'
 import {ethers,utils} from 'ethers'
@@ -11,7 +11,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import { Button } from '../../theme'
 import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
-
+import CustomSnackbar from '../../components/Snackbar'
 const useStyles = makeStyles(theme => ({
     container: {
         display: 'flex',
@@ -38,15 +38,14 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-
-
 const decimals = [12,15, 18];
 const GAS_MARGIN = utils.bigNumberify(1000);
-function CreateIco({history, location}) {
+function CreateIco({ history }) {
     const {t} = useTranslation();
     const classes = useStyles();
     const { active, account,error } = useWeb3Context()
-    const [values, setValues] = React.useState({
+    const contract = useFactoryContract()
+    const [values, setValues] = useState({
         name: '',
         symbol: '',
         decimals: 18,
@@ -55,7 +54,36 @@ function CreateIco({history, location}) {
         price:'',
         tokens:''
     });
-    const contract = useFactoryContract()
+    const [snacks,setSnacks] = useState({
+        show: false,
+        type: 'success',
+        pos:"left",
+        message:''
+    });
+    //listen event
+    useEffect(()=>{
+        let filter = contract.filters.ICOCreated(account || ethers.constants.AddressZero);
+        contract.on(filter, (_creater, _ico, event) => {
+           setSnacks({
+               show:true,
+               pos:'left',
+               message:t('create_success'),
+               type:'success'
+           });
+        });
+        //todo 测试谁在前面
+        history.replace('/ico-detail/' + _ico);
+    },[]);
+    //hide the Snack
+    function hideSnack(){
+        setSnacks({
+            show:false,
+            pos:'left',
+            message:'',
+            type:''
+        });
+    }
+
     async function _createIco(event){
         event.preventDefault();
         let estimate = contract.estimate.createICO
@@ -73,8 +101,17 @@ function CreateIco({history, location}) {
         let args = [name,symbol,decimals,goal,timedelta,price];
         let value = ethers.constants.Zero;
         const estimatedGasLimit = await estimate(...args, { value });
-        method(...args, { value, gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
+        method(...args, {
+             value,
+             gasPrice:utils.parseUnits('10.0','gwei'),
+             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
           // addTransaction(response)
+                setSnacks({
+                    show:true,
+                    pos:'left',
+                    message:t('has_send'),
+                    type:'success'
+                });
         });
     }
 
@@ -159,6 +196,7 @@ function CreateIco({history, location}) {
                     </Button>
 
         </form>
+        {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
     </>
    )
 }

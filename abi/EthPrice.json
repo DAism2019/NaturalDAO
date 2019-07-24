@@ -1,1 +1,52 @@
-[{"outputs": [], "inputs": [], "constant": false, "payable": false, "type": "constructor"}, {"name": "setFiator", "outputs": [], "inputs": [{"type": "address", "name": "_faitor"}], "constant": false, "payable": false, "type": "function", "gas": 35645}, {"name": "getEthPrice", "outputs": [{"type": "uint256", "name": "out"}], "inputs": [], "constant": true, "payable": false, "type": "function", "gas": 2037}, {"name": "updateEthPrice", "outputs": [{"type": "bool", "name": "out"}], "inputs": [], "constant": false, "payable": true, "type": "function", "gas": 36598}, {"name": "fiator", "outputs": [{"type": "address", "name": "out", "unit": "FiatContract"}], "inputs": [], "constant": true, "payable": false, "type": "function", "gas": 573}, {"name": "owner", "outputs": [{"type": "address", "name": "out"}], "inputs": [], "constant": true, "payable": false, "type": "function", "gas": 603}]
+[{
+    "outputs": [],
+    "inputs": [],
+    "constant": false,
+    "payable": false,
+    "type": "constructor"
+}, {
+    "name": "setFiator",
+    "outputs": [],
+    "inputs": [{
+        "type": "address",
+        "name": "_faitor"
+    }],
+    "constant": false,
+    "payable": false,
+    "type": "function",
+    "gas": 35627
+}, {
+    "name": "getEthPrice",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out"
+    }],
+    "inputs": [],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 2331
+}, {
+    "name": "fiator",
+    "outputs": [{
+        "type": "address",
+        "name": "out",
+        "unit": "FiatContract"
+    }],
+    "inputs": [],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 543
+}, {
+    "name": "owner",
+    "outputs": [{
+        "type": "address",
+        "name": "out"
+    }],
+    "inputs": [],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 573
+}]
