@@ -79,7 +79,7 @@ const useStyles2 = makeStyles(theme => ({
     }
 }));
 
-export default function CustomizedSnackbars({type, message, pos,cb}) {
+export default function CustomizedSnackbars({type, message, pos,cb,cb2}) {
     const classes = useStyles2();
     // let [open, setOpen] = React.useState(true);
     function handleClose(event, reason) {
@@ -88,6 +88,11 @@ export default function CustomizedSnackbars({type, message, pos,cb}) {
         }
         if (cb) {
             cb();
+            if(cb2){
+                setTimeout(()=>{
+                     cb2();
+                },500)
+            }
         }
     }
 

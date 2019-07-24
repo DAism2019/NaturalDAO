@@ -12,6 +12,9 @@ import { Button } from '../../theme'
 import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 import CustomSnackbar from '../../components/Snackbar'
+// import { BigNumber}  from "bignumber"
+const BigNumber = require('bignumber.js');
+
 const useStyles = makeStyles(theme => ({
     container: {
         display: 'flex',
@@ -45,6 +48,7 @@ function CreateIco({ history }) {
     const classes = useStyles();
     const { active, account,error } = useWeb3Context()
     const contract = useFactoryContract()
+    const [clicked,setClicked] = useState(false)
     const [values, setValues] = useState({
         name: '',
         symbol: '',
@@ -58,7 +62,8 @@ function CreateIco({ history }) {
         show: false,
         type: 'success',
         pos:"left",
-        message:''
+        message:'',
+        cb2:null
     });
     //listen event
     useEffect(()=>{
@@ -68,12 +73,18 @@ function CreateIco({ history }) {
                show:true,
                pos:'left',
                message:t('create_success'),
-               type:'success'
+               type:'success',
+               cb2:()=>{
+                    history.push('/ico-detail/' + _ico);
+               }
            });
+           //todo 测试谁在前面
+           // history.replace('/ico-detail/' + _ico);
         });
-        //todo 测试谁在前面
-        history.replace('/ico-detail/' + _ico);
-    },[]);
+        return function cleanup() {
+              contract.removeAllListeners("ICOCreated");
+        };
+    },[account,t,history,contract]);
     //hide the Snack
     function hideSnack(){
         setSnacks({
@@ -92,27 +103,40 @@ function CreateIco({ history }) {
         if(decimals < 3 ||  decimals > 18){
             return;
         }
-        goal =  utils.parseEther(goal);
-        timedelta = + timedelta;
-        timedelta = timedelta * 24 * 3600;
-        price =  utils.bigNumberify( + _calPrice());
-        let _des = utils.parseUnits("1",decimals);
-        price = price.mul(_des);
-        let args = [name,symbol,decimals,goal,timedelta,price];
-        let value = ethers.constants.Zero;
-        const estimatedGasLimit = await estimate(...args, { value });
-        method(...args, {
-             value,
-             gasPrice:utils.parseUnits('10.0','gwei'),
-             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
-          // addTransaction(response)
-                setSnacks({
-                    show:true,
-                    pos:'left',
-                    message:t('has_send'),
-                    type:'success'
-                });
-        });
+        setClicked(true);
+        try{
+            goal =  utils.parseEther(goal);
+            timedelta = + timedelta;
+            timedelta = timedelta * 24 * 3600;
+            price =   + _calPrice();
+            price = new BigNumber(price);
+            let _des = new BigNumber(10);
+            _des = _des.exponentiatedBy(decimals);
+            price = _des.multipliedBy(price);
+            price = utils.bigNumberify(price.toString())
+            let args = [name,symbol,decimals,goal,timedelta,price];
+            let value = ethers.constants.Zero;
+            const estimatedGasLimit = await estimate(...args, { value });
+            method(...args, {
+                 value,
+                 gasPrice:utils.parseUnits('10.0','gwei'),
+                 gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
+              // addTransaction(response)
+                    setClicked(false)
+                    setSnacks({
+                        show:true,
+                        pos:'left',
+                        message:t('has_send'),
+                        type:'success'
+                    });
+            }).catch(err =>{
+                    console.log(err);
+                    setClicked(false)
+            });
+        }catch(err){
+            console.log(err);
+            setClicked(false);
+        }
     }
 
     function _calPrice(){
@@ -191,12 +215,12 @@ function CreateIco({ history }) {
                             }}
                            margin="normal" type="number" variant="outlined"/>
                 </FormControl>
-                <Button type="submit" variant="contained" disabled={!isValid} color="primary" className={classes.submit}>
+                <Button type="submit" variant="contained" disabled={!isValid || clicked} color="primary" className={classes.submit}>
                         {t('create')}
                     </Button>
 
         </form>
-        {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
+        {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack} cb2={snacks.cb2}/>}
     </>
    )
 }
