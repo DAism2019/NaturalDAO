@@ -80,7 +80,6 @@ export default function Web3ReactManager({ children }) {
       setShowLoader(true)
     }, 600)
     return () => {
-        console.log("cleaning");
       clearTimeout(timeout)
     }
   }, [])

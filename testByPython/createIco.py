@@ -14,17 +14,17 @@ def createIco():
     # path = dirname(dirname(abspath(__file__))) + '/address/address.json'
     # allAddress = loads(open(path).read())
     # contract_address = allAddress['Factory.py']
-    contract_address = "0xb45744d855CF03Af0494b9C5c65bAe6cEFfF9619"
+    contract_address = "0x2DC4C5aa9d6aCD58D8133560fbDAEa442E6e501D"
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
     nonce = w3.eth.getTransactionCount(my_address)
-    goal = w3.toWei(1000, 'ether')
+    goal = w3.toWei(0.1, 'ether')
     des = 18
-    timedelta = 3600 * 24 * 2
+    timedelta = 3600 * 2
     # price : 1 eth => 1100000 tokens
     price = 10000 * 10 ** des
     unicorn_txn = myContract.functions.createICO('HHCoins', 'HHC', des, goal, timedelta, price).buildTransaction({
         'nonce': nonce,
-        'gas': 400000
+        'gas': 500000
     })
     signed_txn = w3.eth.account.signTransaction(
         unicorn_txn, private_key=private_key)

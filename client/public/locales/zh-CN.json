@@ -126,6 +126,11 @@
     "YES":"是",
     "NO":"否",
     "ico_not_find":"未查询到ICO",
-    "status":"状态"
-
+    "status":"状态",
+    "deposit_success":"投资成功",
+    "cancel_success":"ICO取消成功",
+    "submit_success":"ICO提交成功",
+    "withdraw_success":"提款成功",
+    "has_send":"交易已经发送，请耐心等待!",
+    "price_update":"ETH价格已经更新"
 }

@@ -135,7 +135,13 @@
   "YES":"YES",
   "NO":"NO",
   "ico_not_find":"ICO NOT FOUND",
-  "status":"Status"
+  "status":"Status",
+  "deposit_success":"Deposit Success",
+  "cancel_success":"Cancel ICO Success",
+  "submit_success":"Submit ICO Success",
+  "withdraw_success":"Withdraw Success",
+  "has_send":"Transaction has send,please wait!",
+  "price_update":"The price of ETH has updated!"
 
 
 

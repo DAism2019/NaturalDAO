@@ -16,11 +16,15 @@ import {ethers,utils} from 'ethers'
 import styled from 'styled-components'
 import CustomSnackbar from '../../components/Snackbar'
 import { isAddress,calculateGasMargin} from '../../utils'
-import { useFactoryContract,useTokenContract } from '../../hooks'
+import { useFactoryContract,useTokenContract,usePriceContract } from '../../hooks'
 import { Spinner } from '../../theme'
 import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
+import Fiat_ABI from '../../constants/abis/myFait'
+import { getContract } from '../../utils'
 
+//todo 临时处理
+const priceAddress = '0x487D3D0D7565dDA123b3D3A83878f11Bda03648c';
 const GAS_MARGIN = utils.bigNumberify(1000)
 const MessageWrapper = styled.div`
   display: flex;
@@ -72,12 +76,20 @@ function  convertTimetoTimeString(_times) {
             : d) + " " + now.toTimeString().substr(0, 8);
 }
 
-function IcoDetail({history, location,icoAddress}) {
+function calPrice(_priceBigNum){
+    _priceBigNum =  _priceBigNum.mul(100);
+    let _priceDes = utils.formatEther(_priceBigNum);
+    _priceDes = + _priceDes;
+    return (1/_priceDes).toFixed(2);
+}
+
+function IcoDetail({history,icoAddress}) {
     const contract = useFactoryContract();
     const icoContract = useTokenContract(icoAddress);
+    const priceContract = usePriceContract(priceAddress);
     const {t} = useTranslation();
     const classes = useStyles();
-    const { active, account } = useWeb3Context()
+    const { active, account,library } = useWeb3Context()
     const [myDeposit,setMyDeposit] = useState(0);
     const [showLoader, setShowLoader] = useState(true)
     const [ethPrice,setEthPrice] = useState(227.34);
@@ -97,7 +109,7 @@ function IcoDetail({history, location,icoAddress}) {
         isFailed:false,
         price:0,
         depositAmount:0,
-        creater:'',
+        creater:''
     });
     const [adminInfos,setAdminInfos] = useState({
         canDeposit:false,
@@ -120,8 +132,13 @@ function IcoDetail({history, location,icoAddress}) {
                     setSnacks({
                         show:true,
                         pos:'left',
-                        message:'Deposit Success',
+                        message:t('deposit_success'),
                         type:'success'
+                    });
+                    //增加刷新自己投资额度
+                    icoContract.depositBalanceOfUser(account).then(_deposit =>{
+                        _deposit =  + (utils.formatEther(_deposit));
+                        setMyDeposit(_deposit);
                     });
                 }
                 refreshInfos();
@@ -132,7 +149,7 @@ function IcoDetail({history, location,icoAddress}) {
                     setSnacks({
                         show:true,
                         pos:'left',
-                        message:'Cancel ICO Success',
+                        message:t('cancel_success'),
                         type:'success'
                     });
                 }
@@ -144,7 +161,7 @@ function IcoDetail({history, location,icoAddress}) {
                     setSnacks({
                         show:true,
                         pos:'left',
-                        message:'Sumbmit ICO Success',
+                        message:t('submit_success'),
                         type:'success'
                     });
                 }
@@ -156,12 +173,36 @@ function IcoDetail({history, location,icoAddress}) {
                setSnacks({
                    show:true,
                    pos:'left',
-                   message:'Withdraw Success',
+                   message:t('withdraw_success'),
                    type:'success'
                });
                refreshInfos();
             });
         }
+        //监听刷新ETH价格变化
+        let _priceContract;
+        async function listenPrice(){
+           let  _priceAddress = await priceContract.fiator();
+           console.log("真实价格合约地址为:",_priceAddress);
+           _priceContract = getContract(_priceAddress,Fiat_ABI,library,account);
+           let _priceCur = await priceContract.getEthPrice();
+           let _priceOfUSDCur = calPrice(_priceCur);
+           console.log("当前ETH价格为:",_priceOfUSDCur);
+           setEthPrice(_priceOfUSDCur);
+           _priceContract.on('SetEthPrice',async (_from,_to,event)=>{
+               let _price = await priceContract.getEthPrice();
+               let _priceOfUSD = calPrice(_price);
+               console.log("更新后的ETH价格为:",_priceOfUSD);
+               setEthPrice(_priceOfUSD);
+               setSnacks({
+                   show:true,
+                   pos:'left',
+                   message:t('price_update'),
+                   type:'success'
+               });
+           });
+        }
+        listenPrice();
         return function cleanup() {
             if(icoContract){
                 icoContract.removeAllListeners("Deposit");
@@ -169,8 +210,11 @@ function IcoDetail({history, location,icoAddress}) {
                 icoContract.removeAllListeners("SubmitIco");
                 icoContract.removeAllListeners("RefundTransfer");
             }
+            if(_priceContract){
+                _priceContract.removeAllListeners("SetEthPrice");
+            }
         };
-    },[]);
+    }, []);
 
     //get ico info first
     useEffect(() => {
@@ -202,6 +246,7 @@ function IcoDetail({history, location,icoAddress}) {
     }, []);
 
     //get user deposit
+    //todo 这里要修改，用户投资后这里要有变化,需要结合事件进行测试
     useEffect(() => {
          if(active && account && icoContract){
              async function getDeposit(){
@@ -242,7 +287,7 @@ function IcoDetail({history, location,icoAddress}) {
     }
 
     // refresh ico info
-    async function refreshInfos(icoAddress){
+    async function refreshInfos(){
         let status  = await contract.allIcoStatus(icoAddress);
         status = + status;
         getIcoInfo(status);
@@ -384,7 +429,7 @@ function IcoDetail({history, location,icoAddress}) {
                     {t('ico_status') + infos.status}
                 </ContentWrapper>
                 {account && active &&  <ContentWrapper>
-                     {t('my_deposit') + myDeposit +  'ETH'}
+                     {t('my_deposit') + " " + myDeposit +  ' ETH'}
                  </ContentWrapper>}
             </div>
         )
@@ -400,12 +445,15 @@ function IcoDetail({history, location,icoAddress}) {
         value = utils.parseEther(value);
         let args = [];
         let estimatedGasLimit = await estimate(...args, { value });
-        method(...args, { value, gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
-            console.log(response);
+        method(...args, {
+             value,
+             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+             gasPrice:utils.parseUnits('10.0','gwei')
+            }).then(response => {
             setSnacks({
                 show:true,
                 pos:'left',
-                message:'Transaction has send,please wait!',
+                message:t('has_send'),
                 type:'success'
             });
         });
@@ -443,8 +491,24 @@ function IcoDetail({history, location,icoAddress}) {
     }
 
     //do cancel
-    function doCancel(){
-
+    async function doCancel(event){
+        if (event)
+            event.preventDefault();
+        let estimate = icoContract.estimate.cancelICO
+        let method = icoContract.cancelICO
+        let args = [];
+        let estimatedGasLimit = await estimate(...args);
+        method(...args, {
+             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+             gasPrice:utils.parseUnits('10.0','gwei')
+            }).then(response => {
+            setSnacks({
+                show:true,
+                pos:'left',
+                message:t('has_send'),
+                type:'success'
+            });
+        });
     }
 
     //show cancelUI
@@ -470,13 +534,47 @@ function IcoDetail({history, location,icoAddress}) {
     }
 
     //do submit
-    function doSubmit(){
-
+    async function doSubmit(event){
+        event.preventDefault();
+        let estimate = icoContract.estimate.submitICO
+        let method = icoContract.submitICO
+        let args = [];
+        let estimatedGasLimit = await estimate(...args);
+        method(...args, {
+            gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+            gasPrice:utils.parseUnits('10.0','gwei')
+            }).then(response => {
+                setSnacks({
+                    show:true,
+                    pos:'left',
+                    message:t('has_send'),
+                    type:'success'
+            });
+        });
     }
 
     //refresh the price of eth
-    function doRefreshPrice(){
-
+    async function doRefreshPrice(event){
+        if(event)
+            event.preventDefault();
+        let estimate = priceContract.estimate.updateEthPrice
+        let method = priceContract.updateEthPrice
+        let args = [];
+        //todo 这里以后详细设计
+        let value = utils.parseEther("0.0008");
+        let estimatedGasLimit = await estimate(...args, { value });
+        method(...args, {
+            value,
+            gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+            gasPrice:utils.parseUnits('10.0','gwei')
+            }).then(response => {
+                setSnacks({
+                    show:true,
+                    pos:'left',
+                    message:t('has_send'),
+                    type:'success'
+            });
+        });
     }
 
     //show the submit UI
@@ -521,7 +619,7 @@ function IcoDetail({history, location,icoAddress}) {
                             aria-label="Add"
                             className={classes.submit}
                             onClick = {doCancel}
-                            disabled={infos.isFailed}
+                            disabled={!infos.isFailed}
                             type='button'
                             style={{width:"30%",margin:5}}
                         >
@@ -534,8 +632,23 @@ function IcoDetail({history, location,icoAddress}) {
     }
 
     //do withdraw
-    function doWithDraw(){
-
+    async function doWithDraw(event){
+        event.preventDefault();
+        let estimate = icoContract.estimate.safeWithdrawal
+        let method = icoContract.safeWithdrawal
+        let args = [];
+        let estimatedGasLimit = await estimate(...args);
+        method(...args, {
+             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+             gasPrice:utils.parseUnits('10.0','gwei')
+            }).then(response => {
+            setSnacks({
+                show:true,
+                pos:'left',
+                message:t('has_send'),
+                type:'success'
+            });
+        });
     }
 
     //show withdraw UI

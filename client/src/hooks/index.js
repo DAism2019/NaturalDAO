@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
-
 import ERC20_ABI from '../constants/abis/erc20'
+import ETH_PRICE_ABI from '../constants/abis/ethPrice'
 import { getContract, getFactoryContract, getExchangeContract, isAddress } from '../utils'
 import copy from 'copy-to-clipboard'
 
@@ -110,6 +110,19 @@ export function useTokenContract(tokenAddress, withSignerIfPossible = true) {
     }
   }, [tokenAddress, library, withSignerIfPossible, account])
 }
+
+export function usePriceContract(priceAddress, withSignerIfPossible = true) {
+  const { library, account } = useWeb3Context()
+
+  return useMemo(() => {
+    try {
+      return getContract(priceAddress, ETH_PRICE_ABI, library, withSignerIfPossible ? account : undefined)
+    } catch {
+      return null
+    }
+  }, [priceAddress, library, withSignerIfPossible, account])
+}
+
 
 // returns null on errors
 export function useFactoryContract(withSignerIfPossible = true) {

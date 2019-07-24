@@ -146,7 +146,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 191955
+    "gas": 262589
 }, {
     "name": "endIco",
     "outputs": [],
@@ -156,16 +156,19 @@
     "type": "function",
     "gas": 35874
 }, {
-    "name": "getLatestIco",
+    "name": "getAllIco",
     "outputs": [{
-        "type": "address",
+        "type": "address[128]",
         "name": "out"
     }],
-    "inputs": [],
+    "inputs": [{
+        "type": "address",
+        "name": "creater"
+    }],
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1341
+    "gas": 46777
 }, {
     "name": "buyNdao",
     "outputs": [{
@@ -350,6 +353,20 @@
     "type": "function",
     "gas": 1315
 }, {
+    "name": "allIcoSymbol",
+    "outputs": [{
+        "type": "string",
+        "name": "out"
+    }],
+    "inputs": [{
+        "type": "address",
+        "name": "arg0"
+    }],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 7144
+}, {
     "name": "allIcoAddressOfUser",
     "outputs": [{
         "type": "address",
@@ -365,7 +382,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1550
+    "gas": 1580
 }, {
     "name": "allIcoCountsOfUser",
     "outputs": [{
@@ -379,7 +396,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1375
+    "gas": 1405
 }, {
     "name": "allIcoCreater",
     "outputs": [{
@@ -393,7 +410,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1405
+    "gas": 1435
 }, {
     "name": "submitssionDelta",
     "outputs": [{
@@ -405,7 +422,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1263
+    "gas": 1293
 }, {
     "name": "setter",
     "outputs": [{
@@ -416,5 +433,5 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1293
+    "gas": 1323
 }]
