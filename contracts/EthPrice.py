@@ -1,38 +1,73 @@
-#本合约用来获得ETH对USD的价格,返回的是0.01$对应的WEI数量
-#使用以太坊上现存的Fiat Contract，官方网站为https://fiatcontract.com/
-#其在主网和测试网上的地址为
-#price = FiatContract(0x8055d0504666e2B6942BeB8D6014c964658Ca591) // MAINNET ADDRESS
-#price = FiatContract(0x2CDe56E5c8235D6360CCbb0c57Ce248Ca9C80909) // TESTNET ADDRESS (ROPSTEN)
-
-#定义外部合约接口
+# @title The Eth And Ndao Price Interface V1
+# @author radarzhhua@gmail.com
+# @refernce Fiat Contract  url:https://fiatcontract.com/
 contract FiatContract:
     def USD(_id: uint256) -> uint256: constant
-    def requestUpdate(_id: uint256):modifying
+    def requestUpdate(_id: uint256): modifying
 
 
-#定义状态变量
-fiator:public(FiatContract)
-owner:public(address)
+# state variables
+# instance of FiatContract
+fiator: public(FiatContract)
+# owner that can set the  instance of FiatContract
+owner: public(address)
+# decimals of NDAO token
+NDAO_DECIMALS: constant(uint256) = 18
+
 
 @public
 def __init__():
     self.owner = msg.sender
 
-#允许切换到自己的备份合约
+
 @public
-def setFiator(_faitor:address):
-    assert msg.sender == self.owner and _faitor !=ZERO_ADDRESS
+def setFiator(_faitor: address):
+    """
+    # @param _faitor the address of FiatContract's instance
+    """
+    assert msg.sender == self.owner and _faitor != ZERO_ADDRESS
     self.fiator = FiatContract(_faitor)
 
-# @returns $0.01  => wei 假设返回值是 x ,对应的eth 就是 msg.value/return
+
 @public
 @constant
 def getEthPrice() -> uint256:
+    """
+    # @returns $0.01  => wei
+    """
     return self.fiator.USD(0)
 
 
 @public
 @payable
 def updateEthPrice() -> bool:
-    self.fiator.requestUpdate(0,value=msg.value)
+    """
+    @dev send a signal to update price
+    """
+    self.fiator.requestUpdate(0, value=msg.value)
     return True
+
+
+@public
+@constant
+def ethToNdaoInputPrice(eth_sold: wei_value) -> uint256:
+    """
+    # @param eth_amount The amount of eth to be sold.
+    # @return return the amount of ndao output
+    """
+    price: uint256 = self.getEthPrice()
+    result: uint256 = as_unitless_number(
+        eth_sold) * 10**NDAO_DECIMALS / (100 * price)
+    return result
+
+
+@public
+@constant
+def ethToNdaoOutPrice(ndao_bought: uint256) -> wei_value:
+    """
+    # @param ndao_bought The amount of ndao to be bought.
+    # @return return the amount of eth_sold
+    """
+    price: uint256 = self.getEthPrice()
+    result: uint256 = (100 * price * ndao_bought / 10**NDAO_DECIMALS) + 1
+    return as_wei_value(result, 'wei')

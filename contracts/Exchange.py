@@ -1,9 +1,15 @@
+# @title NaturalDAO Exchange Interface V1
+# @notice Use at your own risk
+# @refernce The exchange contract of uniswap
 from vyper.interfaces import ERC20
 
 
 # the interface of Factory
 contract Factory:
     def getExchange(token_addr: address) -> address: constant
+    def buyNdaoInputSwap() -> uint256: modifying
+    def buyNdaoOutputSwap(
+        ndao_bought: uint256) -> (wei_value, wei_value): modifying
 
 
 # the interface of Exchange
@@ -11,12 +17,11 @@ contract Exchange:
     def getNdaoToTokenOutputPrice(tokens_bought: uint256) -> uint256: constant
     def ndaoToTokenTransferInput(ndao_sold: uint256, min_tokens: uint256,
                                  deadline: timestamp, recipient: address) -> uint256: modifying
-
     def ndaoToTokenTransferOutput(
         tokens_bought: uint256, max_ndao: uint256, deadline: timestamp, recipient: address) -> uint256: modifying
 
 
-# event
+# events
 TokenPurchase: event({buyer: indexed(address), ndao_sold: indexed(
     uint256), tokens_bought: indexed(uint256)})
 NdaoPurchase: event({buyer: indexed(address), tokens_sold: indexed(
@@ -33,17 +38,20 @@ ndao: ERC20
 factory: Factory
 # Max amounts of token on this contract
 maxPool: uint256
+# virtual ndao amounts
+ndaoAmount: uint256
 
 
-# @dev This function acts as a contract constructor which is not currently supported in contracts deployed
-#      using create_with_code_of(). It is called once by the factory during contract creation.
+# init the exchange
 @public
-def setup(token_addr: address, ndao_address: address, token_amount: uint256):
+def setup(token_addr: address, ndao_address: address, token_amount: uint256, ndao_amount: uint256):
     assert self.factory == ZERO_ADDRESS and self.token == ZERO_ADDRESS and self.ndao == ZERO_ADDRESS
-    assert token_addr != ZERO_ADDRESS and ndao_address != ZERO_ADDRESS and token_amount > 0
+    assert token_addr != ZERO_ADDRESS and ndao_address != ZERO_ADDRESS
+    assert ndao_amount > 0 and token_amount > 0
     self.factory = Factory(msg.sender)
     self.token = ERC20(token_addr)
     self.ndao = ERC20(ndao_address)
+    self.ndaoAmount = ndao_amount
     self.maxPool = token_amount
 
 
@@ -73,31 +81,32 @@ def getOutputPrice(output_amount: uint256, input_reserve: uint256, output_reserv
     # @param output_reserve Amount of NDAO or Tokens (output type) in exchange reserves.
     # @return Amount of NDAO or Tokens sold.
     """
-    assert input_reserve > 0 and output_reserve > 0 and output_reserve > output_amount
+    assert input_reserve > 0 and output_reserve > 0
     numerator: uint256 = input_reserve * output_amount
     denominator: uint256 = output_reserve - output_amount
     return numerator / denominator + 1
 
 
-# buy tokens
 @private
-def ndaoToTokenInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
+def ndaoToTokenInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestamp, buyer: address, recipient: address, transNdao: bool) -> uint256:
     assert deadline >= block.timestamp and (ndao_sold > 0 and min_tokens > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     tokens_bought: uint256 = self.getInputPrice(
         ndao_sold, ndao_reserve, token_reserve)
     # Throws if tokens_bought < min_tokens
     assert tokens_bought >= min_tokens, 'little than min_tokens'
-    flag: bool = self.ndao.transferFrom(buyer, self, ndao_sold)
-    assert flag, 'transfer ndao failed'
+    flag: bool
+    if transNdao:
+        flag = self.ndao.transferFrom(buyer, self, ndao_sold)
+        assert flag, 'transfer ndao failed'
+    self.ndaoAmount += ndao_sold
     flag = self.token.transfer(recipient, tokens_bought)
     assert flag, 'transfer token failed'
     log.TokenPurchase(buyer, ndao_sold, tokens_bought)
     return tokens_bought
 
 
-# buy self
 @public
 def ndaoToTokenSwapInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestamp) -> uint256:
     """
@@ -109,10 +118,9 @@ def ndaoToTokenSwapInput(ndao_sold: uint256, min_tokens: uint256, deadline: time
     # @param deadline Time after which this transaction can no longer be executed.
     # @return Amount of Tokens bought.
     """
-    return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, msg.sender)
+    return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, msg.sender, True)
 
 
-# buy for others
 @public
 def ndaoToTokenTransferInput(ndao_sold: uint256, min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256:
     """
@@ -126,32 +134,64 @@ def ndaoToTokenTransferInput(ndao_sold: uint256, min_tokens: uint256, deadline: 
     # @return Amount of Tokens bought.
     """
     assert recipient != self and recipient != ZERO_ADDRESS
-    return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, recipient)
+    return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, recipient, True)
 
 
-# output
+@public
+@payable
+def ethToTokenSwapInput(min_tokens: uint256, deadline: timestamp) -> uint256:
+    """
+    # @notice Convert ETH to Tokens.
+    # @dev User specifies exact input  and minimum output.
+    # @param min_tokens Minimum Tokens bought.
+    # @param deadline Time after which this transaction can no longer be executed.
+    # @return Amount of Tokens bought.
+    """
+    assert msg.value > 0
+    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(value=msg.value)
+    return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, msg.sender, False)
+
+
+@public
+@payable
+def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient: address) -> uint256:
+    """
+    # @notice Convert ETH to Tokens and transfers Tokens to recipient.
+    # @dev User specifies exact input  and minimum output
+    # @param min_tokens Minimum Tokens bought.
+    # @param deadline Time after which this transaction can no longer be executed.
+    # @param recipient The address that receives output Tokens.
+    # @return Amount of Tokens bought.
+    """
+    assert msg.value > 0
+    assert recipient != self and recipient != ZERO_ADDRESS
+    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(value=msg.value)
+    return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, recipient, False)
+
+
 @private
 def ndaoToTokenOutput(tokens_bought: uint256, max_ndao: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and (tokens_bought > 0 and max_ndao > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     ndao_sold: uint256 = self.getOutputPrice(
         tokens_bought, ndao_reserve, token_reserve)
     # Throws if ndao_sold > max_ndao
     assert ndao_sold <= max_ndao, 'beyond max_ndao'
     flag: bool = self.ndao.transferFrom(buyer, self, ndao_sold)
     assert flag, 'transfer ndao failed'
+    self.ndaoAmount += ndao_sold
     flag = self.token.transfer(recipient, tokens_bought)
     assert flag, 'transfer token failed'
     log.TokenPurchase(buyer, ndao_sold, tokens_bought)
     return ndao_sold
 
 
-# buy self
 @public
 def ndaoToTokenSwapOutput(tokens_bought: uint256, max_ndao: uint256, deadline: timestamp) -> uint256:
     """
     # @notice Convert NDAO to Tokens.
+    # @notice need Approve
     # @dev User specifies maximum input max_ndao and exact output.
     # @param tokens_bought Amount of tokens bought.
     # @param deadline Time after which this transaction can no longer be executed.
@@ -160,11 +200,11 @@ def ndaoToTokenSwapOutput(tokens_bought: uint256, max_ndao: uint256, deadline: t
     return self.ndaoToTokenOutput(tokens_bought, max_ndao, deadline, msg.sender, msg.sender)
 
 
-# buy for others
 @public
 def ndaoToTokenTransferOutput(tokens_bought: uint256, max_ndao: uint256, deadline: timestamp, recipient: address) -> uint256:
     """
     # @notice Convert NDAO to Tokens and transfers Tokens to recipient.
+    # @notice need Approve
     # @dev User specifies maximum input max_ndao and exact output.
     # @param tokens_bought Amount of tokens bought.
     # @param deadline Time after which this transaction can no longer be executed.
@@ -175,13 +215,64 @@ def ndaoToTokenTransferOutput(tokens_bought: uint256, max_ndao: uint256, deadlin
     return self.ndaoToTokenOutput(tokens_bought, max_ndao, deadline, msg.sender, recipient)
 
 
-# token => ndao
+@private
+def ethToTokenOutput(eth_value: wei_value, tokens_bought: uint256, max_eth: wei_value, deadline: timestamp, buyer: address, recipient: address) -> wei_value:
+    assert deadline >= block.timestamp and (tokens_bought > 0 and max_eth > 0)
+    token_reserve: uint256 = self.token.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
+    ndao_sold: uint256 = self.getOutputPrice(
+        tokens_bought, ndao_reserve, token_reserve)
+    # need deal the refund
+    eth_sold: wei_value
+    eth_refund: wei_value
+    (eth_sold, eth_refund) = self.factory.buyNdaoOutputSwap(
+        ndao_sold, value=eth_value)
+    # Throws if eth_sold > max_eth
+    assert eth_sold <= max_eth, "beyond max_eth"
+    if eth_refund > 0:
+        send(buyer, eth_refund)
+    self.ndaoAmount += ndao_sold
+    flag: bool = self.token.transfer(recipient, tokens_bought)
+    assert flag, 'transfer token failed'
+    log.TokenPurchase(buyer, ndao_sold, tokens_bought)
+    return eth_sold
+
+
+@public
+@payable
+def ethToTokenSwapOutput(tokens_bought: uint256, max_eth: wei_value, deadline: timestamp) -> wei_value:
+    """
+    # @notice Convert eth to Tokens.
+    # @dev User specifies maximum input max_eth and exact output.
+    # @param tokens_bought Amount of tokens bought.
+    # @param deadline Time after which this transaction can no longer be executed.
+    # @return Amount of eth sold.
+    """
+    assert msg.value > 0
+    return self.ethToTokenOutput(msg.value, tokens_bought, max_eth, deadline, msg.sender, msg.sender)
+
+
+@public
+@payable
+def ethToTokenTransferOutput(tokens_bought: uint256, max_eth: wei_value, deadline: timestamp, recipient: address) -> wei_value:
+    """
+    # @notice Convert eth to Tokens.
+    # @dev User specifies maximum input max_eth and exact output.
+    # @param tokens_bought Amount of tokens bought.
+    # @param deadline Time after which this transaction can no longer be executed.
+    # @return Amount of eth sold.
+    """
+    assert msg.value > 0
+    assert recipient != self and recipient != ZERO_ADDRESS
+    return self.ethToTokenOutput(msg.value, tokens_bought, max_eth, deadline, msg.sender, recipient)
+
+
 @private
 def tokenToNdaoInput(tokens_sold: uint256, min_ndao: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and (tokens_sold > 0 and min_ndao > 0)
     token_reserve: uint256 = self.token.balanceOf(self)
     assert token_reserve + tokens_sold <= self.maxPool, 'the pool is full'
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     ndao_bought: uint256 = self.getInputPrice(
         tokens_sold, token_reserve, ndao_reserve)
     assert ndao_bought >= min_ndao
@@ -189,6 +280,7 @@ def tokenToNdaoInput(tokens_sold: uint256, min_ndao: uint256, deadline: timestam
     assert flag, 'transfer token failed'
     flag = self.ndao.transfer(recipient, ndao_bought)
     assert flag, 'transfer ndao failed'
+    self.ndaoAmount -= ndao_bought
     log.NdaoPurchase(buyer, tokens_sold, ndao_bought)
     return ndao_bought
 
@@ -198,6 +290,7 @@ def tokenToNdaoInput(tokens_sold: uint256, min_ndao: uint256, deadline: timestam
 def tokenToNdaoSwapInput(tokens_sold: uint256, min_ndao: uint256, deadline: timestamp) -> uint256:
     """
     # @notice Convert Tokens to NDAO.
+    # @notice need Approve
     # @dev User specifies exact input and minimum output.
     # @param tokens_sold Amount of Tokens sold.
     # @param min_ndao Minimum NDAO purchased.
@@ -212,6 +305,7 @@ def tokenToNdaoSwapInput(tokens_sold: uint256, min_ndao: uint256, deadline: time
 def tokenToNdaoTransferInput(tokens_sold: uint256, min_ndao: uint256, deadline: timestamp, recipient: address) -> uint256:
     """
     # @notice Convert Tokens to NDAO and transfers NDAO to recipient.
+    # @notice need Approve
     # @dev User specifies exact input and minimum output.
     # @param tokens_sold Amount of Tokens sold.
     # @param min_ndao Minimum NDAO purchased.
@@ -227,7 +321,7 @@ def tokenToNdaoTransferInput(tokens_sold: uint256, min_ndao: uint256, deadline: 
 def tokenToNdaoOutput(ndao_bought: uint256, max_tokens: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and ndao_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     tokens_sold: uint256 = self.getOutputPrice(
         ndao_bought, token_reserve, ndao_reserve)
     assert token_reserve + tokens_sold <= self.maxPool, 'the pool is full'
@@ -236,6 +330,7 @@ def tokenToNdaoOutput(ndao_bought: uint256, max_tokens: uint256, deadline: times
     assert flag, 'transfer token failed'
     flag = self.ndao.transfer(recipient, ndao_bought)
     assert flag, 'transfer ndao failed'
+    self.ndaoAmount -= ndao_bought
     log.NdaoPurchase(buyer, tokens_sold, ndao_bought)
     return tokens_sold
 
@@ -244,6 +339,7 @@ def tokenToNdaoOutput(ndao_bought: uint256, max_tokens: uint256, deadline: times
 def tokenToNdaoSwapOutput(ndao_bought: uint256, max_tokens: uint256, deadline: timestamp) -> uint256:
     """
     # @notice Convert Tokens to NDAO.
+    # @notice need Approve
     # @dev User specifies maximum input and exact output.
     # @param ndao_bought Amount of NDAO purchased.
     # @param max_tokens Maximum Tokens sold.
@@ -257,6 +353,7 @@ def tokenToNdaoSwapOutput(ndao_bought: uint256, max_tokens: uint256, deadline: t
 def tokenToNdaoTransferOutput(ndao_bought: uint256, max_tokens: uint256, deadline: timestamp, recipient: address) -> uint256:
     """
     # @notice Convert Tokens to NDAO and transfers NDAO to recipient.
+    # @notice need Approve
     # @dev User specifies maximum input and exact output.
     # @param ndao_bought Amount of NDAO purchased.
     # @param max_tokens Maximum Tokens sold.
@@ -268,17 +365,16 @@ def tokenToNdaoTransferOutput(ndao_bought: uint256, max_tokens: uint256, deadlin
     return self.tokenToNdaoOutput(ndao_bought, max_tokens, deadline, msg.sender, recipient)
 
 
-# token => token
 @private
 def tokenToTokenInput(tokens_sold: uint256, min_tokens_bought: uint256, min_ndao_bought: uint256, deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
     assert (deadline >= block.timestamp and tokens_sold > 0) and (
         min_tokens_bought > 0 and min_ndao_bought > 0)
     assert exchange_addr != ZERO_ADDRESS
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    assert token_reserve + tokens_sold <= self.maxPool, 'the pool is full'
     ndao_bought: uint256 = self.tokenToNdaoInput(
         tokens_sold, min_ndao_bought, deadline, buyer, self)
-    # need approve
+    # attention: Transfer ndao need approve
     self.ndao.approve(exchange_addr, ndao_bought)
     tokens_bought: uint256 = Exchange(exchange_addr).ndaoToTokenTransferInput(
         ndao_bought, min_tokens_bought, deadline, recipient)
@@ -290,6 +386,7 @@ def tokenToTokenInput(tokens_sold: uint256, min_tokens_bought: uint256, min_ndao
 def tokenToTokenSwapInput(tokens_sold: uint256, min_tokens_bought: uint256, min_ndao_bought: uint256, deadline: timestamp, token_addr: address) -> uint256:
     """
     # @notice Convert Tokens (self.token) to Tokens (token_addr).
+    # @notice need Approve
     # @dev User specifies exact input and minimum output.
     # @param tokens_sold Amount of Tokens sold.
     # @param min_tokens_bought Minimum Tokens (token_addr) purchased.
@@ -307,6 +404,7 @@ def tokenToTokenTransferInput(tokens_sold: uint256, min_tokens_bought: uint256, 
     """
     # @notice Convert Tokens (self.token) to Tokens (token_addr) and transfers
     #         Tokens (token_addr) to recipient.
+    # @notice need Approve
     # @dev User specifies exact input and minimum output.
     # @param tokens_sold Amount of Tokens sold.
     # @param min_tokens_bought Minimum Tokens (token_addr) purchased.
@@ -320,7 +418,6 @@ def tokenToTokenTransferInput(tokens_sold: uint256, min_tokens_bought: uint256, 
     return self.tokenToTokenInput(tokens_sold, min_tokens_bought, min_ndao_bought, deadline, msg.sender, recipient, exchange_addr)
 
 
-# token => token
 @private
 def tokenToTokenOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_ndao_sold: uint256, deadline: timestamp, buyer: address, recipient: address, exchange_addr: address) -> uint256:
     assert deadline >= block.timestamp and (
@@ -329,15 +426,10 @@ def tokenToTokenOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_nda
     # cal ndao_transfer
     ndao_bought: uint256 = Exchange(
         exchange_addr).getNdaoToTokenOutputPrice(tokens_bought)
-    token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
-    # cal tokens_sold
-    tokens_sold: uint256 = self.getOutputPrice(
-        ndao_bought, token_reserve, ndao_reserve)
-    assert max_tokens_sold >= tokens_sold and max_ndao_sold >= ndao_bought
-    flag: bool = self.token.transferFrom(buyer, self, tokens_sold)
-    assert flag, 'transfer tokens_sold failed'
-    # need approve
+    assert ndao_bought <= max_ndao_sold
+    tokens_sold: uint256 = self.tokenToNdaoOutput(
+        ndao_bought, max_tokens_sold, deadline, buyer, self)
+    # attention need approve
     self.ndao.approve(exchange_addr, ndao_bought)
     Exchange(exchange_addr).ndaoToTokenTransferOutput(
         tokens_bought, max_ndao_sold, deadline, recipient)
@@ -349,6 +441,7 @@ def tokenToTokenOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_nda
 def tokenToTokenSwapOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_ndao_sold: uint256, deadline: timestamp, token_addr: address) -> uint256:
     """
     # @notice Convert Tokens (self.token) to Tokens (token_addr).
+    # @notice need Approve
     # @dev User specifies maximum input and exact output.
     # @param tokens_bought Amount of Tokens (token_addr) bought.
     # @param max_tokens_sold Maximum Tokens (self.token) sold.
@@ -366,6 +459,7 @@ def tokenToTokenTransferOutput(tokens_bought: uint256, max_tokens_sold: uint256,
     """
     # @notice Convert Tokens (self.token) to Tokens (token_addr) and transfers
     #         Tokens (token_addr) to recipient.
+    # @notice need Approve
     # @dev User specifies maximum input and exact output.
     # @param tokens_bought Amount of Tokens (token_addr) bought.
     # @param max_tokens_sold Maximum Tokens (self.token) sold.
@@ -380,76 +474,6 @@ def tokenToTokenTransferOutput(tokens_bought: uint256, max_tokens_sold: uint256,
 
 
 @public
-def tokenToExchangeSwapInput(tokens_sold: uint256, min_tokens_bought: uint256, min_ndao_bought: uint256, deadline: timestamp, exchange_addr: address) -> uint256:
-    """
-    # @notice Convert Tokens (self.token) to Tokens (exchange_addr.token).
-    # @dev Allows trades through contracts that were not deployed from the same factory.
-    # @dev User specifies exact input and minimum output.
-    # @param tokens_sold Amount of Tokens sold.
-    # @param min_tokens_bought Minimum Tokens (token_addr) purchased.
-    # @param min_ndao_bought Minimum NDAO purchased as intermediary.
-    # @param deadline Time after which this transaction can no longer be executed.
-    # @param exchange_addr The address of the exchange for the token being purchased.
-    # @return Amount of Tokens (exchange_addr.token) bought.
-    """
-    return self.tokenToTokenInput(tokens_sold, min_tokens_bought, min_ndao_bought, deadline, msg.sender, msg.sender, exchange_addr)
-
-
-@public
-def tokenToExchangeTransferInput(tokens_sold: uint256, min_tokens_bought: uint256, min_ndao_bought: uint256, deadline: timestamp, recipient: address, exchange_addr: address) -> uint256:
-    """
-    # @notice Convert Tokens (self.token) to Tokens (exchange_addr.token) and transfers
-    #         Tokens (exchange_addr.token) to recipient.
-    # @dev Allows trades through contracts that were not deployed from the same factory.
-    # @dev User specifies exact input and minimum output.
-    # @param tokens_sold Amount of Tokens sold.
-    # @param min_tokens_bought Minimum Tokens (token_addr) purchased.
-    # @param min_ndao_bought Minimum NDAO purchased as intermediary.
-    # @param deadline Time after which this transaction can no longer be executed.
-    # @param recipient The address that receives output tokens.
-    # @param exchange_addr The address of the exchange for the token being purchased.
-    # @return Amount of Tokens (exchange_addr.token) bought.
-    """
-    assert recipient != self
-    return self.tokenToTokenInput(tokens_sold, min_tokens_bought, min_ndao_bought, deadline, msg.sender, recipient, exchange_addr)
-
-
-@public
-def tokenToExchangeSwapOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_ndao_sold: uint256, deadline: timestamp, exchange_addr: address) -> uint256:
-    """
-    # @notice Convert Tokens (self.token) to Tokens (exchange_addr.token).
-    # @dev Allows trades through contracts that were not deployed from the same factory.
-    # @dev User specifies maximum input and exact output.
-    # @param tokens_bought Amount of Tokens (token_addr) bought.
-    # @param max_tokens_sold Maximum Tokens (self.token) sold.
-    # @param max_ndao_sold Maximum NDAO purchased as intermediary.
-    # @param deadline Time after which this transaction can no longer be executed.
-    # @param exchange_addr The address of the exchange for the token being purchased.
-    # @return Amount of Tokens (self.token) sold.
-    """
-    return self.tokenToTokenOutput(tokens_bought, max_tokens_sold, max_ndao_sold, deadline, msg.sender, msg.sender, exchange_addr)
-
-
-@public
-def tokenToExchangeTransferOutput(tokens_bought: uint256, max_tokens_sold: uint256, max_ndao_sold: uint256, deadline: timestamp, recipient: address, exchange_addr: address) -> uint256:
-    """
-    # @notice Convert Tokens (self.token) to Tokens (exchange_addr.token) and transfers
-    #         Tokens (exchange_addr.token) to recipient.
-    # @dev Allows trades through contracts that were not deployed from the same factory.
-    # @dev User specifies maximum input and exact output.
-    # @param tokens_bought Amount of Tokens (token_addr) bought.
-    # @param max_tokens_sold Maximum Tokens (self.token) sold.
-    # @param max_ndao_sold Maximum NDAO purchased as intermediary.
-    # @param deadline Time after which this transaction can no longer be executed.
-    # @param recipient The address that receives output tokens.
-    # @param token_addr The address of the token being purchased.
-    # @return Amount of Tokens (self.token) sold.
-    """
-    assert recipient != self
-    return self.tokenToTokenOutput(tokens_bought, max_tokens_sold, max_ndao_sold, deadline, msg.sender, recipient, exchange_addr)
-
-
-@public
 @constant
 def getNdaoToTokenInputPrice(ndao_sold: uint256) -> uint256:
     """
@@ -459,7 +483,7 @@ def getNdaoToTokenInputPrice(ndao_sold: uint256) -> uint256:
     """
     assert ndao_sold > 0
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     return self.getInputPrice(ndao_sold, ndao_reserve, token_reserve)
 
 
@@ -473,7 +497,7 @@ def getNdaoToTokenOutputPrice(tokens_bought: uint256) -> uint256:
     """
     assert tokens_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     return self.getOutputPrice(tokens_bought, ndao_reserve, token_reserve)
 
 
@@ -487,7 +511,7 @@ def getTokenToNdaoInputPrice(tokens_sold: uint256) -> uint256:
     """
     assert tokens_sold > 0
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     return self.getInputPrice(tokens_sold, token_reserve, ndao_reserve)
 
 
@@ -501,7 +525,7 @@ def getTokenToNdaoOutputPrice(ndao_bought: uint256) -> uint256:
     """
     assert ndao_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
-    ndao_reserve: uint256 = self.ndao.balanceOf(self)
+    ndao_reserve: uint256 = self.ndaoAmount
     return self.getOutputPrice(ndao_bought, token_reserve, ndao_reserve)
 
 
@@ -539,3 +563,21 @@ def getMaxPool() -> uint256:
     # @return maxPool of token on this exchange.
     """
     return self.maxPool
+
+
+@public
+@constant
+def getNdaoBalance() -> uint256:
+    """
+    # @return the balance of ndao in the contract
+    """
+    return self.ndao.balanceOf(self)
+
+
+@public
+@constant
+def getNdaoReserve() -> uint256:
+    """
+    # @return the reverse of ndao in the contract
+    """
+    return self.ndaoAmount

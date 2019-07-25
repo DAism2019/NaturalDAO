@@ -1,19 +1,25 @@
-# 在外部Fiat不可用时使用自己的合约替代
-
-# 定义一个价格变化事件
+#events
 SetEthPrice: event({_from: uint256, _to: uint256})
 RequestUpdate: event({_id: uint256})
-Donation: event({_from: address})
+NewSetter: event({_from: indexed(address), _to: indexed(address)})
 
-# 定义状态变量
+
+# state varialbes
 price: public(uint256)
-
 setter: public(address)
 
 
 @public
 def __init__():
     self.setter = msg.sender
+
+
+@public
+def setNewSetter(_newSetter: address):
+    assert _newSetter != ZERO_ADDRESS
+    assert msg.sender == self.setter
+    log.NewSetter(self.setter, _newSetter)
+    self.setter = _newSetter
 
 
 @public
@@ -45,14 +51,3 @@ def USD(id: uint256) -> uint256:
     """
     assert id == 0
     return self.price
-
-
-@public
-@payable
-def donate():
-    """
-    @dev donation function that get forwarded to the contract setter
-    """
-    assert msg.value > 0
-    send(self.setter, msg.value)
-    log.Donation(msg.sender)
