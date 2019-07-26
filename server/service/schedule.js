@@ -1,7 +1,7 @@
 //用来每隔一个小时查询ETH价格并写入自定义的价格合约
 const Schedule = require('node-schedule');
-const util = require('../../service/utilService');
-const fileService = require('../../service/fileService');
+const util = require('./utilService');
+const fileService = require('./fileService');
 let ruleQueryPrice;
 
 function init() {

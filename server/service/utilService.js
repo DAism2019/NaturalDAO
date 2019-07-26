@@ -58,7 +58,7 @@ let util = {
         });
     },
     //价格转换 todo 优化选项:这里精度太高会超过js的处理能力，需要转成bigNumber进行处理
-    convertPrice: async price => {
+    convertPrice:  price => {
         try {
             let _str = price.toString();
             let _strs = _str.split('.');
@@ -90,11 +90,15 @@ let util = {
     queryPrice2: async () => {
         let options = {
             url: "https://api.pro.coinbase.com/products/ETH-USD/ticker",
-            method: 'GET'
+            method: 'GET',
+            headers: {
+                'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36"
+            }
         };
         try {
             let result = await util.doRequest(options);
             price = + result.price;
+            console.log("price:",price);
             return price;
         } catch (err) {
             console.log("err:", err);
