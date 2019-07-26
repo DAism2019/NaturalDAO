@@ -9,7 +9,7 @@
   qq:316855125
 *************************************************/
 //读写文件操作库
-const fileService = require('../service/fileService');
+const fileService = require('../server/service/fileService');
 //定义相关路径
 let abiPath = 'abi';
 let bytecodePath = 'bytecode';

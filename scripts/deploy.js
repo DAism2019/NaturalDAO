@@ -11,7 +11,7 @@
 
 //导入模块
 const ethers = require('ethers');
-const fileService = require('../service/fileService');
+const fileService = require('../server/service/fileService');
 //定义相关文件位置
 let abiPath = 'abi';
 let bytecodePath = 'bytecode';
@@ -76,7 +76,7 @@ async function readAbi(filename) {
 async function deploy(constructor, filename) {
     //开始部署进程
     try {
-        // console.log(`My address is \x1b[32m${myWallet.address}\x1b[0m`);
+        console.log(`My address is \x1b[32m${myWallet.address}\x1b[0m`);
         console.log(`start deploying \x1b[35m ${filename}\x1b[0m`);
         let contract = await factory.deploy(...constructor);
         console.log(`\x1b[35mcontract.address:\x1b[32m${contract.address}\x1b[0m`);
