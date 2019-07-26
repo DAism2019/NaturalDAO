@@ -1,8 +1,8 @@
 //一次性部署并设置该项目所有的合约，仅适用于本工程
 //导入模块
 const ethers = require('ethers');
-const fileService = require('../service/fileService');
-const util = require('../service/utilService');
+const fileService = require('../server/service/fileService');
+const util = require('../server/service/utilService');
 //定义相关文件位置
 let abiPath = 'abi';
 let bytecodePath = 'bytecode';
