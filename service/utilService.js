@@ -2,6 +2,7 @@
 const ethers = require('ethers');
 const fileService = require('./fileService');
 const etherscanProvider = new ethers.providers.EtherscanProvider();
+const request = require('request');
 
 let util = {
     priceContract: null, //价格合约

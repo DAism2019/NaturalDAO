@@ -26,7 +26,7 @@ async function start() {
 }
 
 async function updatePrice(address) {
-    let price = await util.queryPrice1();
+    let price = await util.queryPrice2();
     util.writeContract(address, price, false);
 }
 
