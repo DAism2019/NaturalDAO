@@ -140,7 +140,7 @@ async function setContract() {
     tx = await contract.initializeFactory(allAddress['Exchange.py'], myWallet.address, allAddress['NDAOToken.py'], allAddress['EthPrice.py'], allAddress['Ico.py'],);
     await tx.wait();
     console.log(`\x1b[32mall contracts setup over!\x1b[0m`)
-    let price = await util.queryPrice1();
+    let price = await util.queryPrice2();
     util.writeContract(allAddress['MyFiat.py'], price, true);
 }
 

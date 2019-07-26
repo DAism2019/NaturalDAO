@@ -13,7 +13,7 @@ import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 import CustomSnackbar from '../../components/Snackbar'
 // import { BigNumber}  from "bignumber"
-const BigNumber = require('bignumber.js');
+// const BigNumber = require('bignumber.js');
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -40,6 +40,8 @@ const useStyles = makeStyles(theme => ({
         width: "50%"
     }
 }));
+
+const fixedNumber = 6;
 
 const decimals = [12,15, 18];
 const GAS_MARGIN = utils.bigNumberify(1000);
@@ -108,12 +110,12 @@ function CreateIco({ history }) {
             goal =  utils.parseEther(goal);
             timedelta = + timedelta;
             timedelta = timedelta * 24 * 3600;
-            price =   + _calPrice();
-            price = new BigNumber(price);
-            let _des = new BigNumber(10);
-            _des = _des.exponentiatedBy(decimals);
-            price = _des.multipliedBy(price);
-            price = utils.bigNumberify(price.toString())
+            price =  _calPrice() * 10 ** fixedNumber;
+            price = utils.bigNumberify(price);
+            let _ten = utils.bigNumberify(10);
+            let _des = _ten.pow(decimals);
+            let _devider = _ten.pow(fixedNumber);
+            price = _des.mul(price).div(_devider);
             let args = [name,symbol,decimals,goal,timedelta,price];
             let value = ethers.constants.Zero;
             const estimatedGasLimit = await estimate(...args, { value });
@@ -147,7 +149,7 @@ function CreateIco({ history }) {
         }else if ( _goal<= 0 || _tokens <= 0){
             return 0;
         }else{
-            return (_tokens/_goal).toFixed(6);
+            return  + ((_tokens/_goal).toFixed(fixedNumber));
         }
     }
 

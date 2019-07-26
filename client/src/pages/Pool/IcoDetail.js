@@ -24,7 +24,7 @@ import Fiat_ABI from '../../constants/abis/myFait'
 import { getContract } from '../../utils'
 
 //todo 临时处理
-const priceAddress = '0x487D3D0D7565dDA123b3D3A83878f11Bda03648c';
+const priceAddress = '0xF09B9BCa649ED7e5458c478185Cc7Bb72F2E229E';
 const GAS_MARGIN = utils.bigNumberify(1000)
 const MessageWrapper = styled.div`
   display: flex;
@@ -51,6 +51,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         marginTop: theme.spacing(-3),
         width: 550
+    },
+    ContentWrapper:{
+        marginLeft:theme.spacing(1)
     },
     textField: {
         marginLeft: theme.spacing(1),
@@ -380,9 +383,9 @@ function IcoDetail({history,icoAddress}) {
     }
 
     //get the base info of ICO
-    function getBaseInfo(){
+    function getBaseInfo(classes){
         return(
-            <div>
+            <div className={classes.ContentWrapper}>
                 <ContentWrapper>
                     {t('ico_address') + infos.address}
                 </ContentWrapper>
@@ -700,7 +703,7 @@ function IcoDetail({history,icoAddress}) {
         let flag = infos.creater && judgeSender(infos.creater)
         return (
             <>
-            {getBaseInfo()}
+            {getBaseInfo(classes)}
             {adminInfos.canDeposit && getDepositUI(classes)}
             {adminInfos.canSubmit && flag && getSubmitUI(classes)}
             {adminInfos.canCanecl && getCancelUI(classes)}
