@@ -80,7 +80,7 @@ function QueryIco({history, location}) {
             }else{
                 //todo 设法优化一下，因为Vyper没法返回一次性所需的所有值
                 //可以试下Promise.all
-                let allAddress = await contract.getAllIco(values.creater);
+                let allAddress = await contract.getAllIcoOfUser(values.creater);
                 let data = [];
                 for(let i=0;i<amount;i++){
                     let _address = allAddress[i];

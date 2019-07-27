@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
 import ERC20_ABI from '../constants/abis/erc20'
-import ETH_PRICE_ABI from '../constants/abis/ethPrice'
-import { getContract, getFactoryContract, getExchangeContract, isAddress } from '../utils'
+import { getContract, getFactoryContract, getExchangeContract, getPriceContract, isAddress } from '../utils'
 import copy from 'copy-to-clipboard'
 
 // modified from https://usehooks.com/useDebounce/
@@ -111,16 +110,16 @@ export function useTokenContract(tokenAddress, withSignerIfPossible = true) {
   }, [tokenAddress, library, withSignerIfPossible, account])
 }
 
-export function usePriceContract(priceAddress, withSignerIfPossible = true) {
-  const { library, account } = useWeb3Context()
+export function usePriceContract(withSignerIfPossible = true) {
+  const { networkId, library, account } = useWeb3Context()
 
   return useMemo(() => {
     try {
-      return getContract(priceAddress, ETH_PRICE_ABI, library, withSignerIfPossible ? account : undefined)
+      return getPriceContract(networkId, library, withSignerIfPossible ? account : undefined)
     } catch {
       return null
     }
-  }, [priceAddress, library, withSignerIfPossible, account])
+  }, [networkId, library, withSignerIfPossible, account])
 }
 
 

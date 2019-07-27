@@ -135,8 +135,9 @@ let util = {
     watchUpdate:async(address)=>{
         try{
             let contract = await util.getPriceContract(address);
-            contract.on("requestUpdate", async (id, event) => {
-                let price = await util.queryPrice1();
+            contract.on("RequestUpdate", async (id, event) => {
+                console.log("监听到手动更新ETH价格事件");
+                let price = await util.queryPrice2();
                 util.writeContract(address, price, false);
             });
         }catch(err){

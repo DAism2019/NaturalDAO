@@ -23,8 +23,7 @@ import Circle from '../../assets/images/circle.svg'
 import Fiat_ABI from '../../constants/abis/myFait'
 import { getContract } from '../../utils'
 
-//todo 临时处理
-const priceAddress = '0xF09B9BCa649ED7e5458c478185Cc7Bb72F2E229E';
+
 const GAS_MARGIN = utils.bigNumberify(1000)
 const MessageWrapper = styled.div`
   display: flex;
@@ -89,7 +88,7 @@ function calPrice(_priceBigNum){
 function IcoDetail({history,icoAddress}) {
     const contract = useFactoryContract();
     const icoContract = useTokenContract(icoAddress);
-    const priceContract = usePriceContract(priceAddress);
+    const priceContract = usePriceContract();
     const {t} = useTranslation();
     const classes = useStyles();
     const { active, account,library } = useWeb3Context()
@@ -126,7 +125,7 @@ function IcoDetail({history,icoAddress}) {
         pos:"left",
         message:''
     });
-    //set listener
+    // set listener
     useEffect(()=>{
         if(icoContract){
             icoContract.on("Deposit", (_depositor, _amount, event) => {
@@ -136,7 +135,8 @@ function IcoDetail({history,icoAddress}) {
                         show:true,
                         pos:'left',
                         message:t('deposit_success'),
-                        type:'success'
+                        type:'success',
+                        cb2:refreshInfos
                     });
                     //增加刷新自己投资额度
                     icoContract.depositBalanceOfUser(account).then(_deposit =>{
@@ -144,7 +144,7 @@ function IcoDetail({history,icoAddress}) {
                         setMyDeposit(_deposit);
                     });
                 }
-                refreshInfos();
+                // refreshInfos();
             });
             icoContract.on("CancelIco", (_cancer) => {
                 if(judgeSender(_cancer)){
@@ -186,21 +186,28 @@ function IcoDetail({history,icoAddress}) {
         let _priceContract;
         async function listenPrice(){
            let  _priceAddress = await priceContract.fiator();
-           console.log("真实价格合约地址为:",_priceAddress);
+           // console.log("真实价格合约地址为:",_priceAddress);
            _priceContract = getContract(_priceAddress,Fiat_ABI,library,account);
            let _priceCur = await priceContract.getEthPrice();
            let _priceOfUSDCur = calPrice(_priceCur);
-           console.log("当前ETH价格为:",_priceOfUSDCur);
+           // console.log("当前ETH价格为:",_priceOfUSDCur);
            setEthPrice(_priceOfUSDCur);
            _priceContract.on('SetEthPrice',async (_from,_to,event)=>{
+               if (!adminInfos.canSubmit)
+                   return;
+               if(!infos.goalReached)
+                   return;
+               let flag = infos.creater && judgeSender(infos.creater)
+               if(!flag)
+                   return;
                let _price = await priceContract.getEthPrice();
                let _priceOfUSD = calPrice(_price);
-               console.log("更新后的ETH价格为:",_priceOfUSD);
+               // console.log("更新后的ETH价格为:",_priceOfUSD);
                setEthPrice(_priceOfUSD);
                setSnacks({
                    show:true,
                    pos:'left',
-                   message:t('price_update'),
+                   message:t('price_update').replace('{price}',( _priceOfUSD + " $")),
                    type:'success'
                });
            });
@@ -314,9 +321,9 @@ function IcoDetail({history,icoAddress}) {
             result['goal'] = utils.formatEther(icoInfos[3]);
             result['startAt'] = convertTimetoTimeString(+ (icoInfos[4] * 1000));
             result['submitAt'] = convertTimetoTimeString(_submitTime * 1000);
-            result['isEnd'] = icoInfos[7] ? t('YES') : t('NO');
-            result['goalReached'] = icoInfos[8] ? t('YES') : t('NO');
-            result['isFailed'] = icoInfos[9] ? t('YES') : t('NO');
+            result['isEnd'] = icoInfos[7];
+            result['goalReached'] = icoInfos[8];
+            result['isFailed'] = icoInfos[9];
             let _price = + icoInfos[10].div(utils.parseUnits("1", result['decimals']));
             result['price'] = '1 ETH = '  + _price + " " + result['symbol']
             result['depositAmount'] = utils.formatEther(icoInfos[11]);
@@ -420,10 +427,10 @@ function IcoDetail({history,icoAddress}) {
                    <CustomTimer maxTime={infos.timeLeft}  color="black" label={t('ico_timer')} sstr=" " fontSize={16} />
                 </ContentWrapper>
                 <ContentWrapper>
-                    {t('ico_isEnd') + infos.isEnd}
+                    {t('ico_isEnd') + (infos.isEnd ? t('YES') : t('NO'))}
                 </ContentWrapper>
                 <ContentWrapper>
-                    {t('ico_goalReached') + infos.goalReached}
+                    {t('ico_goalReached') + (infos.goalReached ? t('YES') : t('NO'))}
                 </ContentWrapper>
                 <ContentWrapper>
                     {t('ico_tokenPrice').replace('{%symbol}',infos.symbol) + infos.price}
@@ -564,7 +571,7 @@ function IcoDetail({history,icoAddress}) {
         let method = priceContract.updateEthPrice
         let args = [];
         //todo 这里以后详细设计
-        let value = utils.parseEther("0.0008");
+        let value = utils.parseEther("0.008");
         let estimatedGasLimit = await estimate(...args, { value });
         method(...args, {
             value,
@@ -585,8 +592,8 @@ function IcoDetail({history,icoAddress}) {
         let valid = infos.goalReached;
         return(
             <>
-            <h4>
-                {t('eth_price') + ethPrice + "$"}
+            {valid && <h4>
+                {t('eth_price') + ethPrice + " $"}
                 <Fab
                     variant="extended"
                     size="small"
@@ -600,31 +607,32 @@ function IcoDetail({history,icoAddress}) {
                     <RefreshIcon  />
                     {t('refreshPrice')}
                 </Fab>
-            </h4>
+            </h4>}
+
             <form className = {classes.container}  onSubmit={doSubmit}  autoComplete = "off" style={{marginTop:-10}}>
+                {valid && <Fab
+                    variant="extended"
+                    size="medium"
+                    color="primary"
+                    aria-label="Add"
+                    // className={classes.submit}
+                    type='submit'
+                    disabled={!valid}
+                    style={{width:"30%",marginTop:35}}
+                >
+                    <SubmitIcon  />
+                    {t('submit_ico')}
+                </Fab>}
+
                         <Fab
                             variant="extended"
                             size="medium"
                             color="primary"
                             aria-label="Add"
-                            className={classes.submit}
-                            type='submit'
-                            disabled={!valid}
-                            style={{width:"30%",margin:5}}
-                        >
-                            <SubmitIcon  />
-                            {t('submit_ico')}
-                        </Fab>
-                        <Fab
-                            variant="extended"
-                            size="medium"
-                            color="primary"
-                            aria-label="Add"
-                            className={classes.submit}
                             onClick = {doCancel}
-                            disabled={!infos.isFailed}
+                            disabled={infos.isFailed}
                             type='button'
-                            style={{width:"30%",margin:5}}
+                            style={{width:"30%",marginTop:valid?35:55}}
                         >
                             <CancelIcon />
                             {t('cancelIco')}

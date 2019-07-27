@@ -112,7 +112,7 @@
     "deposit_amount":"输入投资的ETH数量:",
     "cancelIco":"取消ICO",
     "my_deposit":"我的投资:",
-    "withdraw":"提取ETH",
+    "withdraw":"提回ETH",
     "submit_ico":"提交ICO",
     "eth_price":"当前ETH价格(整点刷新):",
     "refreshPrice":"刷新价格",
@@ -132,6 +132,6 @@
     "submit_success":"ICO提交成功",
     "withdraw_success":"提款成功",
     "has_send":"交易已经发送，请耐心等待!",
-    "price_update":"ETH价格已经更新",
+    "price_update":"ETH价格已经更新为:{price}",
     "create_success":"ICO创建成功"
 }

@@ -10,7 +10,8 @@ contract NDAO:
 
 # the interface of Exchange contract
 contract Exchange:
-    def setup(token_addr: address, ndao_address: address, token_amount: uint256, ndao_amount: uint256): modifying
+    def setup(token_addr: address, ndao_address: address,
+              token_amount: uint256, ndao_amount: uint256): modifying
 
 
 # the interface of ICO contract
@@ -18,6 +19,7 @@ contract ICO:
     def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256,
               _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address): modifying
 
+    def getTokenInfo() -> (string[64], string[32], uint256): constant
 
 # the interface of EthPrice contract
 contract EthPriceContract:
@@ -35,11 +37,13 @@ MAX_NUMBER: constant(int128) = 128
 
 
 # events
-NewExchange: event({_token: indexed(address), _exchange: indexed(address), _amount: uint256, _tokenAmount: uint256})
+NewExchange: event({_token: indexed(address), _exchange: indexed(
+    address), _amount: uint256, _tokenAmount: uint256})
 ICOCreated: event({_creater: indexed(address), _ico: address})
 NewSetter: event({_from: indexed(address), _to: indexed(address)})
 NewSubmitDelta: event({_newDelta: timedelta})
-NdaoPurchase: event({buyer: indexed(address), recipient: indexed(address), amout: uint256})
+NdaoPurchase: event(
+    {buyer: indexed(address), recipient: indexed(address), amout: uint256})
 
 
 # state variables
@@ -66,8 +70,8 @@ setter: public(address)  # set the submitssionDelta
 
 @public
 def __init__():
-    self.setter=msg.sender
-    self.submitssionDelta=3 * 24 * 3600
+    self.setter = msg.sender
+    self.submitssionDelta = 3 * 24 * 3600
 
 
 @public
@@ -79,7 +83,7 @@ def setNewSetter(_newSetter: address):
     assert _newSetter != ZERO_ADDRESS
     assert msg.sender == self.setter
     log.NewSetter(self.setter, _newSetter)
-    self.setter=_newSetter
+    self.setter = _newSetter
 
 
 @public
@@ -90,7 +94,7 @@ def setSubmitssionDelta(_newDelta: timedelta):
     """
     assert _newDelta > 0
     assert msg.sender == self.setter
-    self.submitssionDelta=_newDelta
+    self.submitssionDelta = _newDelta
     log.NewSubmitDelta(_newDelta)
 
 
@@ -105,11 +109,11 @@ def initializeFactory(_exchangeTemplate: address, _beneficiary: address, _ndaoAd
     assert _exchangeTemplate != ZERO_ADDRESS and _beneficiary != ZERO_ADDRESS
     assert _ndaoAddress != ZERO_ADDRESS and _priceAddress != ZERO_ADDRESS
     assert _icoTemplate != ZERO_ADDRESS
-    self.exchangeTemplate=_exchangeTemplate
-    self.beneficiary=_beneficiary
-    self.ndaoAddress=_ndaoAddress
-    self.ethPrice=EthPriceContract(_priceAddress)
-    self.icoTemplate=_icoTemplate
+    self.exchangeTemplate = _exchangeTemplate
+    self.beneficiary = _beneficiary
+    self.ndaoAddress = _ndaoAddress
+    self.ethPrice = EthPriceContract(_priceAddress)
+    self.icoTemplate = _icoTemplate
 
 
 @public
@@ -125,15 +129,15 @@ def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depos
     """
     assert self.icoTemplate != ZERO_ADDRESS
     assert self.allIcoCountsOfUser[msg.sender] < MAX_NUMBER
-    ico: address=create_forwarder_to(self.icoTemplate)
+    ico: address = create_forwarder_to(self.icoTemplate)
     ICO(ico).setup(_name, _symbol, _decimals, _depositGoal,
                    _delta, self.submitssionDelta, _price, msg.sender)
-    index: int128=self.allIcoCountsOfUser[msg.sender]
-    self.allIcoCountsOfUser[msg.sender]=index + 1
-    self.allIcoAddressOfUser[msg.sender][index]=ico
-    self.allIcoStatus[ico]=STATUS_STARTED
-    self.allIcoSymbol[ico]=_symbol
-    self.allIcoCreater[ico]=msg.sender
+    index: int128 = self.allIcoCountsOfUser[msg.sender]
+    self.allIcoCountsOfUser[msg.sender] = index + 1
+    self.allIcoAddressOfUser[msg.sender][index] = ico
+    self.allIcoStatus[ico] = STATUS_STARTED
+    self.allIcoSymbol[ico] = _symbol
+    self.allIcoCreater[ico] = msg.sender
     log.ICOCreated(msg.sender, ico)
 
 
@@ -143,7 +147,7 @@ def cancelIco():
     # @dev cancel the ico and can be called only once from the ico
     """
     assert self.allIcoStatus[msg.sender] == STATUS_STARTED
-    self.allIcoStatus[msg.sender]=STATUS_FAILED
+    self.allIcoStatus[msg.sender] = STATUS_FAILED
 
 
 @public
@@ -160,7 +164,7 @@ def getAllIcoOfUser(creater: address) -> address[MAX_NUMBER]:
 @private
 def _buyNdaoInput(value: wei_value, buyer: address, recipient: address) -> uint256:
     send(self.beneficiary, value)
-    amount: uint256=self.ethPrice.ethToNdaoInputPrice(value)
+    amount: uint256 = self.ethPrice.ethToNdaoInputPrice(value)
     NDAO(self.ndaoAddress).mint(recipient, amount)
     log.NdaoPurchase(buyer, recipient, amount)
     return amount
@@ -190,9 +194,9 @@ def buyNdaoInputTransfer(recipient: address) -> uint256:
 
 @private
 def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, buyer: address, recipient: address) -> (wei_value, wei_value):
-    eth_sold: wei_value=self.ethPrice.ethToNdaoOutPrice(ndao_bought)
+    eth_sold: wei_value = self.ethPrice.ethToNdaoOutPrice(ndao_bought)
     # Throws if eth_sold > msg.value
-    eth_refund: wei_value=value - eth_sold
+    eth_refund: wei_value = value - eth_sold
     send(self.beneficiary, eth_sold)
     if eth_refund > 0:
         send(buyer, eth_refund)
@@ -229,11 +233,11 @@ def buyNdaoOutputTransfer(ndao_bought: uint256, recipient: address) -> (wei_valu
 
 @private
 def _saveExchangeInfo(token: address, exchange: address):
-    self.token_to_exchange[token]=exchange
-    self.exchange_to_token[exchange]=token
-    token_id: uint256=self.tokenCount + 1
-    self.tokenCount=token_id
-    self.id_to_token[token_id]=token
+    self.token_to_exchange[token] = exchange
+    self.exchange_to_token[exchange] = token
+    token_id: uint256 = self.tokenCount + 1
+    self.tokenCount = token_id
+    self.id_to_token[token_id] = token
 
 
 @public
@@ -248,20 +252,21 @@ def createExchange():
     assert self.token_to_exchange[msg.sender] == ZERO_ADDRESS
     assert self.allIcoStatus[msg.sender] == STATUS_STARTED
     assert self.allIcoCreater[msg.sender] != ZERO_ADDRESS
-    self.allIcoStatus[msg.sender]=STATUS_SUCCESS
+    self.allIcoStatus[msg.sender] = STATUS_SUCCESS
     # create the exchange
-    exchange: address=create_forwarder_to(self.exchangeTemplate)
-    token_amount: uint256=ERC20(msg.sender).balanceOf(self)
+    exchange: address = create_forwarder_to(self.exchangeTemplate)
+    token_amount: uint256 = ERC20(msg.sender).balanceOf(self)
     # transfer the token
     # attention:the use of "assert ERC20(msg.sender).transfer(exchange, token_amount)" has a error!!!
-    flag: bool=ERC20(msg.sender).transfer(exchange, token_amount)
+    flag: bool = ERC20(msg.sender).transfer(exchange, token_amount)
     assert flag
     # transfer the eth
     send(self.beneficiary, msg.value)
     # get the amount of ndao
     ndao_amount: uint256 = self.ethPrice.ethToNdaoInputPrice(msg.value)
     # set up the exchange contract
-    Exchange(exchange).setup(msg.sender, self.ndaoAddress, token_amount, ndao_amount)
+    Exchange(exchange).setup(
+        msg.sender, self.ndaoAddress, token_amount, ndao_amount)
     # transfer ndao to the creater
     NDAO(self.ndaoAddress).mint(self.allIcoCreater[msg.sender], ndao_amount)
     # save infos
@@ -294,3 +299,16 @@ def getTokenWithId(token_id: uint256) -> address:
     # @dev return address of token by id
     """
     return self.id_to_token[token_id]
+
+
+@public
+@constant
+def getTokenDetailById(token_id: uint256) -> (address, string[64], string[32], uint256, address):
+    assert token_id <= self.tokenCount
+    token_address: address = self.getTokenWithId(token_id)
+    _name: string[64]
+    _symbol: string[32]
+    _decimals: uint256
+    (_name, _symbol, _decimals) = ICO(token_address).getTokenInfo()
+    exchange_address:address = self.getExchange(token_address)
+    return (token_address, _name, _symbol, _decimals, exchange_address)

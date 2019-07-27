@@ -65,11 +65,14 @@
     }, {
         "type": "uint256",
         "name": "token_amount"
+    }, {
+        "type": "uint256",
+        "name": "ndao_amount"
     }],
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 141508
+    "gas": 176392
 }, {
     "name": "ndaoToTokenSwapInput",
     "outputs": [{
@@ -90,7 +93,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 14757
+    "gas": 49095
 }, {
     "name": "ndaoToTokenTransferInput",
     "outputs": [{
@@ -114,7 +117,46 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 14966
+    "gas": 49303
+}, {
+    "name": "ethToTokenSwapInput",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out"
+    }],
+    "inputs": [{
+        "type": "uint256",
+        "name": "min_tokens"
+    }, {
+        "type": "uint256",
+        "name": "deadline",
+        "unit": "sec"
+    }],
+    "constant": false,
+    "payable": true,
+    "type": "function",
+    "gas": 85586
+}, {
+    "name": "ethToTokenTransferInput",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out"
+    }],
+    "inputs": [{
+        "type": "uint256",
+        "name": "min_tokens"
+    }, {
+        "type": "uint256",
+        "name": "deadline",
+        "unit": "sec"
+    }, {
+        "type": "address",
+        "name": "recipient"
+    }],
+    "constant": false,
+    "payable": true,
+    "type": "function",
+    "gas": 85794
 }, {
     "name": "ndaoToTokenSwapOutput",
     "outputs": [{
@@ -135,7 +177,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 16081
+    "gas": 50318
 }, {
     "name": "ndaoToTokenTransferOutput",
     "outputs": [{
@@ -159,7 +201,56 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 16290
+    "gas": 50527
+}, {
+    "name": "ethToTokenSwapOutput",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out",
+        "unit": "wei"
+    }],
+    "inputs": [{
+        "type": "uint256",
+        "name": "tokens_bought"
+    }, {
+        "type": "uint256",
+        "name": "max_eth",
+        "unit": "wei"
+    }, {
+        "type": "uint256",
+        "name": "deadline",
+        "unit": "sec"
+    }],
+    "constant": false,
+    "payable": true,
+    "type": "function",
+    "gas": 119278
+}, {
+    "name": "ethToTokenTransferOutput",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out",
+        "unit": "wei"
+    }],
+    "inputs": [{
+        "type": "uint256",
+        "name": "tokens_bought"
+    }, {
+        "type": "uint256",
+        "name": "max_eth",
+        "unit": "wei"
+    }, {
+        "type": "uint256",
+        "name": "deadline",
+        "unit": "sec"
+    }, {
+        "type": "address",
+        "name": "recipient"
+    }],
+    "constant": false,
+    "payable": true,
+    "type": "function",
+    "gas": 119486
 }, {
     "name": "tokenToNdaoSwapInput",
     "outputs": [{
@@ -180,7 +271,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 15666
+    "gas": 49973
 }, {
     "name": "tokenToNdaoTransferInput",
     "outputs": [{
@@ -204,7 +295,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 15875
+    "gas": 50182
 }, {
     "name": "tokenToNdaoSwapOutput",
     "outputs": [{
@@ -225,7 +316,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 17044
+    "gas": 51255
 }, {
     "name": "tokenToNdaoTransferOutput",
     "outputs": [{
@@ -249,7 +340,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 17253
+    "gas": 51464
 }, {
     "name": "tokenToTokenSwapInput",
     "outputs": [{
@@ -276,7 +367,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 44849
+    "gas": 112330
 }, {
     "name": "tokenToTokenTransferInput",
     "outputs": [{
@@ -306,7 +397,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 44940
+    "gas": 112421
 }, {
     "name": "tokenToTokenSwapOutput",
     "outputs": [{
@@ -333,7 +424,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 22646
+    "gas": 113728
 }, {
     "name": "tokenToTokenTransferOutput",
     "outputs": [{
@@ -363,121 +454,7 @@
     "constant": false,
     "payable": false,
     "type": "function",
-    "gas": 22737
-}, {
-    "name": "tokenToExchangeSwapInput",
-    "outputs": [{
-        "type": "uint256",
-        "name": "out"
-    }],
-    "inputs": [{
-        "type": "uint256",
-        "name": "tokens_sold"
-    }, {
-        "type": "uint256",
-        "name": "min_tokens_bought"
-    }, {
-        "type": "uint256",
-        "name": "min_ndao_bought"
-    }, {
-        "type": "uint256",
-        "name": "deadline",
-        "unit": "sec"
-    }, {
-        "type": "address",
-        "name": "exchange_addr"
-    }],
-    "constant": false,
-    "payable": false,
-    "type": "function",
-    "gas": 43187
-}, {
-    "name": "tokenToExchangeTransferInput",
-    "outputs": [{
-        "type": "uint256",
-        "name": "out"
-    }],
-    "inputs": [{
-        "type": "uint256",
-        "name": "tokens_sold"
-    }, {
-        "type": "uint256",
-        "name": "min_tokens_bought"
-    }, {
-        "type": "uint256",
-        "name": "min_ndao_bought"
-    }, {
-        "type": "uint256",
-        "name": "deadline",
-        "unit": "sec"
-    }, {
-        "type": "address",
-        "name": "recipient"
-    }, {
-        "type": "address",
-        "name": "exchange_addr"
-    }],
-    "constant": false,
-    "payable": false,
-    "type": "function",
-    "gas": 43374
-}, {
-    "name": "tokenToExchangeSwapOutput",
-    "outputs": [{
-        "type": "uint256",
-        "name": "out"
-    }],
-    "inputs": [{
-        "type": "uint256",
-        "name": "tokens_bought"
-    }, {
-        "type": "uint256",
-        "name": "max_tokens_sold"
-    }, {
-        "type": "uint256",
-        "name": "max_ndao_sold"
-    }, {
-        "type": "uint256",
-        "name": "deadline",
-        "unit": "sec"
-    }, {
-        "type": "address",
-        "name": "exchange_addr"
-    }],
-    "constant": false,
-    "payable": false,
-    "type": "function",
-    "gas": 20954
-}, {
-    "name": "tokenToExchangeTransferOutput",
-    "outputs": [{
-        "type": "uint256",
-        "name": "out"
-    }],
-    "inputs": [{
-        "type": "uint256",
-        "name": "tokens_bought"
-    }, {
-        "type": "uint256",
-        "name": "max_tokens_sold"
-    }, {
-        "type": "uint256",
-        "name": "max_ndao_sold"
-    }, {
-        "type": "uint256",
-        "name": "deadline",
-        "unit": "sec"
-    }, {
-        "type": "address",
-        "name": "recipient"
-    }, {
-        "type": "address",
-        "name": "exchange_addr"
-    }],
-    "constant": false,
-    "payable": false,
-    "type": "function",
-    "gas": 21141
+    "gas": 113819
 }, {
     "name": "getNdaoToTokenInputPrice",
     "outputs": [{
@@ -491,7 +468,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 6011
+    "gas": 4458
 }, {
     "name": "getNdaoToTokenOutputPrice",
     "outputs": [{
@@ -505,7 +482,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 6613
+    "gas": 5012
 }, {
     "name": "getTokenToNdaoInputPrice",
     "outputs": [{
@@ -519,7 +496,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 6071
+    "gas": 4518
 }, {
     "name": "getTokenToNdaoOutputPrice",
     "outputs": [{
@@ -533,7 +510,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 6673
+    "gas": 5072
 }, {
     "name": "tokenAddress",
     "outputs": [{
@@ -544,7 +521,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1353
+    "gas": 1383
 }, {
     "name": "ndaoAddress",
     "outputs": [{
@@ -555,7 +532,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1383
+    "gas": 1413
 }, {
     "name": "factoryAddress",
     "outputs": [{
@@ -567,7 +544,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1413
+    "gas": 1443
 }, {
     "name": "getMaxPool",
     "outputs": [{
@@ -578,5 +555,27 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1443
+    "gas": 1473
+}, {
+    "name": "getNdaoBalance",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out"
+    }],
+    "inputs": [],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 3026
+}, {
+    "name": "getNdaoReserve",
+    "outputs": [{
+        "type": "uint256",
+        "name": "out"
+    }],
+    "inputs": [],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 1533
 }]

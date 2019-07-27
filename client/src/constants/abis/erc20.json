@@ -37,7 +37,7 @@
     "inputs": [{
         "type": "address",
         "name": "_depositor",
-        "indexed": false
+        "indexed": true
     }, {
         "type": "uint256",
         "name": "_amount",
@@ -205,7 +205,7 @@
     "constant": false,
     "payable": true,
     "type": "function",
-    "gas": 299850
+    "gas": 299625
 }, {
     "name": "cancelICO",
     "outputs": [],
@@ -255,6 +255,23 @@
     "payable": false,
     "type": "function",
     "gas": 110886
+}, {
+    "name": "getTokenInfo",
+    "outputs": [{
+        "type": "string",
+        "name": "out"
+    }, {
+        "type": "string",
+        "name": "out"
+    }, {
+        "type": "uint256",
+        "name": "out"
+    }],
+    "inputs": [],
+    "constant": true,
+    "payable": false,
+    "type": "function",
+    "gas": 3768
 }, {
     "name": "icoInfo",
     "outputs": [{
@@ -306,7 +323,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 5918
+    "gas": 5948
 }, {
     "name": "name",
     "outputs": [{
@@ -317,7 +334,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 11907
+    "gas": 11937
 }, {
     "name": "symbol",
     "outputs": [{
@@ -328,7 +345,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 6792
+    "gas": 6822
 }, {
     "name": "decimals",
     "outputs": [{
@@ -339,7 +356,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1023
+    "gas": 1053
 }, {
     "name": "balanceOf",
     "outputs": [{
@@ -353,7 +370,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1225
+    "gas": 1255
 }, {
     "name": "depositGoal",
     "outputs": [{
@@ -365,7 +382,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1083
+    "gas": 1113
 }, {
     "name": "depositStart",
     "outputs": [{
@@ -377,7 +394,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1113
+    "gas": 1143
 }, {
     "name": "depositEnd",
     "outputs": [{
@@ -389,7 +406,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1143
+    "gas": 1173
 }, {
     "name": "finalSubmissionTime",
     "outputs": [{
@@ -401,7 +418,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1173
+    "gas": 1203
 }, {
     "name": "isEnd",
     "outputs": [{
@@ -412,7 +429,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1203
+    "gas": 1233
 }, {
     "name": "goalReached",
     "outputs": [{
@@ -423,7 +440,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1233
+    "gas": 1263
 }, {
     "name": "isFailed",
     "outputs": [{
@@ -434,7 +451,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1263
+    "gas": 1293
 }, {
     "name": "tokenPrice",
     "outputs": [{
@@ -445,7 +462,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1293
+    "gas": 1323
 }, {
     "name": "depositAmount",
     "outputs": [{
@@ -457,7 +474,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1323
+    "gas": 1353
 }, {
     "name": "depositBalanceOfUser",
     "outputs": [{
@@ -472,18 +489,19 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1525
+    "gas": 1555
 }, {
     "name": "factory",
     "outputs": [{
         "type": "address",
-        "name": "out"
+        "name": "out",
+        "unit": "Factory"
     }],
     "inputs": [],
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1383
+    "gas": 1413
 }, {
     "name": "creater",
     "outputs": [{
@@ -494,5 +512,5 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 1413
+    "gas": 1443
 }]

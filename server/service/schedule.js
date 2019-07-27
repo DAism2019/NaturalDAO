@@ -17,6 +17,7 @@ async function start() {
     init();
     let allAddress = await fileService.readJson('../address/address.json');
     let address = allAddress['MyFiat.py'];
+    util.watchUpdate(address);
     console.log("Begin query the price of ETH......");
     updatePrice(address);
     Schedule.scheduleJob(ruleQueryPrice, () => {

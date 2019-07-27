@@ -20,8 +20,8 @@ Transfer: event(
 Approval: event({_owner: indexed(address),
                  _spender: indexed(address), _value: uint256})
 # event of ICO
-Deposit: event({_depositor: indexed(address), _amount: wei_value})
-RefundTransfer: event({_drawer: indexed(address), _amount: wei_value})
+Deposit: event({_depositor: indexed(address), _amount: uint256(wei)})
+RefundTransfer: event({_drawer: indexed(address), _amount: uint256(wei)})
 CancelIco: event({_cancer: address})
 SubmitIco: event({_creater: address})
 
@@ -281,6 +281,16 @@ def burnFrom(_to: address, _value: uint256):
     """
     self.allowances[_to][msg.sender] -= _value
     self._burn(_to, _value)
+
+
+
+@public
+@constant
+def getTokenInfo() -> (string[64], string[32], uint256):
+    """
+    # @dev Function to return the  description of token.
+    """
+    return (self.name, self.symbol, self.decimals)
 
 
 @public

@@ -16,14 +16,13 @@ def test():
     tokenCount = myContract.functions.tokenCount().call()
     beneficiary = myContract.functions.beneficiary().call()
     ndaoAddress = myContract.functions.ndaoAddress().call()
-    queryAddress = myContract.functions.queryAddress().call()
-    tokenCount = myContract.functions.tokenCount().call()
+    ethPrice = myContract.functions.ethPrice().call()
     print("本合约地址:",contract_address)
     print("交易对模板地址:", exchangeTemplate)
     print("ICO模板地址:", icoTemplate)
     print("ETH仓库地址:", beneficiary)
     print("稳定币地址:", ndaoAddress)
-    print("ETH价格查询合约地址:", queryAddress)
+    print("ETH价格查询合约地址:", ethPrice)
     print("当前交易对数量:", tokenCount)
 
 

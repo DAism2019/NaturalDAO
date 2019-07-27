@@ -1,13 +1,10 @@
 # 查询某个ICO详情，默认查询当前账号创建的最后一个ICO详情
-# from web3.auto import w3
-from web3 import Web3,HTTPProvider
+from web3.auto import w3
 from json import loads
 import time
 from os.path import dirname, abspath
 from privateKey import my_address, private_key
 
-
-w3 = Web3(HTTPProvider('https://ropsten.infura.io/v3/9e1f16ff18f847bfb54093d4cf8c5f78'))
 
 ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -26,12 +23,11 @@ def convertStatus(status):
 def getIcoAddress(_user):
     path = dirname(dirname(abspath(__file__))) + '/abi/Factory.json'
     contract_abi = loads(open(path).read())
-    # path = dirname(dirname(abspath(__file__))) + '/address/address.json'
-    # allAddress = loads(open(path).read())
-    # contract_address = allAddress['Factory.py']
-    contract_address = "0xb45744d855CF03Af0494b9C5c65bAe6cEFfF9619"
+    path = dirname(dirname(abspath(__file__))) + '/address/address.json'
+    allAddress = loads(open(path).read())
+    contract_address = allAddress['Factory.py']
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    lastIco = myContract.functions.getLatestIco().call({'from': _user})
+    lastIco = myContract.functions.allIcoAddressOfUser(_user,1).call()
     creater = myContract.functions.allIcoCreater(lastIco).call()
     status = myContract.functions.allIcoStatus(lastIco).call()
     exchange = myContract.functions.getExchange(lastIco).call()

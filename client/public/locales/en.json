@@ -141,7 +141,7 @@
   "submit_success":"Submit ICO Success",
   "withdraw_success":"Withdraw Success",
   "has_send":"Transaction has send,please wait!",
-  "price_update":"The price of ETH has updated!",
+  "price_update":"The price of ETH has updated to {price}!",
   "create_success":"ICO Create Success"
 
 

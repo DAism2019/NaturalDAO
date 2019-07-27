@@ -12,8 +12,7 @@ import { Button } from '../../theme'
 import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 import CustomSnackbar from '../../components/Snackbar'
-// import { BigNumber}  from "bignumber"
-// const BigNumber = require('bignumber.js');
+
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -109,7 +108,7 @@ function CreateIco({ history }) {
         try{
             goal =  utils.parseEther(goal);
             timedelta = + timedelta;
-            timedelta = timedelta * 24 * 3600;
+            timedelta = parseInt(timedelta * 24 * 3600);
             price =  _calPrice() * 10 ** fixedNumber;
             price = utils.bigNumberify(price);
             let _ten = utils.bigNumberify(10);
