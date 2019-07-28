@@ -666,7 +666,7 @@ export default function Swap({ initialCurrency }) {
 
   return (
     <>
-      <CurrencyInputPanel
+      <CurrencyInputPanel type='input'
         title={t('input')}
         description={inputValueFormatted && independentField === OUTPUT ? estimatedText : ''}
         extraText={inputBalanceFormatted && formatBalance(inputBalanceFormatted)}
@@ -696,16 +696,16 @@ export default function Swap({ initialCurrency }) {
       <OversizedPanel>
         <DownArrowBackground>
           <DownArrow
-            onClick={() => {
-              dispatchSwapState({ type: 'FLIP_INDEPENDENT' })
-            }}
-            clickable
+            // onClick={() => {
+            //   dispatchSwapState({ type: 'FLIP_INDEPENDENT' })
+            // }}
+            // clickable
             alt="swap"
             src={isValid ? ArrowDownBlue : ArrowDownGrey}
           />
         </DownArrowBackground>
       </OversizedPanel>
-      <CurrencyInputPanel
+      <CurrencyInputPanel type='output'
         title={t('output')}
         description={outputValueFormatted && independentField === INPUT ? estimatedText : ''}
         extraText={outputBalanceFormatted && formatBalance(outputBalanceFormatted)}

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useMemo, useCallback, use
 import { useWeb3Context } from 'web3-react'
 import { ethers } from 'ethers'
 import { reactLocalStorage } from 'reactjs-localstorage';
-import { COOKIE_ID } from '../constants';
+import { COOKIE_ID,NDAO_ADDRESSES } from '../constants';
 import { useFactoryContract } from '../hooks'
 
 import {
@@ -20,6 +20,7 @@ const DECIMALS = 'decimals'
 const EXCHANGE_ADDRESS = 'exchangeAddress'
 
 const UPDATE = 'UPDATE'
+const UPDATE_MANY = 'UPDATE_MANY'
 
 const ETH = {
   ETH: {
@@ -30,15 +31,12 @@ const ETH = {
   }
 }
 
-const NDAO = {
+let NDAO = {
     NDAO:{
         [NAME]: 'NaturalDao',
         [SYMBOL]: 'NDAO',
         [DECIMALS]: 18,
-        [EXCHANGE_ADDRESS]: {
-            1:"",
-            5777:"0x7fe484b457c2d55B1878ea1Ce7e51d84D72a48c9"
-        }
+        [EXCHANGE_ADDRESS]: null
     }
 }
 
@@ -84,6 +82,16 @@ function reducer(state, { type, payload }) {
         }
       }
     }
+    case UPDATE_MANY:{
+        const {networkId,infos} = payload;
+        return {
+          ...state,
+          [networkId]: {
+            ...(safeAccess(state, [networkId]) || {}),
+            ...infos
+          }
+        }
+    }
     default: {
       throw Error(`Unexpected action type in TokensContext reducer: '${type}'.`)
     }
@@ -91,31 +99,47 @@ function reducer(state, { type, payload }) {
 }
 
 //将交易对存于缓存中
-async function updateExchange(factory,networkId){
-    console.log("updateExchange")
+async function updateExchange(factory,networkId,updateMany){
     if(factory){
-        // let infos = reactLocalStorage.getObject(COOKIE_ID);
         if (INITIAL_TOKENS_CONTEXT.tokenCount == undefined)
             INITIAL_TOKENS_CONTEXT.tokenCount = 0;
         let tokenCount = await factory.tokenCount()
         tokenCount = + tokenCount;
+        let noChange = tokenCount == INITIAL_TOKENS_CONTEXT.tokenCount;
+        if (noChange)
+            return;
         let allPromise = [];
         if(INITIAL_TOKENS_CONTEXT.tokenCount < tokenCount){
             for(let i=INITIAL_TOKENS_CONTEXT.tokenCount+1;i<=tokenCount;i++){
-                let _result = await factory.getTokenDetailById(i);
-                console.log(_result);  
+                 allPromise.push(factory.getTokenDetailById(i).catch(() => null))
             }
-
-            // allPromise.push(factory.getTokenDetailById(i).catch(() => null))
         }
-        // Promise.all(allPromise).then(result =>{
-        //     INITIAL_TOKENS_CONTEXT.tokenCount = tokenCount;
-        //     if(!INITIAL_TOKENS_CONTEXT[networkId])
-        //         INITIAL_TOKENS_CONTEXT[networkId] ={}
-        //     for(let _result of result){
-        //         console.log(_result)
-        //     }
-        // });
+        Promise.all(allPromise).then(result =>{
+            let allInfos = {};
+            for(let _result of result){
+                let _tokenAddress = _result[0];
+                let _name = _result[1];
+                let _symbol = _result[2];
+                let _decimals =  + _result[3];
+                let _exchangeAddress = _result[4];
+                allInfos[_tokenAddress] = {
+                    [NAME]: _name,
+                    [SYMBOL]: _symbol,
+                    [DECIMALS]: _decimals,
+                    [EXCHANGE_ADDRESS]: _exchangeAddress
+                }
+            }
+            INITIAL_TOKENS_CONTEXT.tokenCount = tokenCount;
+            INITIAL_TOKENS_CONTEXT = {
+                ...INITIAL_TOKENS_CONTEXT,
+                [networkId]: {
+                  ...(safeAccess(INITIAL_TOKENS_CONTEXT, [networkId]) || {}),
+                  ...allInfos
+                }
+            }
+            reactLocalStorage.setObject(COOKIE_ID,INITIAL_TOKENS_CONTEXT);
+            updateMany(networkId,allInfos);
+        });
     }
     return true
 }
@@ -125,13 +149,16 @@ export default function Provider({ children }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_TOKENS_CONTEXT)
   const { networkId } = useWeb3Context()
   const factory = useFactoryContract();
-  updateExchange(factory,networkId)
   const update = useCallback((networkId, tokenAddress, name, symbol, decimals, exchangeAddress) => {
     dispatch({ type: UPDATE, payload: { networkId, tokenAddress, name, symbol, decimals, exchangeAddress } })
   }, [])
+  const updateMany = useCallback((networkId,infos) =>{
+    dispatch({type:UPDATE_MANY,payload:{networkId,infos}})
+  },[])
+  updateExchange(factory,networkId,updateMany)
 
   return (
-    <TokensContext.Provider value={useMemo(() => [state, { update }], [state, update])}>
+    <TokensContext.Provider value={useMemo(() => [state, { update,updateMany}], [state, update,updateMany,INITIAL_TOKENS_CONTEXT])}>
       {children}
     </TokensContext.Provider>
   )
@@ -139,7 +166,6 @@ export default function Provider({ children }) {
 
 export function useTokenDetails(tokenAddress) {
   const { networkId, library } = useWeb3Context()
-
   const [state, { update }] = useTokensContext()
   const allTokensInNetwork = { ...ETH, ...(safeAccess(state, [networkId]) || {}) }
   const { [NAME]: name, [SYMBOL]: symbol, [DECIMALS]: decimals, [EXCHANGE_ADDRESS]: exchangeAddress } =
@@ -178,17 +204,18 @@ export function useTokenDetails(tokenAddress) {
   return { name, symbol, decimals, exchangeAddress }
 }
 
-export function useAllTokenDetails(requireExchange = true) {
+//todo 增加output 或者  input
+export function useAllTokenDetails(type,requireExchange = true) {
   const { networkId } = useWeb3Context()
-
+  // NDAO['NDAO'][]
   const [state] = useTokensContext()
-  const tokenDetails = { ...ETH, ...(safeAccess(state, [networkId]) || {}) }
-
+  const _solid = type ==='input' ? {...ETH,...NDAO } : {...NDAO};
+  const tokenDetails = { ..._solid, ...(safeAccess(state, [networkId]) || {}) }
   return requireExchange
     ? Object.keys(tokenDetails)
         .filter(
           tokenAddress =>
-            tokenAddress === 'ETH' ||
+            tokenAddress === 'ETH' || tokenAddress === 'NDAO' ||
             (safeAccess(tokenDetails, [tokenAddress, EXCHANGE_ADDRESS]) &&
               safeAccess(tokenDetails, [tokenAddress, EXCHANGE_ADDRESS]) !== ethers.constants.AddressZero)
         )

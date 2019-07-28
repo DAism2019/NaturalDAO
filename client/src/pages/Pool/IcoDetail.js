@@ -135,8 +135,7 @@ function IcoDetail({history,icoAddress}) {
                         show:true,
                         pos:'left',
                         message:t('deposit_success'),
-                        type:'success',
-                        cb2:refreshInfos
+                        type:'success'
                     });
                     //增加刷新自己投资额度
                     icoContract.depositBalanceOfUser(account).then(_deposit =>{
@@ -144,7 +143,7 @@ function IcoDetail({history,icoAddress}) {
                         setMyDeposit(_deposit);
                     });
                 }
-                // refreshInfos();
+                refreshInfos();
             });
             icoContract.on("CancelIco", (_cancer) => {
                 if(judgeSender(_cancer)){
@@ -716,7 +715,7 @@ function IcoDetail({history,icoAddress}) {
             {adminInfos.canSubmit && flag && getSubmitUI(classes)}
             {adminInfos.canCanecl && getCancelUI(classes)}
             {adminInfos.canWithdraw && getWithDrawUI(classes)}
-            {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
+            {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack} cb2={snacks.cb2}/>}
             </>
         )
     }

@@ -205,7 +205,8 @@ export default function CurrencyInputPanel({
   disableTokenSelect,
   selectedTokenAddress = '',
   showUnlock,
-  value
+  value,
+  type
 }) {
   const { t } = useTranslation()
 
@@ -218,7 +219,7 @@ export default function CurrencyInputPanel({
 
   const addTransaction = useTransactionAdder()
 
-  const allTokens = useAllTokenDetails()
+  const allTokens = useAllTokenDetails(type)
 
   function renderUnlockButton() {
     if (disableUnlock || !showUnlock || selectedTokenAddress === 'ETH' || !selectedTokenAddress) {
@@ -332,6 +333,7 @@ export default function CurrencyInputPanel({
       </Container>
       {!disableTokenSelect && (
         <CurrencySelectModal
+          type={type}
           isOpen={modalIsOpen}
           onDismiss={() => {
             setModalIsOpen(false)
@@ -343,13 +345,13 @@ export default function CurrencyInputPanel({
   )
 }
 
-function CurrencySelectModal({ isOpen, onDismiss, onTokenSelect }) {
+function CurrencySelectModal({ type,isOpen, onDismiss, onTokenSelect }) {
   const { t } = useTranslation()
 
   const [searchQuery, setSearchQuery] = useState('')
   const { exchangeAddress } = useTokenDetails(searchQuery)
 
-  const allTokens = useAllTokenDetails()
+  const allTokens = useAllTokenDetails(type)
   const tokenList = useMemo(() => {
     return Object.keys(allTokens)
       .sort((a, b) => {

@@ -27,7 +27,8 @@ def getIcoAddress(_user):
     allAddress = loads(open(path).read())
     contract_address = allAddress['Factory.py']
     myContract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    lastIco = myContract.functions.allIcoAddressOfUser(_user,1).call()
+    lastIndex = myContract.functions.allIcoCountsOfUser(_user).call() 
+    lastIco = myContract.functions.allIcoAddressOfUser(_user,lastIndex - 1).call()
     creater = myContract.functions.allIcoCreater(lastIco).call()
     status = myContract.functions.allIcoStatus(lastIco).call()
     exchange = myContract.functions.getExchange(lastIco).call()

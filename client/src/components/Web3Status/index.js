@@ -233,7 +233,7 @@ export default function Web3Status() {
     if (ref.current) {
       ref.current.innerHTML = ''
       if (account) {
-        ref.current.appendChild(Jazzicon(16, parseInt(account.slice(2, 10), 16)))
+        ref.current.appendChild(Jazzicon(16, parseInt(account.slice(2, 8), 16)))
       }
     }
   }, [account, walletModalError])
