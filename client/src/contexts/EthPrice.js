@@ -1,24 +1,21 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect} from 'react'
 import { useWeb3Context } from 'web3-react'
+import signal from 'signal-js';
 import { usePriceContract } from '../hooks'
-import { getMyPriceContract } from '../utils'
+import { getMyPriceContract,safeAccess } from '../utils'
+
 
 const UPDATE = 'UPDATE'
 const PriceContext = createContext()
 
-function usePriceContext() {
+export function usePriceContext() {
   return useContext(PriceContext)
 }
 
 function reducer(state, { type, payload }){
     switch (type) {
         case UPDATE:{
-            const { price } = payload;
-            return {
-                ...state,
-                price
-            }
-           break;
+            return payload;
         }
         default:{
             throw Error(`Unexpected action type in PriceContext reducer: '${type}'.`)
@@ -26,18 +23,26 @@ function reducer(state, { type, payload }){
     }
 }
 
+async function updatePrice(priceContract,state,update) {
+    if(priceContract){
+        try{
+           let _price = await priceContract.getEthPrice();
+           if(!state || !state.price || !state.price.eq(_price)){
+               update(_price);
+           }
+       }catch {
 
-async function updatePrice(priceContract,update) {
-    let _priceCur = await priceContract.getEthPrice();
-    update(_priceCur);
+       }
+    }
 }
 
 export default function Provider({ children }) {
-    const [state, dispatch] = useReducer(reducer);
+    const [state, dispatch] = useReducer(reducer,{});
     const priceContract = usePriceContract();
     const update = useCallback( price => {
         dispatch({ type: UPDATE, payload: { price }})
      }, []);
+    updatePrice(priceContract,state,update)
     return (
         <PriceContext.Provider value ={useMemo (() => [state,update],[state,update])}>
             {children}
@@ -45,15 +50,11 @@ export default function Provider({ children }) {
     )
 }
 
-
-
-
 //the ETH price monitor
 export function Updater(){
     const priceContract = usePriceContract();
     const { account,library } = useWeb3Context();
     const [,update] = usePriceContext();
-    updatePrice(priceContract,update);
     useEffect(() => {
         let _priceContract;
         async function listenPrice(){
@@ -62,14 +63,23 @@ export function Updater(){
             _priceContract.on('SetEthPrice',async (_from,_to,event) => {
                 let _price = await priceContract.getEthPrice();
                 update(_price);
+                signal.emit('updatePrice',_from,_price);
             });
         }
-        listenPrice();
+        if(priceContract){
+           listenPrice();
+        }
         return () => {
             if(_priceContract){
                 _priceContract.removeAllListeners("SetEthPrice");
             }
         }
-    },priceContract,account,library);
+    },[priceContract,account,library,update]);
     return null;
+}
+
+export function useEthPrice(){
+    const [state,] = usePriceContext();
+    const value = safeAccess(state,["price"]);
+    return value;
 }

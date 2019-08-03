@@ -59,6 +59,10 @@ function QueryIco({history, location}) {
     async function _queryIcoByCreater(event){
         event.preventDefault();
         setShowTable(false);
+        setValues({
+            ...values,
+            ["icoAddress"]: ""
+        });
         if (!isAddress(values.creater)){
             setSnacks({
                  show:true,
@@ -114,6 +118,10 @@ function QueryIco({history, location}) {
     async function _queryIco(event){
         event.preventDefault();
         setShowTable(false);
+        setValues({
+            ...values,
+            ["creater"]: ""
+        });
         if (!isAddress(values.icoAddress)){
             return setSnacks({
                  show:true,

@@ -133,6 +133,16 @@ export function useExchangeReserves(tokenAddress){
     return { reserveNDAO, reserveToken }
 }
 
+
+export function useTokenLimit(tokenAddress)  {
+    const { maxPool } = useTokenDetails(tokenAddress);
+    return maxPool;
+}
+
+// export function useTokenLimit(tokenAddress) {
+//
+// }
+
 // export function useExchangeReserves(tokenAddress) {
 //   const { exchangeAddress } = useTokenDetails(tokenAddress)
 //   const reserveETH = useAddressBalance(exchangeAddress, 'ETH')

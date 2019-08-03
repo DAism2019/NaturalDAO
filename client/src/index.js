@@ -47,7 +47,7 @@ function ContextProviders({ children }) {
 function Updaters() {
   return (
     <>
-      <TransactionContextUpdater />
+      <PriceContextUpdater />
       <ApplicationContextUpdater />
       <TransactionContextUpdater />
     </>

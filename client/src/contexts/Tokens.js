@@ -18,6 +18,7 @@ const NAME = 'name'
 const SYMBOL = 'symbol'
 const DECIMALS = 'decimals'
 const EXCHANGE_ADDRESS = 'exchangeAddress'
+const MAX_POOL = 'maxPool'
 
 const UPDATE = 'UPDATE'
 const UPDATE_MANY = 'UPDATE_MANY'
@@ -27,7 +28,8 @@ const ETH = {
     [NAME]: 'Ethereum',
     [SYMBOL]: 'ETH',
     [DECIMALS]: 18,
-    [EXCHANGE_ADDRESS]: null
+    [EXCHANGE_ADDRESS]: null,
+    [MAX_POOL]:null
   }
 }
 
@@ -35,7 +37,8 @@ let NDAO_INFO = {
     [NAME]: 'NaturalDao',
     [SYMBOL]: 'NDAO',
     [DECIMALS]: 18,
-    [EXCHANGE_ADDRESS]: null
+    [EXCHANGE_ADDRESS]: null,
+    [MAX_POOL]:null
 }
 
 let NDAO = { }
@@ -68,7 +71,7 @@ function useTokensContext() {
 function reducer(state, { type, payload }) {
   switch (type) {
     case UPDATE: {
-      const { networkId, tokenAddress, name, symbol, decimals, exchangeAddress } = payload
+      const { networkId, tokenAddress, name, symbol, decimals, exchangeAddress,maxPool } = payload
       return {
         ...state,
         [networkId]: {
@@ -77,7 +80,8 @@ function reducer(state, { type, payload }) {
             [NAME]: name,
             [SYMBOL]: symbol,
             [DECIMALS]: decimals,
-            [EXCHANGE_ADDRESS]: exchangeAddress
+            [EXCHANGE_ADDRESS]: exchangeAddress,
+            [MAX_POOL]:maxPool
           }
         }
       }
@@ -122,11 +126,13 @@ async function updateExchange(factory,networkId,updateMany){
                 let _symbol = _result[2];
                 let _decimals =  + _result[3];
                 let _exchangeAddress = _result[4];
+                let _maxPool = _result[5]
                 allInfos[_tokenAddress] = {
                     [NAME]: _name,
                     [SYMBOL]: _symbol,
                     [DECIMALS]: _decimals,
-                    [EXCHANGE_ADDRESS]: _exchangeAddress
+                    [EXCHANGE_ADDRESS]: _exchangeAddress,
+                    [MAX_POOL]:_maxPool
                 }
             }
             INITIAL_TOKENS_CONTEXT.tokenCount = tokenCount;
@@ -153,8 +159,8 @@ export default function Provider({ children }) {
       [_ndaoAddress]:NDAO_INFO
   }
   const factory = useFactoryContract();
-  const update = useCallback((networkId, tokenAddress, name, symbol, decimals, exchangeAddress) => {
-    dispatch({ type: UPDATE, payload: { networkId, tokenAddress, name, symbol, decimals, exchangeAddress } })
+  const update = useCallback((networkId, tokenAddress, name, symbol, decimals, exchangeAddress, maxPool) => {
+    dispatch({ type: UPDATE, payload: { networkId, tokenAddress, name, symbol, decimals, exchangeAddress, maxPool } })
   }, [])
   const updateMany = useCallback((networkId,infos) =>{
     dispatch({type:UPDATE_MANY,payload:{networkId,infos}})

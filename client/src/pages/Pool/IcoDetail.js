@@ -13,6 +13,7 @@ import SubmitIcon from '@material-ui/icons/PresentToAll'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import Fab from '@material-ui/core/Fab'
 import {ethers,utils} from 'ethers'
+import signal from 'signal-js';
 import styled from 'styled-components'
 import CustomSnackbar from '../../components/Snackbar'
 import { isAddress,calculateGasMargin} from '../../utils'
@@ -22,6 +23,7 @@ import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
 import Fiat_ABI from '../../constants/abis/myFait'
 import { getContract } from '../../utils'
+import { useEthPrice } from '../../contexts/EthPrice'
 
 
 const GAS_MARGIN = utils.bigNumberify(1000)
@@ -79,6 +81,8 @@ function  convertTimetoTimeString(_times) {
 }
 
 function calPrice(_priceBigNum){
+    if(!_priceBigNum)
+        return ''
     _priceBigNum =  _priceBigNum.mul(100);
     let _priceDes = utils.formatEther(_priceBigNum);
     _priceDes = + _priceDes;
@@ -93,8 +97,9 @@ function IcoDetail({history,icoAddress}) {
     const classes = useStyles();
     const { active, account,library } = useWeb3Context()
     const [myDeposit,setMyDeposit] = useState(0);
-    const [showLoader, setShowLoader] = useState(true)
-    const [ethPrice,setEthPrice] = useState(227.34);
+    const [showLoader, setShowLoader] = useState(true);
+    const ethPrice = useEthPrice();
+    const [priceOfUSD,setPriceOfUSD] = useState();
     const [infos, setInfos] = React.useState({
         address:icoAddress,
         status:"",
@@ -113,6 +118,7 @@ function IcoDetail({history,icoAddress}) {
         depositAmount:0,
         creater:''
     });
+    const [exchangeAddress,setExchangeAddress] = useState();
     const [adminInfos,setAdminInfos] = useState({
         canDeposit:false,
         canSubmit:false,
@@ -182,48 +188,22 @@ function IcoDetail({history,icoAddress}) {
             });
         }
         //监听刷新ETH价格变化
-        let _priceContract;
-        async function listenPrice(){
-           let  _priceAddress = await priceContract.fiator();
-           // console.log("真实价格合约地址为:",_priceAddress);
-           _priceContract = getContract(_priceAddress,Fiat_ABI,library,account);
-           let _priceCur = await priceContract.getEthPrice();
-           let _priceOfUSDCur = calPrice(_priceCur);
-           // console.log("当前ETH价格为:",_priceOfUSDCur);
-           setEthPrice(_priceOfUSDCur);
-           _priceContract.on('SetEthPrice',async (_from,_to,event)=>{
-               if (!adminInfos.canSubmit)
-                   return;
-               if(!infos.goalReached)
-                   return;
-               let flag = infos.creater && judgeSender(infos.creater)
-               if(!flag)
-                   return;
-               let _price = await priceContract.getEthPrice();
-               let _priceOfUSD = calPrice(_price);
-               // console.log("更新后的ETH价格为:",_priceOfUSD);
-               setEthPrice(_priceOfUSD);
-               setSnacks({
-                   show:true,
-                   pos:'left',
-                   message:t('price_update').replace('{price}',( _priceOfUSD + " $")),
-                   type:'success'
-               });
-           });
-        }
-        listenPrice();
-        return function cleanup() {
+        signal.on('updatePrice', (from,price) => showUpdatePriceTip(from,price));
+        return  () => {
             if(icoContract){
                 icoContract.removeAllListeners("Deposit");
                 icoContract.removeAllListeners("CancelIco");
                 icoContract.removeAllListeners("SubmitIco");
                 icoContract.removeAllListeners("RefundTransfer");
             }
-            if(_priceContract){
-                _priceContract.removeAllListeners("SetEthPrice");
-            }
+            signal.off('updatePrice');
         };
     }, []);
+
+    useEffect(()=>{
+        let _price = calPrice(ethPrice);
+        setPriceOfUSD(_price)
+    },[ethPrice,calPrice])
 
     //get ico info first
     useEffect(() => {
@@ -267,6 +247,22 @@ function IcoDetail({history,icoAddress}) {
          }
      },[active,account,icoContract]);
 
+     function showUpdatePriceTip(from,price) {
+         console.log("ICO界面监听到ETH价格变化",from,price)
+         // if (!adminInfos.canSubmit)
+         //     return;
+         // if(!infos.goalReached)
+         //     return;
+         // let flag = (infos.creater && infos.creater.toLowerCase() === from.toLowerCase() && judgeSender(infos.creater))
+         // if(!flag)
+         //     return;
+         setSnacks({
+             show:true,
+             pos:'left',
+             message:t('price_update').replace('{price}',(calPrice(ethPrice) + " $")),
+             type:'success'
+         });
+     }
      //judge user
      function judgeSender(_sender){
          return active && account && _sender.toLowerCase() === account.toLowerCase()
@@ -313,7 +309,7 @@ function IcoDetail({history,icoAddress}) {
             let _submitTime = + icoInfos[6];
             result['endAt'] = convertTimetoTimeString(_endTime * 1000);
             let _status = calStatusString(status,icoInfos[8],_endTime,_submitTime);
-            result['status'] = t(_status);
+            result['status'] = _status ;
             result['name'] = icoInfos[0];
             result['symbol'] = icoInfos[1];
             result['decimals'] =  + icoInfos[2];
@@ -334,10 +330,15 @@ function IcoDetail({history,icoAddress}) {
             setInfos(result);
             setShowLoader(false);
             refreshStatus(_status);
+            if(_status === 'STATUS_SUCCESS'){
+                getExchangeAddress();
+            }
         }catch(err){
-            console.log(err);
-            return ;
         }
+    }
+    async function getExchangeAddress(tokenAddress){
+        let _exchangeAddress = await contract.getExchange(icoAddress);
+        setExchangeAddress(_exchangeAddress);
     }
 
     // refresh status UI by status string
@@ -435,11 +436,14 @@ function IcoDetail({history,icoAddress}) {
                     {t('ico_tokenPrice').replace('{%symbol}',infos.symbol) + infos.price}
                 </ContentWrapper>
                 <ContentWrapper>
-                    {t('ico_status') + infos.status}
+                    {t('ico_status') + t(infos.status)}
                 </ContentWrapper>
                 {account && active &&  <ContentWrapper>
                      {t('my_deposit') + " " + myDeposit +  ' ETH'}
                  </ContentWrapper>}
+                { (infos.status === 'STATUS_SUCCESS' && exchangeAddress) && <ContentWrapper>
+                  {t('exchange_address') + exchangeAddress}
+                </ContentWrapper>}
             </div>
         )
     }
