@@ -105,11 +105,11 @@ function reducer(state, { type, payload }) {
 //将交易对存于缓存中
 async function updateExchange(factory,networkId,updateMany){
     if(factory){
-        if (INITIAL_TOKENS_CONTEXT.tokenCount == undefined)
+        if (INITIAL_TOKENS_CONTEXT.tokenCount === undefined)
             INITIAL_TOKENS_CONTEXT.tokenCount = 0;
         let tokenCount = await factory.tokenCount()
         tokenCount = + tokenCount;
-        let noChange = tokenCount == INITIAL_TOKENS_CONTEXT.tokenCount;
+        let noChange = tokenCount === INITIAL_TOKENS_CONTEXT.tokenCount;
         if (noChange)
             return;
         let allPromise = [];
@@ -168,7 +168,7 @@ export default function Provider({ children }) {
   updateExchange(factory,networkId,updateMany)
 
   return (
-    <TokensContext.Provider value={useMemo(() => [state, { update,updateMany}], [state, update,updateMany,INITIAL_TOKENS_CONTEXT])}>
+    <TokensContext.Provider value={useMemo(() => [state, { update,updateMany}], [state, update,updateMany])}>
       {children}
     </TokensContext.Provider>
   )

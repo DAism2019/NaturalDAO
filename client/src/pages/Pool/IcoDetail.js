@@ -21,8 +21,6 @@ import { useFactoryContract,useTokenContract,usePriceContract } from '../../hook
 import { Spinner } from '../../theme'
 import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
-import Fiat_ABI from '../../constants/abis/myFait'
-import { getContract } from '../../utils'
 import { useEthPrice } from '../../contexts/EthPrice'
 
 
@@ -95,7 +93,7 @@ function IcoDetail({history,icoAddress}) {
     const priceContract = usePriceContract();
     const {t} = useTranslation();
     const classes = useStyles();
-    const { active, account,library } = useWeb3Context()
+    const { active, account } = useWeb3Context()
     const [myDeposit,setMyDeposit] = useState(0);
     const [showLoader, setShowLoader] = useState(true);
     const ethPrice = useEthPrice();
@@ -198,12 +196,12 @@ function IcoDetail({history,icoAddress}) {
             }
             signal.off('updatePrice');
         };
-    }, []);
+    }, [icoContract,account,judgeSender,refreshInfos,t]);
 
     useEffect(()=>{
         let _price = calPrice(ethPrice);
         setPriceOfUSD(_price)
-    },[ethPrice,calPrice])
+    },[ethPrice])
 
     //get ico info first
     useEffect(() => {
@@ -232,7 +230,7 @@ function IcoDetail({history,icoAddress}) {
             }
             getStatus();
        }
-    }, []);
+   }, []);
 
     //get user deposit
     //todo 这里要修改，用户投资后这里要有变化,需要结合事件进行测试
@@ -249,13 +247,13 @@ function IcoDetail({history,icoAddress}) {
 
      function showUpdatePriceTip(from,price) {
          console.log("ICO界面监听到ETH价格变化",from,price)
-         // if (!adminInfos.canSubmit)
-         //     return;
-         // if(!infos.goalReached)
-         //     return;
-         // let flag = (infos.creater && infos.creater.toLowerCase() === from.toLowerCase() && judgeSender(infos.creater))
-         // if(!flag)
-         //     return;
+         if (!adminInfos.canSubmit)
+             return;
+         if(!infos.goalReached)
+             return;
+         let flag = (infos.creater && infos.creater.toLowerCase() === from.toLowerCase() && judgeSender(infos.creater))
+         if(!flag)
+             return;
          setSnacks({
              show:true,
              pos:'left',

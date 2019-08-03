@@ -61,7 +61,7 @@ function QueryIco({history, location}) {
         setShowTable(false);
         setValues({
             ...values,
-            ["icoAddress"]: ""
+            icoAddress:''
         });
         if (!isAddress(values.creater)){
             setSnacks({
@@ -120,7 +120,7 @@ function QueryIco({history, location}) {
         setShowTable(false);
         setValues({
             ...values,
-            ["creater"]: ""
+            creater: ""
         });
         if (!isAddress(values.icoAddress)){
             return setSnacks({

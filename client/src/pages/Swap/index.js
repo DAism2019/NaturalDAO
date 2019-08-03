@@ -12,7 +12,7 @@ import OversizedPanel from '../../components/OversizedPanel'
 import ArrowDownBlue from '../../assets/images/arrow-down-blue.svg'
 import ArrowDownGrey from '../../assets/images/arrow-down-grey.svg'
 import { amountFormatter, calculateGasMargin } from '../../utils'
-import { useExchangeContract,useFactoryContract,usePriceContract } from '../../hooks'
+import { useExchangeContract,useFactoryContract } from '../../hooks'
 import { useTokenDetails } from '../../contexts/Tokens'
 import { useTransactionAdder } from '../../contexts/Transactions'
 import { useAddressBalance, useExchangeReserves } from '../../contexts/Balances'
@@ -298,7 +298,7 @@ export default function Swap({ initialCurrency }) {
   // get input allowance
   // const inputAllowance = useAddressAllowance(account, inputCurrency, inputExchangeAddress)
   let _address = contract ? contract.address : null;
-  if(swapType == NDAO_TO_TOKEN && outputExchangeContract ){
+  if(swapType === NDAO_TO_TOKEN && outputExchangeContract ){
       _address = outputExchangeContract.address;
       setNdaoExchangeAddress(_address);
   }else{

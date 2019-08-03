@@ -306,6 +306,9 @@
     }, {
         "type": "address",
         "name": "out"
+    }, {
+        "type": "uint256",
+        "name": "out"
     }],
     "inputs": [{
         "type": "uint256",
@@ -314,7 +317,7 @@
     "constant": true,
     "payable": false,
     "type": "function",
-    "gas": 10217
+    "gas": 11369
 }, {
     "name": "exchangeTemplate",
     "outputs": [{
