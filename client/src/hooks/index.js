@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
 import ERC20_ABI from '../constants/abis/erc20'
-import { getContract, getFactoryContract, getExchangeContract, getPriceContract, isAddress } from '../utils'
+import { getContract, getFactoryContract, getExchangeContract, getNdaoContract,
+        getPriceContract, getMyPriceContract, isAddress } from '../utils'
 import copy from 'copy-to-clipboard'
 
 // modified from https://usehooks.com/useDebounce/
@@ -122,6 +123,31 @@ export function usePriceContract(withSignerIfPossible = true) {
   }, [networkId, library, withSignerIfPossible, account])
 }
 
+export function useMyPriceContract(address,withSignerIfPossible = true){
+    const { library, account } = useWeb3Context()
+
+    return useMemo(async () => {
+      try {
+        return await getMyPriceContract(address, library, withSignerIfPossible ? account : undefined)
+      } catch {
+        return null
+      }
+    }, [address, library, withSignerIfPossible, account])
+}
+
+
+export function useNdaoContract(withSignerIfPossible = true) {
+  const { networkId, library, account } = useWeb3Context()
+
+  return useMemo(async () => {
+    try {
+      return await getNdaoContract(networkId, library, withSignerIfPossible ? account : undefined)
+    } catch {
+      return null
+    }
+  }, [networkId, library, withSignerIfPossible, account])
+}
+
 
 // returns null on errors
 export function useFactoryContract(withSignerIfPossible = true) {
@@ -135,6 +161,7 @@ export function useFactoryContract(withSignerIfPossible = true) {
     }
   }, [networkId, library, withSignerIfPossible, account])
 }
+
 
 export function useExchangeContract(exchangeAddress, withSignerIfPossible = true) {
   const { library, account } = useWeb3Context()

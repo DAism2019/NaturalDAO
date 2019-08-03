@@ -31,14 +31,14 @@ const ETH = {
   }
 }
 
-let NDAO = {
-    NDAO:{
-        [NAME]: 'NaturalDao',
-        [SYMBOL]: 'NDAO',
-        [DECIMALS]: 18,
-        [EXCHANGE_ADDRESS]: null
-    }
+let NDAO_INFO = {
+    [NAME]: 'NaturalDao',
+    [SYMBOL]: 'NDAO',
+    [DECIMALS]: 18,
+    [EXCHANGE_ADDRESS]: null
 }
+
+let NDAO = { }
 
 
 
@@ -148,6 +148,10 @@ async function updateExchange(factory,networkId,updateMany){
 export default function Provider({ children }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_TOKENS_CONTEXT)
   const { networkId } = useWeb3Context()
+  let _ndaoAddress = NDAO_ADDRESSES[networkId];
+  NDAO = {
+      [_ndaoAddress]:NDAO_INFO
+  }
   const factory = useFactoryContract();
   const update = useCallback((networkId, tokenAddress, name, symbol, decimals, exchangeAddress) => {
     dispatch({ type: UPDATE, payload: { networkId, tokenAddress, name, symbol, decimals, exchangeAddress } })
@@ -164,13 +168,17 @@ export default function Provider({ children }) {
   )
 }
 
+export function setNdaoExchangeAddress(_address){
+    NDAO_INFO[EXCHANGE_ADDRESS] = _address
+}
+
+
 export function useTokenDetails(tokenAddress) {
   const { networkId, library } = useWeb3Context()
   const [state, { update }] = useTokensContext()
-  const allTokensInNetwork = { ...ETH, ...(safeAccess(state, [networkId]) || {}) }
+  const allTokensInNetwork = { ...ETH, ...NDAO,...(safeAccess(state, [networkId]) || {}) }
   const { [NAME]: name, [SYMBOL]: symbol, [DECIMALS]: decimals, [EXCHANGE_ADDRESS]: exchangeAddress } =
     safeAccess(allTokensInNetwork, [tokenAddress]) || {}
-
   useEffect(() => {
     if (
       isAddress(tokenAddress) &&
@@ -178,6 +186,7 @@ export function useTokenDetails(tokenAddress) {
       (networkId || networkId === 0) &&
       library
     ) {
+
       let stale = false
 
       const namePromise = getTokenName(tokenAddress, library).catch(() => null)
@@ -190,6 +199,7 @@ export function useTokenDetails(tokenAddress) {
       Promise.all([namePromise, symbolPromise, decimalsPromise, exchangeAddressPromise]).then(
         ([resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress]) => {
           if (!stale) {
+
             update(networkId, tokenAddress, resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress)
           }
         }
@@ -207,7 +217,6 @@ export function useTokenDetails(tokenAddress) {
 //todo 增加output 或者  input
 export function useAllTokenDetails(type,requireExchange = true) {
   const { networkId } = useWeb3Context()
-  // NDAO['NDAO'][]
   const [state] = useTokensContext()
   const _solid = type ==='input' ? {...ETH,...NDAO } : {...NDAO};
   const tokenDetails = { ..._solid, ...(safeAccess(state, [networkId]) || {}) }
@@ -215,7 +224,7 @@ export function useAllTokenDetails(type,requireExchange = true) {
     ? Object.keys(tokenDetails)
         .filter(
           tokenAddress =>
-            tokenAddress === 'ETH' || tokenAddress === 'NDAO' ||
+            tokenAddress === 'ETH' || tokenAddress === NDAO_ADDRESSES[networkId] ||
             (safeAccess(tokenDetails, [tokenAddress, EXCHANGE_ADDRESS]) &&
               safeAccess(tokenDetails, [tokenAddress, EXCHANGE_ADDRESS]) !== ethers.constants.AddressZero)
         )

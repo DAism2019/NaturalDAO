@@ -103,7 +103,7 @@ const InputPanel = styled.div`
 `
 
 const Container = styled.div`
-  border-radius: 1.25rem;
+  ${'' /* border-radius: 1.25rem; */}
   box-shadow: 0 0 0 0.5px ${({ error, theme }) => (error ? theme.salmonRed : theme.mercuryGray)};
   background-color: ${({ theme }) => theme.white};
   transition: box-shadow 200ms ease-in-out;
@@ -211,10 +211,8 @@ export default function CurrencyInputPanel({
   const { t } = useTranslation()
 
   const [modalIsOpen, setModalIsOpen] = useState(false)
-
   const tokenContract = useTokenContract(selectedTokenAddress)
   const { exchangeAddress: selectedTokenExchangeAddress } = useTokenDetails(selectedTokenAddress)
-
   const pendingApproval = usePendingApproval(selectedTokenAddress)
 
   const addTransaction = useTransactionAdder()
@@ -233,7 +231,6 @@ export default function CurrencyInputPanel({
                 selectedTokenExchangeAddress,
                 ethers.constants.MaxUint256
               )
-
               tokenContract
                 .approve(selectedTokenExchangeAddress, ethers.constants.MaxUint256, {
                   gasLimit: calculateGasMargin(estimatedGas, GAS_MARGIN)
@@ -359,7 +356,9 @@ function CurrencySelectModal({ type,isOpen, onDismiss, onTokenSelect }) {
         const bSymbol = allTokens[b].symbol.toLowerCase()
         if (aSymbol === 'ETH'.toLowerCase() || bSymbol === 'ETH'.toLowerCase()) {
           return aSymbol === bSymbol ? 0 : aSymbol === 'ETH'.toLowerCase() ? -1 : 1
-        } else {
+      } else if (aSymbol === 'NDAO'.toLowerCase() || bSymbol === 'NDAO'.toLowerCase()){
+          return aSymbol === bSymbol ? 0 : aSymbol === 'NDAO'.toLowerCase() ? -1 : 1
+      }else {
           return aSymbol < bSymbol ? -1 : aSymbol > bSymbol ? 1 : 0
         }
       })
@@ -400,9 +399,9 @@ function CurrencySelectModal({ type,isOpen, onDismiss, onTokenSelect }) {
       return (
         <>
           <TokenModalInfo>{t('noExchange')}</TokenModalInfo>
-          <TokenModalInfo>
+          {/* <TokenModalInfo>
             <Link to={`/create-exchange/${searchQuery}`}>{t('createExchange')}</Link>
-          </TokenModalInfo>
+          </TokenModalInfo> */}
         </>
       )
     }

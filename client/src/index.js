@@ -6,6 +6,7 @@ import Web3Provider, { Connectors } from 'web3-react'
 import ThemeProvider, { GlobalStyle } from './theme'
 import ApplicationContextProvider, { Updater as ApplicationContextUpdater } from './contexts/Application'
 import TransactionContextProvider, { Updater as TransactionContextUpdater } from './contexts/Transactions'
+import PriceContextProvider,{ Updater as PriceContextUpdater } from './contexts/EthPrice'
 import TokensContextProvider from './contexts/Tokens'
 import BalancesContextProvider from './contexts/Balances'
 import AllowancesContextProvider from './contexts/Allowances'
@@ -29,21 +30,24 @@ const connectors = { Injected, Network }
 
 function ContextProviders({ children }) {
   return (
-    <ApplicationContextProvider>
-      <TransactionContextProvider>
-        <TokensContextProvider>
-          <BalancesContextProvider>
-            <AllowancesContextProvider>{children}</AllowancesContextProvider>
-          </BalancesContextProvider>
-        </TokensContextProvider>
-      </TransactionContextProvider>
-    </ApplicationContextProvider>
+    <PriceContextProvider>
+      <ApplicationContextProvider>
+        <TransactionContextProvider>
+          <TokensContextProvider>
+            <BalancesContextProvider>
+              <AllowancesContextProvider>{children}</AllowancesContextProvider>
+            </BalancesContextProvider>
+          </TokensContextProvider>
+        </TransactionContextProvider>
+      </ApplicationContextProvider>
+    </PriceContextProvider>
   )
 }
 
 function Updaters() {
   return (
     <>
+      <TransactionContextUpdater />
       <ApplicationContextUpdater />
       <TransactionContextUpdater />
     </>

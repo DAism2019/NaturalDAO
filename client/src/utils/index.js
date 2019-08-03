@@ -1,12 +1,12 @@
 import { ethers } from 'ethers'
-
 import FACTORY_ABI from '../constants/abis/factory'
 import EXCHANGE_ABI from '../constants/abis/exchange'
 import ERC20_ABI from '../constants/abis/erc20'
 import PRICE_ABI from '../constants/abis/ethPrice'
 import ERC20_BYTES32_ABI from '../constants/abis/erc20_bytes32'
-import { FACTORY_ADDRESSES, PRICE_ADDRESSES } from '../constants'
-
+import Fiat_ABI from '../constants/abis/myFait'
+import NDAO_ABI from '../constants/abis/NDAOToken'
+import { FACTORY_ADDRESSES, PRICE_ADDRESSES,NDAO_ADDRESSES } from '../constants'
 import UncheckedJsonRpcSigner from './signer'
 
 export const ERROR_CODES = ['TOKEN_NAME', 'TOKEN_SYMBOL', 'TOKEN_DECIMALS'].reduce(
@@ -104,7 +104,6 @@ export function getContract(address, ABI, library, account) {
   if (!isAddress(address) || address === ethers.constants.AddressZero) {
     throw Error(`Invalid 'address' parameter '${address}'.`)
   }
-
   return new ethers.Contract(address, ABI, getProviderOrSigner(library, account))
 }
 
@@ -117,6 +116,13 @@ export function getPriceContract(networkId, library, account) {
   return getContract(PRICE_ADDRESSES[networkId], PRICE_ABI, library, account)
 }
 
+export function getNdaoContract(networkId, library, account) {
+   return getContract(NDAO_ADDRESSES[networkId], NDAO_ABI, library, account)
+}
+
+export function getMyPriceContract(address,library, account) {
+   return getContract(address, Fiat_ABI, library, account)
+}
 
 // account is optional
 export function getExchangeContract(exchangeAddress, library, account) {
@@ -193,7 +199,6 @@ export async function getTokenBalance(tokenAddress, address, library) {
   if (!isAddress(tokenAddress) || !isAddress(address)) {
     throw Error(`Invalid 'tokenAddress' or 'address' parameter '${tokenAddress}' or '${address}'.`)
   }
-
   return getContract(tokenAddress, ERC20_ABI, library).balanceOf(address)
 }
 

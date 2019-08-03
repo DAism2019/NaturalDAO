@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import Jazzicon from 'jazzicon'
+import { useWeb3Context } from 'web3-react'
 import { ReactComponent as EthereumLogo } from '../../assets/images/ethereum-logo.svg'
 import { ReactComponent as NaturalDaoLogo } from '../../assets/images/natualDao.svg'
+import { NDAO_ADDRESSES } from '../../constants'
 
 const TOKEN_ICON_API = 'https://raw.githubusercontent.com/TrustWallet/tokens/master/tokens'
 const BAD_IMAGES = {}
@@ -30,13 +32,14 @@ const StyledNaturalDAOLogo = styled(NaturalDaoLogo)`
 
 export default function TokenLogo({ address, size = '1rem', ...rest }) {
   const [error, setError] = useState(false)
+  const {networkId} = useWeb3Context();
   const ref = useRef()
   useEffect(() => {
       if(address!=='ETH' && address !=='NDAO'){
           if (ref.current) {
             ref.current.innerHTML = ''
             if (address) {
-              ref.current.appendChild(Jazzicon(16, parseInt(address.slice(2, 14), 16)))
+              ref.current.appendChild(Jazzicon(16, parseInt(address.slice(2, 10), 16)))
             }
           }
       }
@@ -46,7 +49,7 @@ export default function TokenLogo({ address, size = '1rem', ...rest }) {
   let path = ''
   if (address === 'ETH') {
     return <StyledEthereumLogo size={size} />
-  } else if (address ==='NDAO'){
+} else if (address === NDAO_ADDRESSES[networkId]){
     return <StyledNaturalDAOLogo size={size} />
   // } else if (!error && !BAD_IMAGES[address]) {
   //   path = `${TOKEN_ICON_API}/${address.toLowerCase()}.png`

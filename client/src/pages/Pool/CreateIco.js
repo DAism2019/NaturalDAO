@@ -9,7 +9,7 @@ import {useTranslation} from 'react-i18next'
 import FormControl from '@material-ui/core/FormControl';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import { Button } from '../../theme'
-import { useFactoryContract } from '../../hooks'
+import { useFactoryContract,useNdaoAddress } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 import CustomSnackbar from '../../components/Snackbar'
 
