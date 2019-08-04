@@ -17,7 +17,7 @@ def createIco():
     nonce = w3.eth.getTransactionCount(my_address)
     goal = w3.toWei(100, 'ether')
     des = 18
-    timedelta = 60 * 3
+    timedelta = 60 * 2
     # price : 1 eth => 1100000 tokens
     price = 10000 * 10 ** des
     unicorn_txn = myContract.functions.createICO('DDCoins', 'DDC', des, goal, timedelta, price).buildTransaction({

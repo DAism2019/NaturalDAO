@@ -12,7 +12,8 @@ contract NDAO:
 contract Exchange:
     def setup(token_addr: address, ndao_address: address,
               token_amount: uint256, ndao_amount: uint256): modifying
-    def getMaxPool() -> uint256:constant
+
+    def getMaxPool() -> uint256: constant
 
 
 # the interface of ICO contract
@@ -163,7 +164,7 @@ def getAllIcoOfUser(creater: address) -> address[MAX_NUMBER]:
 
 # risk:How to encapsulates the following six methods and relative events or variables in a isolated contract!
 @private
-def _buyNdaoInput(value: wei_value,min_ndao:uint256,deadline: timestamp, buyer: address, recipient: address) -> uint256:
+def _buyNdaoInput(value: wei_value, min_ndao: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and min_ndao > 0
     send(self.beneficiary, value)
     amount: uint256 = self.ethPrice.ethToNdaoInputPrice(value)
@@ -175,17 +176,17 @@ def _buyNdaoInput(value: wei_value,min_ndao:uint256,deadline: timestamp, buyer: 
 
 @public
 @payable
-def buyNdaoInputSwap(min_ndao:uint256,deadline: timestamp) -> uint256:
+def buyNdaoInputSwap(min_ndao: uint256, deadline: timestamp) -> uint256:
     """
     # @return the amounts of ndao_bought
     """
     assert msg.value > 0
-    return self._buyNdaoInput(msg.value,min_ndao, deadline,msg.sender, msg.sender)
+    return self._buyNdaoInput(msg.value, min_ndao, deadline, msg.sender, msg.sender)
 
 
 @public
 @payable
-def buyNdaoInputTransfer(min_ndao:uint256,deadline: timestamp,recipient: address) -> uint256:
+def buyNdaoInputTransfer(min_ndao: uint256, deadline: timestamp, recipient: address) -> uint256:
     """
     # @param recipient The address that receives output Ndao.
     # @return the amounts of ndao_bought
@@ -196,15 +197,13 @@ def buyNdaoInputTransfer(min_ndao:uint256,deadline: timestamp,recipient: address
 
 
 @private
-def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, max_sold:wei_value,deadline:timestamp buyer: address, recipient: address) -> (wei_value, wei_value):
+def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, deadline: timestamp, buyer: address, recipient: address) -> (wei_value, wei_value):
     assert deadline >= block.timestamp
     eth_sold: wei_value = self.ethPrice.ethToNdaoOutPrice(ndao_bought)
-    assert eth_sold <= max_sold
     # Throws if eth_sold > msg.value
     eth_refund: wei_value = value - eth_sold
     send(self.beneficiary, eth_sold)
-    if eth_refund > 0:
-        send(buyer, eth_refund)
+    send(buyer, eth_refund)
     NDAO(self.ndaoAddress).mint(recipient, ndao_bought)
     log.NdaoPurchase(buyer, recipient, ndao_bought)
     return (eth_sold, eth_refund)
@@ -212,19 +211,19 @@ def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, max_sold:wei_value,de
 
 @public
 @payable
-def buyNdaoOutputSwap(ndao_bought: uint256,max_sold:wei_value,deadline:timestamp) -> (wei_value, wei_value):
+def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> (wei_value, wei_value):
     """
     # @param ndao_bought the amounts of ndao_bought
     # @return the amounts of eth_sold
     # @return the refund of eth
     """
     assert ndao_bought > 0 and msg.value > 0
-    return self._buyNdaoOutput(msg.value, ndao_bought,max_sold,deadline, msg.sender, msg.sender)
+    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender)
 
 
 @public
 @payable
-def buyNdaoOutputTransfer(ndao_bought: uint256, max_sold:wei_value, deadline:timestamp,recipient: address) -> (wei_value, wei_value):
+def buyNdaoOutputTransfer(ndao_bought: uint256, deadline: timestamp, recipient: address) -> (wei_value, wei_value):
     """
     # @param ndao_bought the amounts of ndao_bought
     # @param recipient The address that receives output Ndao.
@@ -233,7 +232,7 @@ def buyNdaoOutputTransfer(ndao_bought: uint256, max_sold:wei_value, deadline:tim
     """
     assert ndao_bought > 0 and msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    return self._buyNdaoOutput(msg.value, ndao_bought,max_sold,deadline, msg.sender, msg.sender)
+    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender)
 
 
 @private
@@ -308,13 +307,13 @@ def getTokenWithId(token_id: uint256) -> address:
 
 @public
 @constant
-def getTokenDetailById(token_id: uint256) -> (address, string[64], string[32], uint256, address,uint256):
+def getTokenDetailById(token_id: uint256) -> (address, string[64], string[32], uint256, address, uint256):
     assert token_id <= self.tokenCount
     token_address: address = self.getTokenWithId(token_id)
     _name: string[64]
     _symbol: string[32]
     _decimals: uint256
     (_name, _symbol, _decimals) = ICO(token_address).getTokenInfo()
-    exchange_address:address = self.getExchange(token_address)
-    maxPool:uint256 = Exchange(exchange_address).getMaxPool()
-    return (token_address, _name, _symbol, _decimals, exchange_address,maxPool)
+    exchange_address: address = self.getExchange(token_address)
+    maxPool: uint256 = Exchange(exchange_address).getMaxPool()
+    return (token_address, _name, _symbol, _decimals, exchange_address, maxPool)

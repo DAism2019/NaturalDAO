@@ -691,7 +691,6 @@ export default function Swap({ initialCurrency }) {
 
   async function onSwap() {
     const deadline = Math.ceil(Date.now() / 1000) + DEADLINE_FROM_NOW
-
     let estimate, method, args, value
     if (independentField === INPUT) {
       ReactGA.event({
@@ -705,15 +704,25 @@ export default function Swap({ initialCurrency }) {
         args = [dependentValueMinumum, deadline]
         value = independentValueParsed
       } else if (swapType === TOKEN_TO_ETH) {
-        estimate = contract.estimate.tokenToEthSwapInput
-        method = contract.tokenToEthSwapInput
-        args = [independentValueParsed, dependentValueMinumum, deadline]
-        value = ethers.constants.Zero
+        // estimate = contract.estimate.tokenToEthSwapInput
+        // method = contract.tokenToEthSwapInput
+        // args = [independentValueParsed, dependentValueMinumum, deadline]
+        // value = ethers.constants.Zero
       } else if (swapType === TOKEN_TO_TOKEN) {
         estimate = contract.estimate.tokenToTokenSwapInput
         method = contract.tokenToTokenSwapInput
         args = [independentValueParsed, dependentValueMinumum, ethers.constants.One, deadline, outputCurrency]
         value = ethers.constants.Zero
+      }else if (swapType === NDAO_TO_TOKEN) {
+        estimate = contract.estimate.ndaoToTokenSwapInput
+        method = contract.ndaoToTokenSwapInput
+        args = [independentValueParsed,dependentValueMinumum, deadline]
+        value = ethers.constants.Zero
+      }else if(swapType === ETH_TO_TOKEN){
+        estimate = contract.estimate.ethToTokenSwapInput
+        method = contract.ethToTokenSwapInput
+        args = [dependentValueMinumum, deadline]
+        value = independentValueParsed
       }
     } else if (independentField === OUTPUT) {
       ReactGA.event({
@@ -722,8 +731,8 @@ export default function Swap({ initialCurrency }) {
       })
 
       if (swapType === ETH_TO_NDAO) {
-        estimate = contract.estimate.ethToTokenSwapOutput
-        method = contract.ethToTokenSwapOutput
+        estimate = contract.estimate.buyNdaoOutputSwap
+        method = contract.buyNdaoOutputSwap
         args = [independentValueParsed, deadline]
         value = dependentValueMaximum
       } else if (swapType === TOKEN_TO_ETH) {
@@ -736,6 +745,16 @@ export default function Swap({ initialCurrency }) {
         method = contract.tokenToTokenSwapOutput
         args = [independentValueParsed, dependentValueMaximum, ethers.constants.MaxUint256, deadline, outputCurrency]
         value = ethers.constants.Zero
+      }else if (swapType === NDAO_TO_TOKEN) {
+        estimate = contract.estimate.ndaoToTokenSwapOutput
+        method = contract.ndaoToTokenSwapOutput
+        args = [independentValueParsed,dependentValueMaximum, deadline]
+        value = ethers.constants.Zero
+      }else if(swapType === ETH_TO_TOKEN){
+        estimate = contract.estimate.ethToTokenSwapOutput
+        method = contract.ethToTokenSwapOutput
+        args = [independentValueParsed, deadline]
+        value = dependentValueMaximum
       }
     }
 
@@ -744,7 +763,7 @@ export default function Swap({ initialCurrency }) {
       addTransaction(response)
     })
   }
-  const showTokenLimit = (swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN);
+  const showTokenLimit = (swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN || swapType === ETH_TO_TOKEN || swapType === NDAO_TO_TOKEN);
   return (
     <>
       <CurrencyInputPanel type='input'
@@ -847,6 +866,7 @@ export default function Swap({ initialCurrency }) {
     </>
   )
 }
+
 
 function getInputPrice(_price,eth_sold) {
     if(_price) {

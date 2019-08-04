@@ -7,9 +7,8 @@ from vyper.interfaces import ERC20
 # the interface of Factory
 contract Factory:
     def getExchange(token_addr: address) -> address: constant
-    def buyNdaoInputSwap() -> uint256: modifying
-    def buyNdaoOutputSwap(
-        ndao_bought: uint256) -> (wei_value, wei_value): modifying
+    def buyNdaoInputSwap(min_ndao: uint256, deadline: timestamp) -> uint256: modifying
+    def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> (wei_value, wei_value): modifying
 
 
 # the interface of Exchange
@@ -148,7 +147,7 @@ def ethToTokenSwapInput(min_tokens: uint256, deadline: timestamp) -> uint256:
     # @return Amount of Tokens bought.
     """
     assert msg.value > 0
-    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(value=msg.value)
+    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(1,deadline,value=msg.value)
     return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, msg.sender, False)
 
 
@@ -165,7 +164,7 @@ def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient:
     """
     assert msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(value=msg.value)
+    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(1,deadline,value=msg.value)
     return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, recipient, False)
 
 
@@ -216,19 +215,15 @@ def ndaoToTokenTransferOutput(tokens_bought: uint256, max_ndao: uint256, deadlin
 
 
 @private
-def ethToTokenOutput(eth_value: wei_value, tokens_bought: uint256, max_eth: wei_value, deadline: timestamp, buyer: address, recipient: address) -> wei_value:
-    assert deadline >= block.timestamp and (tokens_bought > 0 and max_eth > 0)
+def ethToTokenOutput(eth_value: wei_value, tokens_bought: uint256,  deadline: timestamp, buyer: address, recipient: address) -> wei_value:
+    assert deadline >= block.timestamp and tokens_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     ndao_reserve: uint256 = self.ndaoAmount
-    ndao_sold: uint256 = self.getOutputPrice(
-        tokens_bought, ndao_reserve, token_reserve)
+    ndao_sold: uint256 = self.getOutputPrice(tokens_bought, ndao_reserve, token_reserve)
     # need deal the refund
     eth_sold: wei_value
     eth_refund: wei_value
-    (eth_sold, eth_refund) = self.factory.buyNdaoOutputSwap(
-        ndao_sold, value=eth_value)
-    # Throws if eth_sold > max_eth
-    assert eth_sold <= max_eth, "beyond max_eth"
+    (eth_sold, eth_refund) = self.factory.buyNdaoOutputSwap(ndao_sold,deadline,value=eth_value)
     if eth_refund > 0:
         send(buyer, eth_refund)
     self.ndaoAmount += ndao_sold
@@ -240,31 +235,31 @@ def ethToTokenOutput(eth_value: wei_value, tokens_bought: uint256, max_eth: wei_
 
 @public
 @payable
-def ethToTokenSwapOutput(tokens_bought: uint256, max_eth: wei_value, deadline: timestamp) -> wei_value:
+def ethToTokenSwapOutput(tokens_bought: uint256,  deadline: timestamp) -> wei_value:
     """
     # @notice Convert eth to Tokens.
-    # @dev User specifies maximum input max_eth and exact output.
+    # @dev User specifies  exact output.
     # @param tokens_bought Amount of tokens bought.
     # @param deadline Time after which this transaction can no longer be executed.
     # @return Amount of eth sold.
     """
     assert msg.value > 0
-    return self.ethToTokenOutput(msg.value, tokens_bought, max_eth, deadline, msg.sender, msg.sender)
+    return self.ethToTokenOutput(msg.value, tokens_bought, deadline, msg.sender, msg.sender)
 
 
 @public
 @payable
-def ethToTokenTransferOutput(tokens_bought: uint256, max_eth: wei_value, deadline: timestamp, recipient: address) -> wei_value:
+def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipient: address) -> wei_value:
     """
     # @notice Convert eth to Tokens.
-    # @dev User specifies maximum input max_eth and exact output.
+    # @dev User specifies  exact output.
     # @param tokens_bought Amount of tokens bought.
     # @param deadline Time after which this transaction can no longer be executed.
     # @return Amount of eth sold.
     """
     assert msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    return self.ethToTokenOutput(msg.value, tokens_bought, max_eth, deadline, msg.sender, recipient)
+    return self.ethToTokenOutput(msg.value, tokens_bought, deadline, msg.sender, recipient)
 
 
 @private

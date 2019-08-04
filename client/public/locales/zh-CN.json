@@ -29,7 +29,7 @@
     "orTransFail": "或交易失败。",
     "youWillReceive": "你将至少收到",
     "youAreBuying": "你正在购买",
-    "itWillCost": "它将至少花费",
+    "itWillCost": "它将至多花费",
     "insufficientBalance": "余额不足",
     "inputNotValid": "无效的输入值",
     "differentToken": "必须是不同的通证。",
