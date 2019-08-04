@@ -234,9 +234,9 @@ function getMarketRate(
   outputDecimals,
   invert = false
 ) {
-  if (swapType === ETH_TO_TOKEN) {
+  if (swapType === NDAO_TO_TOKEN) {
     return getExchangeRate(outputReserveNDAO, 18, outputReserveToken, outputDecimals, invert)
-  } else if (swapType === TOKEN_TO_ETH) {
+} else if (swapType === TOKEN_TO_NDAO) {
     return getExchangeRate(inputReserveToken, inputDecimals, inputReserveNDAO, 18, invert)
   } else if (swapType === TOKEN_TO_TOKEN) {
     const factor = ethers.utils.bigNumberify(10).pow(ethers.utils.bigNumberify(18))
@@ -294,7 +294,7 @@ export default function Swap({ initialCurrency }) {
   const outputExchangeContract = useExchangeContract(outputExchangeAddress)
   const factory = useFactoryContract();
   const _type = getSwapContract(swapType);
-  const contract = _type === ETH_TO_TOKEN ? factory : (_type === 1 ? inputExchangeContract : outputExchangeContract);
+  const contract = _type === 0 ? factory : (_type === 1 ? inputExchangeContract : outputExchangeContract);
   // get input allowance
   // const inputAllowance = useAddressAllowance(account, inputCurrency, inputExchangeAddress)
   let _address = contract ? contract.address : null;
@@ -584,7 +584,7 @@ export default function Swap({ initialCurrency }) {
     })
 
     const b = text => <BlueSpan>{text}</BlueSpan>
-
+    // const hideMarket = (swapType === ETH_TO_NDAO || swapType === NDAO_TO_ETH);
     if (independentField === INPUT) {
       return (
         <div>
@@ -616,7 +616,7 @@ export default function Swap({ initialCurrency }) {
                 ⚠️
               </span>
             )}
-            {t('priceChange')} {b(`${percentSlippageFormatted}%`)}.
+            {/* {t('priceChange')} {b(`${percentSlippageFormatted}%`)}. */}
           </LastSummaryText>
         </div>
       )
@@ -646,7 +646,7 @@ export default function Swap({ initialCurrency }) {
             {t('orTransFail')}
           </LastSummaryText>
           <LastSummaryText>
-            {t('priceChange')} {b(`${percentSlippageFormatted}%`)}.
+            {/* {t('priceChange')} {b(`${percentSlippageFormatted}%`)}. */}
           </LastSummaryText>
         </div>
       )
@@ -699,9 +699,9 @@ export default function Swap({ initialCurrency }) {
         action: 'SwapInput'
       })
 
-      if (swapType === ETH_TO_TOKEN) {
-        estimate = contract.estimate.ethToTokenSwapInput
-        method = contract.ethToTokenSwapInput
+      if (swapType === ETH_TO_NDAO) {
+        estimate = contract.estimate.buyNdaoInputSwap
+        method = contract.buyNdaoInputSwap
         args = [dependentValueMinumum, deadline]
         value = independentValueParsed
       } else if (swapType === TOKEN_TO_ETH) {
@@ -721,7 +721,7 @@ export default function Swap({ initialCurrency }) {
         action: 'SwapOutput'
       })
 
-      if (swapType === ETH_TO_TOKEN) {
+      if (swapType === ETH_TO_NDAO) {
         estimate = contract.estimate.ethToTokenSwapOutput
         method = contract.ethToTokenSwapOutput
         args = [independentValueParsed, deadline]
@@ -745,7 +745,6 @@ export default function Swap({ initialCurrency }) {
     })
   }
   const showTokenLimit = (swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN);
-
   return (
     <>
       <CurrencyInputPanel type='input'
@@ -824,18 +823,20 @@ export default function Swap({ initialCurrency }) {
             </span>
           )}
         </ExchangeRateWrapper>
-        <ExchangeRateWrapper>
-            <ExchangeRate>{t('currentPoolSize')}</ExchangeRate>
-            <span>
-              {outputReserveNDAO && outputReserveToken
-                ? `${amountFormatter(outputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
-                    outputReserveToken,
-                    outputDecimals,
-                    Math.min(4, outputDecimals)
-                  )} ${outputSymbol}`
-                : ' - '}
-            </span>
-          </ExchangeRateWrapper>
+        { showTokenLimit &&
+            <ExchangeRateWrapper>
+                <ExchangeRate>{t('currentPoolSize')}</ExchangeRate>
+                <span>
+                  {outputReserveNDAO && outputReserveToken
+                    ? `${amountFormatter(outputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
+                        outputReserveToken,
+                        outputDecimals,
+                        Math.min(4, outputDecimals)
+                      )} ${outputSymbol}`
+                    : ' - '}
+                </span>
+              </ExchangeRateWrapper>
+        }
       </OversizedPanel>
       {renderSummary()}
       <Flex>
@@ -865,7 +866,10 @@ function getOutputPrice(_price,ndao_buy) {
         _price = _price.mul(100).mul(ndao_buy);
         let _ten = ethers.utils.bigNumberify(10);
         let _des = _ten.pow(18);
-        return _price.div(_des).add(ethers.constants.One)
+        let _reslut = _price.div(_des).add(ethers.constants.One);
+        return _reslut
+        // console.log(_reslut.toString());
+        // return .add(ethers.constants.One)
     }else{
         return 0;
     }

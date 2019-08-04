@@ -216,6 +216,7 @@ export async function getTokenAllowance(address, tokenAddress, spenderAddress, l
 
 // amount must be a BigNumber, {base,display}Decimals must be Numbers
 export function amountFormatter(amount, baseDecimals = 18, displayDecimals = 3, useLessThan = true) {
+    // console.log(amount, baseDecimals,displayDecimals,useLessThan)
   if (baseDecimals > 18 || displayDecimals > 18 || displayDecimals > baseDecimals) {
     throw Error(`Invalid combination of baseDecimals '${baseDecimals}' and displayDecimals '${displayDecimals}.`)
   }
@@ -246,30 +247,31 @@ export function amountFormatter(amount, baseDecimals = 18, displayDecimals = 3, 
     // if the balance is greater than the minimum display amount
     else {
       const stringAmount = ethers.utils.formatUnits(amount, baseDecimals)
-
       // if there isn't a decimal portion
       if (!stringAmount.match(/\./)) {
         return stringAmount
       }
       // if there is a decimal portion
       else {
-        const [wholeComponent, decimalComponent] = stringAmount.split('.')
-        const roundUpAmount = minimumDisplayAmount.div(ethers.constants.Two)
-        const roundedDecimalComponent = ethers.utils
-          .bigNumberify(decimalComponent.padEnd(baseDecimals, '0'))
-          .add(roundUpAmount)
-          .toString()
-          .padStart(baseDecimals, '0')
-          .substring(0, displayDecimals)
-
-        // decimals are too small to show
-        if (roundedDecimalComponent === '0'.repeat(displayDecimals)) {
-          return wholeComponent
-        }
-        // decimals are not too small to show
-        else {
-          return `${wholeComponent}.${roundedDecimalComponent.toString().replace(/0*$/, '')}`
-        }
+        let _reslut = (+stringAmount).toFixed(displayDecimals);
+        return _reslut
+        // const [wholeComponent, decimalComponent] = stringAmount.split('.')
+        // const roundUpAmount = minimumDisplayAmount.div(ethers.constants.Two)
+        // const roundedDecimalComponent = ethers.utils
+        //   .bigNumberify(decimalComponent.padEnd(baseDecimals, '0'))
+        //   .add(roundUpAmount)
+        //   .toString()
+        //   .padStart(baseDecimals, '0')
+        //   .substring(0, displayDecimals)
+        // // console.log(roundedDecimalComponent);
+        // // decimals are too small to show
+        // if (roundedDecimalComponent === '0'.repeat(displayDecimals)) {
+        //   return wholeComponent
+        // }
+        // // decimals are not too small to show
+        // else {
+        //   return `${wholeComponent}.${roundedDecimalComponent.toString().replace(/0*$/, '')}`
+        // }
       }
     }
   }

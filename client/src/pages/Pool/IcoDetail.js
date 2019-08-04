@@ -186,7 +186,7 @@ function IcoDetail({history,icoAddress}) {
             });
         }
         //监听刷新ETH价格变化
-        signal.on('updatePrice', (from,price) => showUpdatePriceTip(from,price));
+        // signal.on('updatePrice', (from,price) => showUpdatePriceTip(from,price));
         return  () => {
             if(icoContract){
                 icoContract.removeAllListeners("Deposit");
@@ -194,7 +194,7 @@ function IcoDetail({history,icoAddress}) {
                 icoContract.removeAllListeners("SubmitIco");
                 icoContract.removeAllListeners("RefundTransfer");
             }
-            signal.off('updatePrice');
+            // signal.off('updatePrice');
         };
     }, [icoContract,account,judgeSender,refreshInfos,t]);
 
@@ -245,22 +245,22 @@ function IcoDetail({history,icoAddress}) {
          }
      },[active,account,icoContract]);
 
-     function showUpdatePriceTip(from,price) {
-         console.log("ICO界面监听到ETH价格变化",from,price)
-         if (!adminInfos.canSubmit)
-             return;
-         if(!infos.goalReached)
-             return;
-         let flag = (infos.creater && infos.creater.toLowerCase() === from.toLowerCase() && judgeSender(infos.creater))
-         if(!flag)
-             return;
-         setSnacks({
-             show:true,
-             pos:'left',
-             message:t('price_update').replace('{price}',(calPrice(ethPrice) + " $")),
-             type:'success'
-         });
-     }
+     // function showUpdatePriceTip(from,price) {
+     //     console.log("ICO界面监听到ETH价格变化",from,price)
+     //     if (!adminInfos.canSubmit)
+     //         return;
+     //     if(!infos.goalReached)
+     //         return;
+     //     let flag = (infos.creater && infos.creater.toLowerCase() === from.toLowerCase() && judgeSender(infos.creater))
+     //     if(!flag)
+     //         return;
+     //     setSnacks({
+     //         show:true,
+     //         pos:'left',
+     //         message:t('price_update').replace('{price}',(calPrice(ethPrice) + " $")),
+     //         type:'success'
+     //     });
+     // }
      //judge user
      function judgeSender(_sender){
          return active && account && _sender.toLowerCase() === account.toLowerCase()
@@ -593,24 +593,27 @@ function IcoDetail({history,icoAddress}) {
         let valid = infos.goalReached;
         return(
             <>
-            {valid && <h4>
-                {t('eth_price') + ethPrice + " $"}
-                <Fab
-                    variant="extended"
-                    size="small"
-                    color="secondary"
-                    aria-label="Add"
-                    type='button'
-                    // className={classes.submit}
-                    onClick={doRefreshPrice}
-                    style={{width:"25%",marginLeft:80}}
-                >
-                    <RefreshIcon  />
-                    {t('refreshPrice')}
-                </Fab>
-            </h4>}
+            {valid && <ContentWrapper style={{marginLeft:8}}>
+                {t('eth_price') + priceOfUSD + " $"}
+                <span>
+                    <Fab
+                        variant="extended"
+                        size="small"
+                        color="secondary"
+                        aria-label="Add"
+                        type='button'
+                        // className={classes.submit}
+                        onClick={doRefreshPrice}
+                        style={{width:"25%",marginLeft:80}}
+                    >
+                        <RefreshIcon  />
+                        {t('refreshPrice')}
+                    </Fab>
+                </span>
 
-            <form className = {classes.container}  onSubmit={doSubmit}  autoComplete = "off" style={{marginTop:-10}}>
+            </ContentWrapper>}
+
+            <form className = {classes.container}  onSubmit={doSubmit}  autoComplete = "off" style={{marginTop:-15}}>
                 {valid && <Fab
                     variant="extended"
                     size="medium"
@@ -633,7 +636,7 @@ function IcoDetail({history,icoAddress}) {
                             onClick = {doCancel}
                             disabled={infos.isFailed}
                             type='button'
-                            style={{width:"30%",marginTop:valid?35:55}}
+                            style={{width:"30%",marginTop:valid?25:35}}
                         >
                             <CancelIcon />
                             {t('cancelIco')}

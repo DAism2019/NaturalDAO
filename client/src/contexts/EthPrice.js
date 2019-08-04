@@ -63,7 +63,7 @@ export function Updater(){
             _priceContract.on('SetEthPrice',async (_from,_to,event) => {
                 let _price = await priceContract.getEthPrice();
                 update(_price);
-                signal.emit('updatePrice',_from,_price);
+                // signal.emit('updatePrice',_from,_price);
             });
         }
         if(priceContract){

@@ -163,9 +163,11 @@ def getAllIcoOfUser(creater: address) -> address[MAX_NUMBER]:
 
 # risk:How to encapsulates the following six methods and relative events or variables in a isolated contract!
 @private
-def _buyNdaoInput(value: wei_value, buyer: address, recipient: address) -> uint256:
+def _buyNdaoInput(value: wei_value,min_ndao:uint256,deadline: timestamp, buyer: address, recipient: address) -> uint256:
+    assert deadline >= block.timestamp and min_ndao > 0
     send(self.beneficiary, value)
     amount: uint256 = self.ethPrice.ethToNdaoInputPrice(value)
+    assert amount >= min_ndao
     NDAO(self.ndaoAddress).mint(recipient, amount)
     log.NdaoPurchase(buyer, recipient, amount)
     return amount
@@ -173,29 +175,31 @@ def _buyNdaoInput(value: wei_value, buyer: address, recipient: address) -> uint2
 
 @public
 @payable
-def buyNdaoInputSwap() -> uint256:
+def buyNdaoInputSwap(min_ndao:uint256,deadline: timestamp) -> uint256:
     """
     # @return the amounts of ndao_bought
     """
     assert msg.value > 0
-    return self._buyNdaoInput(msg.value, msg.sender, msg.sender)
+    return self._buyNdaoInput(msg.value,min_ndao, deadline,msg.sender, msg.sender)
 
 
 @public
 @payable
-def buyNdaoInputTransfer(recipient: address) -> uint256:
+def buyNdaoInputTransfer(min_ndao:uint256,deadline: timestamp,recipient: address) -> uint256:
     """
     # @param recipient The address that receives output Ndao.
     # @return the amounts of ndao_bought
     """
     assert msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    return self._buyNdaoInput(msg.value, msg.sender, recipient)
+    return self._buyNdaoInput(msg.value, min_ndao, deadline, msg.sender, recipient)
 
 
 @private
-def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, buyer: address, recipient: address) -> (wei_value, wei_value):
+def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, max_sold:wei_value,deadline:timestamp buyer: address, recipient: address) -> (wei_value, wei_value):
+    assert deadline >= block.timestamp
     eth_sold: wei_value = self.ethPrice.ethToNdaoOutPrice(ndao_bought)
+    assert eth_sold <= max_sold
     # Throws if eth_sold > msg.value
     eth_refund: wei_value = value - eth_sold
     send(self.beneficiary, eth_sold)
@@ -208,19 +212,19 @@ def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, buyer: address, recip
 
 @public
 @payable
-def buyNdaoOutputSwap(ndao_bought: uint256) -> (wei_value, wei_value):
+def buyNdaoOutputSwap(ndao_bought: uint256,max_sold:wei_value,deadline:timestamp) -> (wei_value, wei_value):
     """
     # @param ndao_bought the amounts of ndao_bought
     # @return the amounts of eth_sold
     # @return the refund of eth
     """
     assert ndao_bought > 0 and msg.value > 0
-    return self._buyNdaoOutput(msg.value, ndao_bought, msg.sender, msg.sender)
+    return self._buyNdaoOutput(msg.value, ndao_bought,max_sold,deadline, msg.sender, msg.sender)
 
 
 @public
 @payable
-def buyNdaoOutputTransfer(ndao_bought: uint256, recipient: address) -> (wei_value, wei_value):
+def buyNdaoOutputTransfer(ndao_bought: uint256, max_sold:wei_value, deadline:timestamp,recipient: address) -> (wei_value, wei_value):
     """
     # @param ndao_bought the amounts of ndao_bought
     # @param recipient The address that receives output Ndao.
@@ -229,7 +233,7 @@ def buyNdaoOutputTransfer(ndao_bought: uint256, recipient: address) -> (wei_valu
     """
     assert ndao_bought > 0 and msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    return self._buyNdaoOutput(msg.value, ndao_bought, msg.sender, msg.sender)
+    return self._buyNdaoOutput(msg.value, ndao_bought,max_sold,deadline, msg.sender, msg.sender)
 
 
 @private

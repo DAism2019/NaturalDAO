@@ -74,7 +74,6 @@ async function readAbi(filename) {
 async function deploy(filename, constructor) {
     if (!constructor)
         constructor = [];
-
     //开始部署进程
     try {
         console.log(`start deploying \x1b[35m ${filename}\x1b[0m`);
