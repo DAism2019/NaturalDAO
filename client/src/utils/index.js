@@ -180,6 +180,16 @@ export async function getTokenDecimals(tokenAddress, library) {
     })
 }
 
+// get tokenDetails
+export async function getTokenDetailFromFactory(tokenAddress, networkId, library) {
+    if (!isAddress(tokenAddress)) {
+      throw Error(`Invalid 'tokenAddress' parameter '${tokenAddress}'.`)
+    }
+
+    return getFactoryContract(networkId, library).getTokenDetailByAddress(tokenAddress);
+}
+
+
 // get the exchange address for a token from the factory
 export async function getTokenExchangeAddressFromFactory(tokenAddress, networkId, library) {
   return getFactoryContract(networkId, library).getExchange(tokenAddress)

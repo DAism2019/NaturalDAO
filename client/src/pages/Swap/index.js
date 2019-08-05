@@ -13,19 +13,18 @@ import ArrowDownBlue from '../../assets/images/arrow-down-blue.svg'
 import ArrowDownGrey from '../../assets/images/arrow-down-grey.svg'
 import { amountFormatter, calculateGasMargin } from '../../utils'
 import { useExchangeContract,useFactoryContract } from '../../hooks'
-import { useTokenDetails } from '../../contexts/Tokens'
+import { useTokenDetails,setNdaoExchangeAddress} from '../../contexts/Tokens'
 import { useTransactionAdder } from '../../contexts/Transactions'
 import { useAddressBalance, useExchangeReserves } from '../../contexts/Balances'
 import { useAddressAllowance } from '../../contexts/Allowances'
 import { NDAO_ADDRESSES } from "../../constants"
-import { setNdaoExchangeAddress } from '../../contexts/Tokens'
 import { useEthPrice } from '../../contexts/EthPrice'
 
 const INPUT = 0
 const OUTPUT = 1
 
 const ETH_TO_TOKEN = 0
-const TOKEN_TO_ETH = 1
+// const TOKEN_TO_ETH = 1
 const TOKEN_TO_TOKEN = 2
 const ETH_TO_NDAO = 3
 const NDAO_TO_TOKEN = 4
@@ -283,13 +282,12 @@ export default function Swap({ initialCurrency }) {
   const swapType = getSwapType(inputCurrency, outputCurrency,ndao_address)
 
   // get decimals and exchange addressfor each of the currency types
-  const { symbol: inputSymbol, decimals: inputDecimals, exchangeAddress: inputExchangeAddress } = useTokenDetails(
+  const { symbol: inputSymbol, decimals: inputDecimals, exchangeAddress: inputExchangeAddress,maxPool:inputLimit } = useTokenDetails(
     inputCurrency
   )
-  const { symbol: outputSymbol, decimals: outputDecimals, exchangeAddress: outputExchangeAddress } = useTokenDetails(
+  const { symbol: outputSymbol, decimals: outputDecimals, exchangeAddress: outputExchangeAddress} = useTokenDetails(
     outputCurrency
   )
-
   const inputExchangeContract = useExchangeContract(inputExchangeAddress)
   const outputExchangeContract = useExchangeContract(outputExchangeAddress)
   const factory = useFactoryContract();
@@ -563,7 +561,7 @@ export default function Swap({ initialCurrency }) {
           .div(marketRate)
           .sub(ethers.utils.bigNumberify(3).mul(ethers.utils.bigNumberify(10).pow(ethers.utils.bigNumberify(15))))
       : undefined
-  const percentSlippageFormatted = percentSlippage && amountFormatter(percentSlippage, 16, 2)
+  // const percentSlippageFormatted = percentSlippage && amountFormatter(percentSlippage, 16, 2)
   const slippageWarning =
     percentSlippage &&
     percentSlippage.gte(ethers.utils.parseEther('.05')) &&
@@ -616,7 +614,7 @@ export default function Swap({ initialCurrency }) {
                 ⚠️
               </span>
             )}
-            {/* {t('priceChange')} {b(`${percentSlippageFormatted}%`)}. */}
+            {/* {t('priceChange')} {b(`${}%`)}. */}
           </LastSummaryText>
         </div>
       )
@@ -646,7 +644,7 @@ export default function Swap({ initialCurrency }) {
             {t('orTransFail')}
           </LastSummaryText>
           <LastSummaryText>
-            {/* {t('priceChange')} {b(`${percentSlippageFormatted}%`)}. */}
+            {/* {t('priceChange')} {b(`${}%`)}. */}
           </LastSummaryText>
         </div>
       )
@@ -703,11 +701,11 @@ export default function Swap({ initialCurrency }) {
         method = contract.buyNdaoInputSwap
         args = [dependentValueMinumum, deadline]
         value = independentValueParsed
-      } else if (swapType === TOKEN_TO_ETH) {
-        // estimate = contract.estimate.tokenToEthSwapInput
-        // method = contract.tokenToEthSwapInput
-        // args = [independentValueParsed, dependentValueMinumum, deadline]
-        // value = ethers.constants.Zero
+    } else if (swapType === TOKEN_TO_NDAO) {
+        estimate = contract.estimate.tokenToNdaoSwapInput
+        method = contract.tokenToNdaoSwapInput
+        args = [independentValueParsed, dependentValueMinumum, deadline]
+        value = ethers.constants.Zero
       } else if (swapType === TOKEN_TO_TOKEN) {
         estimate = contract.estimate.tokenToTokenSwapInput
         method = contract.tokenToTokenSwapInput
@@ -735,9 +733,9 @@ export default function Swap({ initialCurrency }) {
         method = contract.buyNdaoOutputSwap
         args = [independentValueParsed, deadline]
         value = dependentValueMaximum
-      } else if (swapType === TOKEN_TO_ETH) {
-        estimate = contract.estimate.tokenToEthSwapOutput
-        method = contract.tokenToEthSwapOutput
+    } else if (swapType === TOKEN_TO_NDAO) {
+        estimate = contract.estimate.tokenToNdaoSwapOutput
+        method = contract.tokenToNdaoSwapOutput
         args = [independentValueParsed, dependentValueMaximum, deadline]
         value = ethers.constants.Zero
       } else if (swapType === TOKEN_TO_TOKEN) {
@@ -763,7 +761,8 @@ export default function Swap({ initialCurrency }) {
       addTransaction(response)
     })
   }
-  const showTokenLimit = (swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN || swapType === ETH_TO_TOKEN || swapType === NDAO_TO_TOKEN);
+  const tokenInputFlag = swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN;
+  const tokenOutPutFlag = swapType === ETH_TO_TOKEN || swapType === NDAO_TO_TOKEN;
   return (
     <>
       <CurrencyInputPanel type='input'
@@ -842,19 +841,45 @@ export default function Swap({ initialCurrency }) {
             </span>
           )}
         </ExchangeRateWrapper>
-        { showTokenLimit &&
+        { (tokenInputFlag || tokenOutPutFlag) &&
             <ExchangeRateWrapper>
                 <ExchangeRate>{t('currentPoolSize')}</ExchangeRate>
-                <span>
-                  {outputReserveNDAO && outputReserveToken
-                    ? `${amountFormatter(outputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
-                        outputReserveToken,
-                        outputDecimals,
-                        Math.min(4, outputDecimals)
-                      )} ${outputSymbol}`
+                {tokenInputFlag && <span>
+                  {inputReserveNDAO && inputReserveToken
+                    ? `${amountFormatter(inputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
+                        inputReserveToken,
+                        inputDecimals,
+                        Math.min(4, inputDecimals)
+                    )} ${inputSymbol}`
                     : ' - '}
                 </span>
+                }
+                {
+                    tokenOutPutFlag &&  <span>
+                       {outputReserveNDAO && outputReserveToken
+                         ? `${amountFormatter(outputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
+                             outputReserveToken,
+                             outputDecimals,
+                             Math.min(4, outputDecimals)
+                           )} ${outputSymbol}`
+                         : ' - '}
+                     </span>
+                }
+
               </ExchangeRateWrapper>
+        }
+        {
+           tokenInputFlag &&   <ExchangeRateWrapper>
+                <ExchangeRate>{t('currentPoolTokenLimit')}</ExchangeRate>
+                {
+                    inputLimit ? `${amountFormatter(
+                        inputLimit,
+                        inputDecimals,
+                        Math.min(4, inputDecimals)
+                      )} ${inputSymbol}`
+                    : ' - '
+                }
+                 </ExchangeRateWrapper>
         }
       </OversizedPanel>
       {renderSummary()}

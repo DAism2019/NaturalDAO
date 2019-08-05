@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback} from 'react'
 import {useTranslation} from 'react-i18next'
 import { withRouter } from 'react-router'
 import {useWeb3Context} from 'web3-react'
@@ -13,7 +13,7 @@ import SubmitIcon from '@material-ui/icons/PresentToAll'
 import RefreshIcon from '@material-ui/icons/Refresh'
 import Fab from '@material-ui/core/Fab'
 import {ethers,utils} from 'ethers'
-import signal from 'signal-js';
+// import signal from 'signal-js';
 import styled from 'styled-components'
 import CustomSnackbar from '../../components/Snackbar'
 import { isAddress,calculateGasMargin} from '../../utils'
@@ -129,6 +129,56 @@ function IcoDetail({history,icoAddress}) {
         pos:"left",
         message:''
     });
+    const judgeSender = useCallback((_sender) => {
+        return active && account && _sender.toLowerCase() === account.toLowerCase()
+    },[active,account]);
+    const getExchangeAddress = useCallback(async (tokenAddress) => {
+         let _exchangeAddress = await contract.getExchange(icoAddress);
+         setExchangeAddress(_exchangeAddress);
+     },[contract,icoAddress])
+    //get ico info detail
+    const getIcoInfo = useCallback(async(status) => {
+        let result = {
+            address:icoContract.address
+        };
+        try{
+            let icoInfos = await icoContract.icoInfo();
+            let _endTime = + icoInfos[5];
+            let _submitTime = + icoInfos[6];
+            result['endAt'] = convertTimetoTimeString(_endTime * 1000);
+            let _status = calStatusString(status,icoInfos[8],_endTime,_submitTime);
+            result['status'] = _status ;
+            result['name'] = icoInfos[0];
+            result['symbol'] = icoInfos[1];
+            result['decimals'] =  + icoInfos[2];
+            result['goal'] = utils.formatEther(icoInfos[3]);
+            result['startAt'] = convertTimetoTimeString(+ (icoInfos[4] * 1000));
+            result['submitAt'] = convertTimetoTimeString(_submitTime * 1000);
+            result['isEnd'] = icoInfos[7];
+            result['goalReached'] = icoInfos[8];
+            result['isFailed'] = icoInfos[9];
+            let _price = + icoInfos[10].div(utils.parseUnits("1", result['decimals']));
+            result['price'] = '1 ETH = '  + _price + " " + result['symbol']
+            result['depositAmount'] = utils.formatEther(icoInfos[11]);
+            result['creater'] = icoInfos[12];
+            let _left = _endTime - Math.floor(Date.now()/1000);
+            if (_left <= 0)
+                _left = 0;
+            result['timeLeft'] = _left;
+            setInfos(result);
+            setShowLoader(false);
+            refreshStatus(_status);
+            if(_status === 'STATUS_SUCCESS'){
+                getExchangeAddress();
+            }
+        }catch{
+        }
+    },[icoContract,getExchangeAddress])
+    const refreshInfos = useCallback(async () =>{
+        let status  = await contract.allIcoStatus(icoAddress);
+        status = + status;
+        getIcoInfo(status);
+    },[contract,icoAddress,getIcoInfo]);
     // set listener
     useEffect(()=>{
         if(icoContract){
@@ -209,7 +259,7 @@ function IcoDetail({history,icoAddress}) {
           history.replace('/ico-detail');
         }else if(!icoAddress){
             setInfos({
-                ...infos,
+                // ...infos,
                 status: 0
             });
         }else{
@@ -223,27 +273,30 @@ function IcoDetail({history,icoAddress}) {
                     }
                 }else{
                     setInfos({
-                        ...infos,
+                        // ...infos,
                         status
                     });
                 }
             }
             getStatus();
        }
-   }, []);
+   }, [icoAddress,contract,getIcoInfo,history,icoContract]);
 
     //get user deposit
-    //todo 这里要修改，用户投资后这里要有变化,需要结合事件进行测试
     useEffect(() => {
-         if(active && account && icoContract){
+         if(active && account && icoContract ){
              async function getDeposit(){
+                 let status  = await contract.allIcoStatus(icoContract.address);
+                 status = + status;
+                 if(status === 0)
+                    return;
                  let _deposit = await icoContract.depositBalanceOfUser(account);
                  _deposit =  + (utils.formatEther(_deposit));
                  setMyDeposit(_deposit);
              }
              getDeposit();
          }
-     },[active,account,icoContract]);
+     },[active,account,icoContract,contract]);
 
      // function showUpdatePriceTip(from,price) {
      //     console.log("ICO界面监听到ETH价格变化",from,price)
@@ -262,9 +315,10 @@ function IcoDetail({history,icoAddress}) {
      //     });
      // }
      //judge user
-     function judgeSender(_sender){
-         return active && account && _sender.toLowerCase() === account.toLowerCase()
-     }
+
+     // function judgeSender(_sender){
+     //     return active && account && _sender.toLowerCase() === account.toLowerCase()
+     // }
 
      //get the ico status string
      function calStatusString(_status,isGoal,endAt,_submitTime){
@@ -289,55 +343,6 @@ function IcoDetail({history,icoAddress}) {
         }
     }
 
-    // refresh ico info
-    async function refreshInfos(){
-        let status  = await contract.allIcoStatus(icoAddress);
-        status = + status;
-        getIcoInfo(status);
-    }
-
-    //get ico info detail
-    async function getIcoInfo(status){
-        let result = {
-            address:icoContract.address
-        };
-        try{
-            let icoInfos = await icoContract.icoInfo();
-            let _endTime = + icoInfos[5];
-            let _submitTime = + icoInfos[6];
-            result['endAt'] = convertTimetoTimeString(_endTime * 1000);
-            let _status = calStatusString(status,icoInfos[8],_endTime,_submitTime);
-            result['status'] = _status ;
-            result['name'] = icoInfos[0];
-            result['symbol'] = icoInfos[1];
-            result['decimals'] =  + icoInfos[2];
-            result['goal'] = utils.formatEther(icoInfos[3]);
-            result['startAt'] = convertTimetoTimeString(+ (icoInfos[4] * 1000));
-            result['submitAt'] = convertTimetoTimeString(_submitTime * 1000);
-            result['isEnd'] = icoInfos[7];
-            result['goalReached'] = icoInfos[8];
-            result['isFailed'] = icoInfos[9];
-            let _price = + icoInfos[10].div(utils.parseUnits("1", result['decimals']));
-            result['price'] = '1 ETH = '  + _price + " " + result['symbol']
-            result['depositAmount'] = utils.formatEther(icoInfos[11]);
-            result['creater'] = icoInfos[12];
-            let _left = _endTime - Math.floor(Date.now()/1000);
-            if (_left <= 0)
-                _left = 0;
-            result['timeLeft'] = _left;
-            setInfos(result);
-            setShowLoader(false);
-            refreshStatus(_status);
-            if(_status === 'STATUS_SUCCESS'){
-                getExchangeAddress();
-            }
-        }catch(err){
-        }
-    }
-    async function getExchangeAddress(tokenAddress){
-        let _exchangeAddress = await contract.getExchange(icoAddress);
-        setExchangeAddress(_exchangeAddress);
-    }
 
     // refresh status UI by status string
     function refreshStatus(_status){

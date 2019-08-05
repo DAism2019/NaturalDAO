@@ -134,5 +134,6 @@
     "has_send":"交易已经发送，请耐心等待!",
     "price_update":"ETH价格已经更新为:{price}",
     "create_success":"ICO创建成功",
-    "exchange_address":"交易对地址:"
+    "exchange_address":"交易对地址:",
+    "currentPoolTokenLimit":"当前资金池代币上限"
 }

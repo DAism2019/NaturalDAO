@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect} from 'react'
 import { useWeb3Context } from 'web3-react'
-import signal from 'signal-js';
+// import signal from 'signal-js';
 import { usePriceContract } from '../hooks'
 import { getMyPriceContract,safeAccess } from '../utils'
 

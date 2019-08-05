@@ -139,10 +139,6 @@ export function useTokenLimit(tokenAddress)  {
     return maxPool;
 }
 
-// export function useTokenLimit(tokenAddress) {
-//
-// }
-
 // export function useExchangeReserves(tokenAddress) {
 //   const { exchangeAddress } = useTokenDetails(tokenAddress)
 //   const reserveETH = useAddressBalance(exchangeAddress, 'ETH')

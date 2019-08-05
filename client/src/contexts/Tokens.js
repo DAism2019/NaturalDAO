@@ -7,10 +7,11 @@ import { useFactoryContract } from '../hooks'
 
 import {
   isAddress,
-  getTokenName,
-  getTokenSymbol,
-  getTokenDecimals,
-  getTokenExchangeAddressFromFactory,
+  // getTokenName,
+  // getTokenSymbol,
+  // getTokenDecimals,
+  // getTokenExchangeAddressFromFactory,
+  getTokenDetailFromFactory,
   safeAccess
 } from '../utils'
 
@@ -183,7 +184,7 @@ export function useTokenDetails(tokenAddress) {
   const { networkId, library } = useWeb3Context()
   const [state, { update }] = useTokensContext()
   const allTokensInNetwork = { ...ETH, ...NDAO,...(safeAccess(state, [networkId]) || {}) }
-  const { [NAME]: name, [SYMBOL]: symbol, [DECIMALS]: decimals, [EXCHANGE_ADDRESS]: exchangeAddress } =
+  const { [NAME]: name, [SYMBOL]: symbol, [DECIMALS]: decimals, [EXCHANGE_ADDRESS]: exchangeAddress,[MAX_POOL]:maxPool } =
     safeAccess(allTokensInNetwork, [tokenAddress]) || {}
   useEffect(() => {
     if (
@@ -194,30 +195,42 @@ export function useTokenDetails(tokenAddress) {
     ) {
 
       let stale = false
-
-      const namePromise = getTokenName(tokenAddress, library).catch(() => null)
-      const symbolPromise = getTokenSymbol(tokenAddress, library).catch(() => null)
-      const decimalsPromise = getTokenDecimals(tokenAddress, library).catch(() => null)
-      const exchangeAddressPromise = getTokenExchangeAddressFromFactory(tokenAddress, networkId, library).catch(
-        () => null
-      )
-
-      Promise.all([namePromise, symbolPromise, decimalsPromise, exchangeAddressPromise]).then(
-        ([resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress]) => {
-          if (!stale) {
-
-            update(networkId, tokenAddress, resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress)
+      getTokenDetailFromFactory(tokenAddress, networkId, library).then( _result =>{
+          if (!stale){
+              // let _tokenAddress = _result[0];
+              let resolvedName = _result[1];
+              let resolvedSymbol = _result[2];
+              let resolvedDecimals =  + _result[3];
+              let resolvedExchangeAddress = _result[4];
+              let maxPool = _result[5]
+              update(networkId, tokenAddress, resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress,maxPool)
           }
-        }
-      )
+      }).catch(()=>null);
+
+      // const namePromise = getTokenName(tokenAddress, library).catch(() => null)
+      // const symbolPromise = getTokenSymbol(tokenAddress, library).catch(() => null)
+      // const decimalsPromise = getTokenDecimals(tokenAddress, library).catch(() => null)
+      // const exchangeAddressPromise = getTokenExchangeAddressFromFactory(tokenAddress, networkId, library).catch(
+      //   () => null
+      // )
+      //
+      // Promise.all([namePromise, symbolPromise, decimalsPromise, exchangeAddressPromise]).then(
+      //   ([resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress]) => {
+      //     if (!stale) {
+      //
+      //       update(networkId, tokenAddress, resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress)
+      //     }
+      //   }
+      // )
 
       return () => {
         stale = true
       }
     }
-  }, [tokenAddress, name, symbol, decimals, exchangeAddress, networkId, library, update])
-
-  return { name, symbol, decimals, exchangeAddress }
+  }, [tokenAddress, name, symbol, decimals, exchangeAddress,maxPool, networkId, library, update])
+  //读取缓存后这里的bigNumber被转成16进制，所以要转回去
+  let _maxPool = maxPool ? ethers.utils.bigNumberify(maxPool) : null
+  return { name, symbol, decimals, exchangeAddress,maxPool:_maxPool }
 }
 
 //todo 增加output 或者  input

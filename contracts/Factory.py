@@ -308,8 +308,27 @@ def getTokenWithId(token_id: uint256) -> address:
 @public
 @constant
 def getTokenDetailById(token_id: uint256) -> (address, string[64], string[32], uint256, address, uint256):
+    """
+    # @dev return detail of token by id
+    """
     assert token_id <= self.tokenCount
     token_address: address = self.getTokenWithId(token_id)
+    _name: string[64]
+    _symbol: string[32]
+    _decimals: uint256
+    (_name, _symbol, _decimals) = ICO(token_address).getTokenInfo()
+    exchange_address: address = self.getExchange(token_address)
+    maxPool: uint256 = Exchange(exchange_address).getMaxPool()
+    return (token_address, _name, _symbol, _decimals, exchange_address, maxPool)
+
+
+@public
+@constant
+def getTokenDetailByAddress(token_address: address) -> (address, string[64], string[32], uint256, address, uint256):
+    """
+    # @dev return detail of token by address
+    """
+    assert self.token_to_exchange[token_address] != ZERO_ADDRESS
     _name: string[64]
     _symbol: string[32]
     _decimals: uint256
