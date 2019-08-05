@@ -279,10 +279,10 @@ export default function Swap({ initialCurrency }) {
   const { independentValue, dependentValue, independentField, inputCurrency, outputCurrency } = swapState
 
   // get swap type from the currency types
-  const swapType = getSwapType(inputCurrency, outputCurrency,ndao_address)
+  const swapType = getSwapType(inputCurrency, outputCurrency, ndao_address)
 
   // get decimals and exchange addressfor each of the currency types
-  const { symbol: inputSymbol, decimals: inputDecimals, exchangeAddress: inputExchangeAddress,maxPool:inputLimit } = useTokenDetails(
+  const { symbol: inputSymbol, decimals: inputDecimals, exchangeAddress: inputExchangeAddress, maxPool:inputLimit } = useTokenDetails(
     inputCurrency
   )
   const { symbol: outputSymbol, decimals: outputDecimals, exchangeAddress: outputExchangeAddress} = useTokenDetails(
@@ -398,7 +398,16 @@ export default function Swap({ initialCurrency }) {
         setShowUnlock(false)
       }
     }
-  }, [independentField, independentValueParsed, dependentValueMaximum, inputBalance, inputCurrency, inputAllowance, t])
+}, [independentField,
+   independentValueParsed,
+   dependentValueMaximum,
+   inputBalance,
+   inputCurrency,
+   inputAllowance,
+   inputLimit,
+   tokenInputFlag,
+   inputReserveToken,
+   t])
 
   // calculate dependent value
   useEffect(() => {
@@ -653,9 +662,9 @@ export default function Swap({ initialCurrency }) {
             )}{' '}
             {t('orTransFail')}
           </LastSummaryText>
-          <LastSummaryText>
-            {/* {t('priceChange')} {b(`${}%`)}. */}
-          </LastSummaryText>
+          {/* <LastSummaryText>
+            {t('priceChange')} {b(`${}%`)}.
+          </LastSummaryText> */}
         </div>
       )
     }

@@ -13,18 +13,23 @@ import AddressInputPanel from '../../components/AddressInputPanel'
 import ArrowDownBlue from '../../assets/images/arrow-down-blue.svg'
 import ArrowDownGrey from '../../assets/images/arrow-down-grey.svg'
 import { isAddress, amountFormatter, calculateGasMargin } from '../../utils'
-import { useExchangeContract } from '../../hooks'
-import { useTokenDetails } from '../../contexts/Tokens'
+import { useExchangeContract,useFactoryContract } from '../../hooks'
+import { useTokenDetails,setNdaoExchangeAddress } from '../../contexts/Tokens'
 import { useTransactionAdder } from '../../contexts/Transactions'
 import { useAddressBalance, useExchangeReserves } from '../../contexts/Balances'
 import { useAddressAllowance } from '../../contexts/Allowances'
+import { NDAO_ADDRESSES } from "../../constants"
+import { useEthPrice } from '../../contexts/EthPrice'
 
 const INPUT = 0
 const OUTPUT = 1
 
 const ETH_TO_TOKEN = 0
-const TOKEN_TO_ETH = 1
+// const TOKEN_TO_ETH = 1
 const TOKEN_TO_TOKEN = 2
+const ETH_TO_NDAO = 3
+const NDAO_TO_TOKEN = 4
+const TOKEN_TO_NDAO = 5
 
 // denominated in bips
 const ALLOWED_SLIPPAGE = ethers.utils.bigNumberify(200)
@@ -96,30 +101,35 @@ function calculateSlippageBounds(value, token = false) {
   }
 }
 
-function getSwapType(inputCurrency, outputCurrency) {
-  if (!inputCurrency || !outputCurrency) {
+function getSwapType(inputCurrency, outputCurrency,ndao_address) {
+  if (!inputCurrency || !outputCurrency || !ndao_address) {
     return null
   } else if (inputCurrency === 'ETH') {
-    return ETH_TO_TOKEN
-  } else if (outputCurrency === 'ETH') {
-    return TOKEN_TO_ETH
-  } else {
+      if(outputCurrency.toLowerCase() === ndao_address.toLowerCase()){
+          return ETH_TO_NDAO
+      }else{
+          return ETH_TO_TOKEN
+      }
+  } else if (inputCurrency.toLowerCase() === ndao_address.toLowerCase()) {
+    return NDAO_TO_TOKEN
+  } else  if (outputCurrency.toLowerCase() === ndao_address.toLowerCase()){
+    return TOKEN_TO_NDAO
+  }else{
     return TOKEN_TO_TOKEN
   }
 }
 
 // this mocks the getInputPrice function, and calculates the required output
-function calculateEtherTokenOutputFromInput(inputAmount, inputReserve, outputReserve) {
-  const inputAmountWithFee = inputAmount.mul(ethers.utils.bigNumberify(997))
-  const numerator = inputAmountWithFee.mul(outputReserve)
-  const denominator = inputReserve.mul(ethers.utils.bigNumberify(1000)).add(inputAmountWithFee)
+function calculateNdaoTokenOutputFromInput(inputAmount, inputReserve, outputReserve) {
+  const numerator = inputAmount.mul(outputReserve)
+  const denominator = inputReserve.add(inputAmount)
   return numerator.div(denominator)
 }
 
 // this mocks the getOutputPrice function, and calculates the required input
-function calculateEtherTokenInputFromOutput(outputAmount, inputReserve, outputReserve) {
-  const numerator = inputReserve.mul(outputAmount).mul(ethers.utils.bigNumberify(1000))
-  const denominator = outputReserve.sub(outputAmount).mul(ethers.utils.bigNumberify(997))
+function calculateNdaoTokenInputFromOutput(outputAmount, inputReserve, outputReserve) {
+  const numerator = inputReserve.mul(outputAmount)
+  const denominator = outputReserve.sub(outputAmount)
   return numerator.div(denominator).add(ethers.constants.One)
 }
 
@@ -216,33 +226,50 @@ function getExchangeRate(inputValue, inputDecimals, outputValue, outputDecimals,
 
 function getMarketRate(
   swapType,
-  inputReserveETH,
+  inputReserveNDAO,
   inputReserveToken,
   inputDecimals,
-  outputReserveETH,
+  outputReserveNDAO,
   outputReserveToken,
   outputDecimals,
   invert = false
-) {
-  if (swapType === ETH_TO_TOKEN) {
-    return getExchangeRate(outputReserveETH, 18, outputReserveToken, outputDecimals, invert)
-  } else if (swapType === TOKEN_TO_ETH) {
-    return getExchangeRate(inputReserveToken, inputDecimals, inputReserveETH, 18, invert)
+){
+  if (swapType === NDAO_TO_TOKEN) {
+    return getExchangeRate(outputReserveNDAO, 18, outputReserveToken, outputDecimals, invert)
+} else if (swapType === TOKEN_TO_NDAO) {
+    return getExchangeRate(inputReserveToken, inputDecimals, inputReserveNDAO, 18, invert)
   } else if (swapType === TOKEN_TO_TOKEN) {
     const factor = ethers.utils.bigNumberify(10).pow(ethers.utils.bigNumberify(18))
-    const firstRate = getExchangeRate(inputReserveToken, inputDecimals, inputReserveETH, 18)
-    const secondRate = getExchangeRate(outputReserveETH, 18, outputReserveToken, outputDecimals)
+    const firstRate = getExchangeRate(inputReserveToken, inputDecimals, inputReserveNDAO, 18)
+    const secondRate = getExchangeRate(outputReserveNDAO, 18, outputReserveToken, outputDecimals)
     try {
       return !!(firstRate && secondRate) ? firstRate.mul(secondRate).div(factor) : undefined
     } catch {}
   }
 }
 
+//0-factory 1-inputContract 2-outContract
+function getSwapContract(swapType){
+    switch (swapType) {
+        case ETH_TO_TOKEN:
+        case NDAO_TO_TOKEN:
+            return 2;
+        case ETH_TO_NDAO:
+            return 0;
+        case TOKEN_TO_NDAO:
+        case TOKEN_TO_TOKEN:
+        default:
+            return 1;
+    }
+}
+
+
 export default function Swap({ initialCurrency }) {
   const { t } = useTranslation()
-  const { account } = useWeb3Context()
-
+  const { networkId,account } = useWeb3Context()
+  const ndao_address = NDAO_ADDRESSES[networkId];
   const addTransaction = useTransactionAdder()
+  const ethPrice = useEthPrice();
 
   // analytics
   useEffect(() => {
@@ -257,10 +284,10 @@ export default function Swap({ initialCurrency }) {
   const [recipientError, setRecipientError] = useState()
 
   // get swap type from the currency types
-  const swapType = getSwapType(inputCurrency, outputCurrency)
+  const swapType = getSwapType(inputCurrency, outputCurrency, ndao_address)
 
   // get decimals and exchange addressfor each of the currency types
-  const { symbol: inputSymbol, decimals: inputDecimals, exchangeAddress: inputExchangeAddress } = useTokenDetails(
+  const { symbol: inputSymbol, decimals: inputDecimals, exchangeAddress: inputExchangeAddress, maxPool:inputLimit } = useTokenDetails(
     inputCurrency
   )
   const { symbol: outputSymbol, decimals: outputDecimals, exchangeAddress: outputExchangeAddress } = useTokenDetails(
@@ -269,18 +296,29 @@ export default function Swap({ initialCurrency }) {
 
   const inputExchangeContract = useExchangeContract(inputExchangeAddress)
   const outputExchangeContract = useExchangeContract(outputExchangeAddress)
-  const contract = swapType === ETH_TO_TOKEN ? outputExchangeContract : inputExchangeContract
+  const factory = useFactoryContract();
+  const _type = getSwapContract(swapType);
+  // const contract = swapType === ETH_TO_TOKEN ? outputExchangeContract : inputExchangeContract
+  const contract = _type === 0 ? factory : (_type === 1 ? inputExchangeContract : outputExchangeContract);
 
   // get input allowance
-  const inputAllowance = useAddressAllowance(account, inputCurrency, inputExchangeAddress)
+  // const inputAllowance = useAddressAllowance(account, inputCurrency, inputExchangeAddress)
+  let _address = contract ? contract.address : null;
+  if(swapType === NDAO_TO_TOKEN && outputExchangeContract ){
+      _address = outputExchangeContract.address;
+      setNdaoExchangeAddress(_address);
+  }else{
+      setNdaoExchangeAddress("");
+  }
+  const inputAllowance = useAddressAllowance(account, inputCurrency, _address)
 
   // fetch reserves for each of the currency types
-  const { reserveETH: inputReserveETH, reserveToken: inputReserveToken } = useExchangeReserves(inputCurrency)
-  const { reserveETH: outputReserveETH, reserveToken: outputReserveToken } = useExchangeReserves(outputCurrency)
+  const { reserveNDAO: inputReserveNDAO, reserveToken: inputReserveToken } = useExchangeReserves(inputCurrency)
+  const { reserveNDAO: outputReserveNDAO, reserveToken: outputReserveToken } = useExchangeReserves(outputCurrency)
 
   // get balances for each of the currency types
-  const inputBalance = useAddressBalance(account, inputCurrency)
-  const outputBalance = useAddressBalance(account, outputCurrency)
+  const inputBalance = useAddressBalance(account, inputCurrency, "input")
+  const outputBalance = useAddressBalance(account, outputCurrency, "output")
   const inputBalanceFormatted = !!(inputBalance && Number.isInteger(inputDecimals))
     ? amountFormatter(inputBalance, inputDecimals, Math.min(4, inputDecimals))
     : ''
@@ -335,41 +373,100 @@ export default function Swap({ initialCurrency }) {
   // validate input allowance + balance
   const [inputError, setInputError] = useState()
   const [showUnlock, setShowUnlock] = useState(false)
+  const tokenInputFlag = swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN
+  const tokenOutPutFlag = swapType === ETH_TO_TOKEN || swapType === NDAO_TO_TOKEN
   useEffect(() => {
-    const inputValueCalculation = independentField === INPUT ? independentValueParsed : dependentValueMaximum
+    const inputValueCalculation = independentField === INPUT ? independentValueParsed :
+    inputCurrency === 'ETH' ? dependentValueMaximum : independentValueParsed
 
     if (inputBalance && (inputAllowance || inputCurrency === 'ETH') && inputValueCalculation) {
-      if (inputBalance.lt(inputValueCalculation)) {
+        if (inputCurrency !== 'ETH'  && inputAllowance.lt(inputValueCalculation) ) {
+          setInputError(t('unlockTokenCont'))
+          setShowUnlock(true)
+       } else if(tokenInputFlag && inputReserveToken && inputValueCalculation && inputLimit){
+         if(inputValueCalculation.add(inputReserveToken).gt(inputLimit)){
+             setInputError(t('beyond_limit'))
+         }else{
+             setInputError(null)
+             setShowUnlock(false)
+         }
+      }else if (inputBalance.lt(inputValueCalculation)) {
         setInputError(t('insufficientBalance'))
-      } else if (inputCurrency !== 'ETH' && inputAllowance.lt(inputValueCalculation)) {
-        setInputError(t('unlockTokenCont'))
-        setShowUnlock(true)
       } else {
         setInputError(null)
         setShowUnlock(false)
       }
-
       return () => {
         setInputError()
         setShowUnlock(false)
       }
     }
-  }, [independentField, independentValueParsed, dependentValueMaximum, inputBalance, inputCurrency, inputAllowance, t])
+}, [independentField,
+    independentValueParsed,
+    dependentValueMaximum,
+    inputBalance,
+    inputCurrency,
+    inputAllowance,
+    inputLimit,
+    tokenInputFlag,
+    inputReserveToken,
+    t])
 
   // calculate dependent value
   useEffect(() => {
     const amount = independentValueParsed
 
-    if (swapType === ETH_TO_TOKEN) {
-      const reserveETH = outputReserveETH
-      const reserveToken = outputReserveToken
+    if (swapType === ETH_TO_NDAO){
+        if(amount && ethPrice){
+            try {
+                const calculatedDependentValue =
+                  independentField === INPUT
+                  ? getInputPrice(ethPrice, amount)
+                  : getOutputPrice(ethPrice, amount)
+                if (calculatedDependentValue.lte(ethers.constants.Zero)) {
+                  throw Error()
+                }
+                dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
+            } catch(err) {
+              setIndependentError(t('insufficientLiquidity'))
+            }
+            return () => {
+              dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
+            }
+        }
+    }else if (swapType === ETH_TO_TOKEN){
+        const reserveNDAO = outputReserveNDAO
+        const reserveToken = outputReserveToken
+        if(amount && ethPrice  && reserveNDAO && reserveToken){
+            try {
+                const ndao_amount =  independentField === INPUT
+                 ? getInputPrice(ethPrice, amount)
+                 : calculateNdaoTokenInputFromOutput(amount, reserveNDAO, reserveToken);
+                const calculatedDependentValue =
+                  independentField === INPUT
+                  ? calculateNdaoTokenOutputFromInput(ndao_amount, reserveNDAO, reserveToken)
+                  : getOutputPrice(ethPrice, ndao_amount)
+                if (calculatedDependentValue.lte(ethers.constants.Zero)) {
+                  throw Error()
+                }
+                dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
+            } catch(err) {
+              setIndependentError(t('insufficientLiquidity'))
+            }
+            return () => {
+              dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
+            }
+        }
 
-      if (amount && reserveETH && reserveToken) {
+    }else if (swapType === NDAO_TO_TOKEN) {
+      const reserveNDAO = outputReserveNDAO
+      const reserveToken = outputReserveToken
+      if (amount && reserveNDAO && reserveToken) {
         try {
           const calculatedDependentValue =
             independentField === INPUT
-              ? calculateEtherTokenOutputFromInput(amount, reserveETH, reserveToken)
-              : calculateEtherTokenInputFromOutput(amount, reserveETH, reserveToken)
+              ? calculateNdaoTokenOutputFromInput(amount, reserveNDAO, reserveToken)
+              : calculateNdaoTokenInputFromOutput(amount, reserveNDAO, reserveToken)
 
           if (calculatedDependentValue.lte(ethers.constants.Zero)) {
             throw Error()
@@ -383,16 +480,16 @@ export default function Swap({ initialCurrency }) {
           dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
         }
       }
-    } else if (swapType === TOKEN_TO_ETH) {
-      const reserveETH = inputReserveETH
+  } else if (swapType === TOKEN_TO_NDAO) {
+      const reserveNDAO = inputReserveNDAO
       const reserveToken = inputReserveToken
 
-      if (amount && reserveETH && reserveToken) {
+      if (amount && reserveNDAO && reserveToken) {
         try {
           const calculatedDependentValue =
             independentField === INPUT
-              ? calculateEtherTokenOutputFromInput(amount, reserveToken, reserveETH)
-              : calculateEtherTokenInputFromOutput(amount, reserveToken, reserveETH)
+              ? calculateNdaoTokenOutputFromInput(amount, reserveToken, reserveNDAO)
+              : calculateNdaoTokenInputFromOutput(amount, reserveToken, reserveNDAO)
 
           if (calculatedDependentValue.lte(ethers.constants.Zero)) {
             throw Error()
@@ -407,20 +504,20 @@ export default function Swap({ initialCurrency }) {
         }
       }
     } else if (swapType === TOKEN_TO_TOKEN) {
-      const reserveETHFirst = inputReserveETH
+      const reserveETHFirst = inputReserveNDAO
       const reserveTokenFirst = inputReserveToken
 
-      const reserveETHSecond = outputReserveETH
+      const reserveETHSecond = outputReserveNDAO
       const reserveTokenSecond = outputReserveToken
 
       if (amount && reserveETHFirst && reserveTokenFirst && reserveETHSecond && reserveTokenSecond) {
         try {
           if (independentField === INPUT) {
-            const intermediateValue = calculateEtherTokenOutputFromInput(amount, reserveTokenFirst, reserveETHFirst)
+            const intermediateValue = calculateNdaoTokenOutputFromInput(amount, reserveTokenFirst, reserveETHFirst)
             if (intermediateValue.lte(ethers.constants.Zero)) {
               throw Error()
             }
-            const calculatedDependentValue = calculateEtherTokenOutputFromInput(
+            const calculatedDependentValue = calculateNdaoTokenOutputFromInput(
               intermediateValue,
               reserveETHSecond,
               reserveTokenSecond
@@ -430,12 +527,11 @@ export default function Swap({ initialCurrency }) {
             }
             dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
           } else {
-            const intermediateValue = calculateEtherTokenInputFromOutput(amount, reserveETHSecond, reserveTokenSecond)
+            const intermediateValue = calculateNdaoTokenInputFromOutput(amount, reserveETHSecond, reserveTokenSecond)
             if (intermediateValue.lte(ethers.constants.Zero)) {
               throw Error()
             }
-            // console.log('hi!', amountFormatter(intermediateValue, ))
-            const calculatedDependentValue = calculateEtherTokenInputFromOutput(
+            const calculatedDependentValue = calculateNdaoTokenInputFromOutput(
               intermediateValue,
               reserveTokenFirst,
               reserveETHFirst
@@ -454,11 +550,12 @@ export default function Swap({ initialCurrency }) {
       }
     }
   }, [
+    ethPrice,
     independentValueParsed,
     swapType,
-    outputReserveETH,
+    outputReserveNDAO,
     outputReserveToken,
-    inputReserveETH,
+    inputReserveNDAO,
     inputReserveToken,
     independentField,
     t
@@ -469,13 +566,13 @@ export default function Swap({ initialCurrency }) {
   const exchangeRateInverted = getExchangeRate(inputValueParsed, inputDecimals, outputValueParsed, outputDecimals, true)
 
   const marketRate = getMarketRate(
-    swapType,
-    inputReserveETH,
-    inputReserveToken,
-    inputDecimals,
-    outputReserveETH,
-    outputReserveToken,
-    outputDecimals
+      swapType,
+      inputReserveNDAO,
+      inputReserveToken,
+      inputDecimals,
+      outputReserveNDAO,
+      outputReserveToken,
+      outputDecimals
   )
 
   const percentSlippage =
@@ -487,7 +584,7 @@ export default function Swap({ initialCurrency }) {
           .div(marketRate)
           .sub(ethers.utils.bigNumberify(3).mul(ethers.utils.bigNumberify(10).pow(ethers.utils.bigNumberify(15))))
       : undefined
-  const percentSlippageFormatted = percentSlippage && amountFormatter(percentSlippage, 16, 2)
+  // const percentSlippageFormatted = percentSlippage && amountFormatter(percentSlippage, 16, 2)
   const slippageWarning =
     percentSlippage &&
     percentSlippage.gte(ethers.utils.parseEther('.05')) &&
@@ -540,7 +637,7 @@ export default function Swap({ initialCurrency }) {
                 ⚠️
               </span>
             )}
-            {t('priceChange')} {b(`${percentSlippageFormatted}%`)}.
+            {/* {t('priceChange')} {b(`${percentSlippageFormatted}%`)}. */}
           </LastSummaryText>
         </div>
       )
@@ -569,9 +666,9 @@ export default function Swap({ initialCurrency }) {
             )}{' '}
             {t('orTransFail')}
           </LastSummaryText>
-          <LastSummaryText>
+          {/* <LastSummaryText>
             {t('priceChange')} {b(`${percentSlippageFormatted}%`)}.
-          </LastSummaryText>
+          </LastSummaryText> */}
         </div>
       )
     }
@@ -626,59 +723,63 @@ export default function Swap({ initialCurrency }) {
         category: `${swapType}`,
         action: 'TransferInput'
       })
-
-      if (swapType === ETH_TO_TOKEN) {
-        estimate = contract.estimate.ethToTokenTransferInput
-        method = contract.ethToTokenTransferInput
-        args = [dependentValueMinumum, deadline, recipient.address]
-        value = independentValueParsed
-      } else if (swapType === TOKEN_TO_ETH) {
-        estimate = contract.estimate.tokenToEthTransferInput
-        method = contract.tokenToEthTransferInput
-        args = [independentValueParsed, dependentValueMinumum, deadline, recipient.address]
-        value = ethers.constants.Zero
-      } else if (swapType === TOKEN_TO_TOKEN) {
-        estimate = contract.estimate.tokenToTokenTransferInput
-        method = contract.tokenToTokenTransferInput
-        args = [
-          independentValueParsed,
-          dependentValueMinumum,
-          ethers.constants.One,
-          deadline,
-          recipient.address,
-          outputCurrency
-        ]
-        value = ethers.constants.Zero
-      }
+      if (swapType === ETH_TO_NDAO) {
+             estimate = contract.estimate.buyNdaoInputTransfer
+             method = contract.buyNdaoInputTransfer
+             args = [dependentValueMinumum, deadline, recipient.address]
+             value = independentValueParsed
+         } else if (swapType === TOKEN_TO_NDAO) {
+             estimate = contract.estimate.tokenToNdaoTransferInput
+             method = contract.tokenToNdaoTransferInput
+             args = [independentValueParsed, dependentValueMinumum, deadline, recipient.address]
+             value = ethers.constants.Zero
+           } else if (swapType === TOKEN_TO_TOKEN) {
+             estimate = contract.estimate.tokenToTokenTransferInput
+             method = contract.tokenToTokenTransferInput
+             args = [independentValueParsed, dependentValueMinumum, ethers.constants.One, deadline, recipient.address, outputCurrency]
+             value = ethers.constants.Zero
+           }else if (swapType === NDAO_TO_TOKEN) {
+             estimate = contract.estimate.ndaoToTokenTransferInput
+             method = contract.ndaoToTokenTransferInput
+             args = [independentValueParsed,dependentValueMinumum, deadline, recipient.address]
+             value = ethers.constants.Zero
+           }else if(swapType === ETH_TO_TOKEN){
+             estimate = contract.estimate.ethToTokenTransferInput
+             method = contract.ethToTokenTransferInput
+             args = [dependentValueMinumum, deadline, recipient.address]
+             value = independentValueParsed
+           }
     } else if (independentField === OUTPUT) {
       ReactGA.event({
         category: `${swapType}`,
         action: 'TransferOutput'
       })
-
-      if (swapType === ETH_TO_TOKEN) {
-        estimate = contract.estimate.ethToTokenTransferOutput
-        method = contract.ethToTokenTransferOutput
-        args = [independentValueParsed, deadline, recipient.address]
-        value = dependentValueMaximum
-      } else if (swapType === TOKEN_TO_ETH) {
-        estimate = contract.estimate.tokenToEthTransferOutput
-        method = contract.tokenToEthTransferOutput
-        args = [independentValueParsed, dependentValueMaximum, deadline, recipient.address]
-        value = ethers.constants.Zero
-      } else if (swapType === TOKEN_TO_TOKEN) {
-        estimate = contract.estimate.tokenToTokenTransferOutput
-        method = contract.tokenToTokenTransferOutput
-        args = [
-          independentValueParsed,
-          dependentValueMaximum,
-          ethers.constants.MaxUint256,
-          deadline,
-          recipient.address,
-          outputCurrency
-        ]
-        value = ethers.constants.Zero
-      }
+      if (swapType === ETH_TO_NDAO) {
+             estimate = contract.estimate.buyNdaoOutputTransfer
+             method = contract.buyNdaoOutputTransfer
+             args = [independentValueParsed, deadline, recipient.address]
+             value = dependentValueMaximum
+         } else if (swapType === TOKEN_TO_NDAO) {
+             estimate = contract.estimate.tokenToNdaoTransferOutput
+             method = contract.tokenToNdaoTransferOutput
+             args = [independentValueParsed, dependentValueMaximum, deadline, recipient.address]
+             value = ethers.constants.Zero
+         } else if (swapType === TOKEN_TO_TOKEN) {
+             estimate = contract.estimate.tokenToTokenTransferOutput
+             method = contract.tokenToTokenTransferOutput
+             args = [independentValueParsed, dependentValueMaximum, ethers.constants.MaxUint256, deadline, recipient.address, outputCurrency]
+             value = ethers.constants.Zero
+         }else if (swapType === NDAO_TO_TOKEN) {
+             estimate = contract.estimate.ndaoToTokenTransferOutput
+             method = contract.ndaoToTokenTransferOutput
+             args = [independentValueParsed,dependentValueMaximum, deadline, recipient.address]
+             value = ethers.constants.Zero
+         }else if(swapType === ETH_TO_TOKEN){
+             estimate = contract.estimate.ethToTokenTransferOutput
+             method = contract.ethToTokenTransferOutput
+             args = [independentValueParsed, deadline,recipient.address]
+             value = dependentValueMaximum
+         }
     }
 
     const estimatedGasLimit = await estimate(...args, { value })
@@ -719,10 +820,10 @@ export default function Swap({ initialCurrency }) {
       <OversizedPanel>
         <DownArrowBackground>
           <DownArrow
-            onClick={() => {
-              dispatchSwapState({ type: 'FLIP_INDEPENDENT' })
-            }}
-            clickable
+            // onClick={() => {
+            //   dispatchSwapState({ type: 'FLIP_INDEPENDENT' })
+            // }}
+            // clickable
             alt="swap"
             src={isValid ? ArrowDownBlue : ArrowDownGrey}
           />
@@ -771,6 +872,59 @@ export default function Swap({ initialCurrency }) {
             </span>
           )}
         </ExchangeRateWrapper>
+        { (tokenInputFlag || tokenOutPutFlag) &&
+            <ExchangeRateWrapper>
+                <ExchangeRate>{t('currentPoolSize')}</ExchangeRate>
+                {tokenInputFlag && <span>
+                  {inputReserveNDAO && inputReserveToken
+                    ? `${amountFormatter(inputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
+                        inputReserveToken,
+                        inputDecimals,
+                        Math.min(4, inputDecimals)
+                    )} ${inputSymbol}`
+                    : ' - '}
+                </span>
+                }
+                {
+                    tokenOutPutFlag &&  <span>
+                       {outputReserveNDAO && outputReserveToken
+                         ? `${amountFormatter(outputReserveNDAO, 18, 4)} NDAO + ${amountFormatter(
+                             outputReserveToken,
+                             outputDecimals,
+                             Math.min(4, outputDecimals)
+                           )} ${outputSymbol}`
+                         : ' - '}
+                     </span>
+                }
+
+              </ExchangeRateWrapper>
+        }
+        {
+           tokenInputFlag &&   <ExchangeRateWrapper>
+                <ExchangeRate>{t('currentPoolTokenLimit')}</ExchangeRate>
+                {
+                    inputLimit ? `${amountFormatter(
+                        inputLimit,
+                        inputDecimals,
+                        Math.min(4, inputDecimals)
+                      )} ${inputSymbol}`
+                    : ' - '
+                }
+                 </ExchangeRateWrapper>
+        }
+        {
+           tokenInputFlag &&   <ExchangeRateWrapper>
+                <ExchangeRate>{t('token_can_sell')}</ExchangeRate>
+                {
+                    (inputLimit && inputReserveToken)  ? `${amountFormatter(
+                        inputLimit.sub(inputReserveToken),
+                        inputDecimals,
+                        Math.min(4, inputDecimals)
+                      )} ${inputSymbol}`
+                    : ' - '
+                }
+                 </ExchangeRateWrapper>
+        }
       </OversizedPanel>
       {renderSummary()}
       <Flex>
@@ -780,4 +934,31 @@ export default function Swap({ initialCurrency }) {
       </Flex>
     </>
   )
+}
+
+function getInputPrice(_price,eth_sold) {
+    if(_price) {
+        let _priceUsd = _price.mul(100);
+        let _ten = ethers.utils.bigNumberify(10);
+        let _des = _ten.pow(18);
+        _des = _des.mul(eth_sold);
+        return _des.div(_priceUsd)
+    }else{
+        return 0;
+    }
+}
+
+
+function getOutputPrice(_price,ndao_buy) {
+    if(_price) {
+        _price = _price.mul(100).mul(ndao_buy);
+        let _ten = ethers.utils.bigNumberify(10);
+        let _des = _ten.pow(18);
+        let _reslut = _price.div(_des).add(ethers.constants.One);
+        return _reslut
+        // console.log(_reslut.toString());
+        // return .add(ethers.constants.One)
+    }else{
+        return 0;
+    }
 }

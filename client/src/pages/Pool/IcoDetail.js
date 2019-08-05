@@ -707,7 +707,7 @@ function IcoDetail({history,icoAddress}) {
         return (
             <>
                 <MessageWrapper>
-                    {t('ico_query_exist')}
+                    {t('ico_query_first')}
                 </MessageWrapper>
             </>
         )
