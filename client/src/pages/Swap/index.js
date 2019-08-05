@@ -371,11 +371,16 @@ export default function Swap({ initialCurrency }) {
   //todo 当输入为NDAO时，地址为输出交易对地址
   const [inputError, setInputError] = useState()
   const [showUnlock, setShowUnlock] = useState(false)
+  const tokenInputFlag = swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN;
+  const tokenOutPutFlag = swapType === ETH_TO_TOKEN || swapType === NDAO_TO_TOKEN;
   useEffect(() => {
-    const inputValueCalculation = independentField === INPUT ? independentValueParsed : dependentValueMaximum
-    // const tokenInputFlag = swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN
+    const inputValueCalculation = independentField === INPUT ? independentValueParsed :
+    inputCurrency === 'ETH' ? dependentValueMaximum : independentValueParsed
     if (inputBalance && (inputAllowance || inputCurrency === 'ETH') && inputValueCalculation) {
-      if(tokenInputFlag && inputReserveToken && inputValueCalculation && inputLimit){
+        if (inputCurrency !== 'ETH'  && inputAllowance.lt(inputValueCalculation) ) {
+          setInputError(t('unlockTokenCont'))
+          setShowUnlock(true)
+       } else if(tokenInputFlag && inputReserveToken && inputValueCalculation && inputLimit){
          if(inputValueCalculation.add(inputReserveToken).gt(inputLimit)){
              setInputError(t('beyond_limit'))
          }else{
@@ -384,9 +389,6 @@ export default function Swap({ initialCurrency }) {
          }
       }else if (inputBalance.lt(inputValueCalculation)) {
         setInputError(t('insufficientBalance'))
-      } else if (inputCurrency !== 'ETH'  && inputAllowance.lt(inputValueCalculation) ) {
-        setInputError(t('unlockTokenCont'))
-        setShowUnlock(true)
       } else {
         setInputError(null)
         setShowUnlock(false)
@@ -769,8 +771,7 @@ export default function Swap({ initialCurrency }) {
       addTransaction(response)
     })
   }
-  const tokenInputFlag = swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN;
-  const tokenOutPutFlag = swapType === ETH_TO_TOKEN || swapType === NDAO_TO_TOKEN;
+
   return (
     <>
       <CurrencyInputPanel type='input'
