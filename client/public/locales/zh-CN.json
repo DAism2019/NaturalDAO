@@ -135,5 +135,7 @@
     "price_update":"ETH价格已经更新为:{price}",
     "create_success":"ICO创建成功",
     "exchange_address":"交易对地址:",
-    "currentPoolTokenLimit":"当前资金池代币上限"
+    "currentPoolTokenLimit":"当前资金池代币上限",
+    "beyond_limit":"出售代币超限",
+    "token_can_sell":"当前可出售的最大代币数量:"
 }

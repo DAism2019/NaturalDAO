@@ -144,7 +144,9 @@
   "price_update":"The price of ETH has updated to {price}!",
   "create_success":"ICO Create Success",
   "exchange_address":"Exchange Address:",
-  "currentPoolTokenLimit":"Current Pool Token Limit"
+  "currentPoolTokenLimit":"Current Pool Token Limit",
+  "beyond_limit":"Tokens of sold are beyond the max limit",
+  "token_can_sell":"The maximum of tokens that can be sold"
 
 
 

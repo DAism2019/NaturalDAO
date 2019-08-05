@@ -373,10 +373,18 @@ export default function Swap({ initialCurrency }) {
   const [showUnlock, setShowUnlock] = useState(false)
   useEffect(() => {
     const inputValueCalculation = independentField === INPUT ? independentValueParsed : dependentValueMaximum
+    // const tokenInputFlag = swapType === TOKEN_TO_NDAO || swapType === TOKEN_TO_TOKEN
     if (inputBalance && (inputAllowance || inputCurrency === 'ETH') && inputValueCalculation) {
-      if (inputBalance.lt(inputValueCalculation)) {
+      if(tokenInputFlag && inputReserveToken && inputValueCalculation && inputLimit){
+         if(inputValueCalculation.add(inputReserveToken).gt(inputLimit)){
+             setInputError(t('beyond_limit'))
+         }else{
+             setInputError(null)
+             setShowUnlock(false)
+         }
+      }else if (inputBalance.lt(inputValueCalculation)) {
         setInputError(t('insufficientBalance'))
-    } else if (inputCurrency !== 'ETH'  && inputAllowance.lt(inputValueCalculation) ) {
+      } else if (inputCurrency !== 'ETH'  && inputAllowance.lt(inputValueCalculation) ) {
         setInputError(t('unlockTokenCont'))
         setShowUnlock(true)
       } else {
@@ -874,6 +882,19 @@ export default function Swap({ initialCurrency }) {
                 {
                     inputLimit ? `${amountFormatter(
                         inputLimit,
+                        inputDecimals,
+                        Math.min(4, inputDecimals)
+                      )} ${inputSymbol}`
+                    : ' - '
+                }
+                 </ExchangeRateWrapper>
+        }
+        {
+           tokenInputFlag &&   <ExchangeRateWrapper>
+                <ExchangeRate>{t('token_can_sell')}</ExchangeRate>
+                {
+                    (inputLimit && inputReserveToken)  ? `${amountFormatter(
+                        inputLimit.sub(inputReserveToken),
                         inputDecimals,
                         Math.min(4, inputDecimals)
                       )} ${inputSymbol}`
