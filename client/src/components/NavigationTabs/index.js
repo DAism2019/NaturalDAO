@@ -9,15 +9,14 @@ import IcoIcon from '@material-ui/icons/MonetizationOn';
 import {withRouter} from "react-router-dom";
 import {useTranslation} from 'react-i18next'
 
-const useStyles = makeStyles({
+const useStyles = makeStyles( theme =>({
     root: {
-        // flexGrow: 1,
-        maxWidth: 550,
-        marginLeft: 5,
-        marginBottom: 5,
-        width: 550
+        flexGrow: 1,
+    },
+    tabs:{
+        marginBottom:theme.spacing(3)
     }
-});
+}));
 
 const allPaths = [/\/swap/, /\/send/, /\/create-ico|\/query-ico|\/ico-detail.*/];
 
@@ -54,7 +53,11 @@ function IconLabelTabs({location: {
     }
     return (<div>
         <Paper square className={classes.root}>
-            <Tabs value={value} onChange={handleChange} variant="fullWidth" indicatorColor="secondary" textColor="secondary">
+            <Tabs value={value} onChange={handleChange}
+                variant="fullWidth"
+                centered
+                className ={classes.tabs}
+                indicatorColor="secondary" textColor="secondary">
                 <Tab icon={<SwapIcon />} label={t("swap")}/>
                 <Tab icon={<SendIcon />} label={t("send")}/>
                 <Tab icon={<IcoIcon />} label={t("Ico")}/>

@@ -103,6 +103,8 @@ function reducer(state, { type, payload }) {
   }
 }
 
+
+
 //将交易对存于缓存中
 async function updateExchange(factory,networkId,updateMany){
     if(factory){
@@ -167,6 +169,19 @@ export default function Provider({ children }) {
     dispatch({type:UPDATE_MANY,payload:{networkId,infos}})
   },[])
   updateExchange(factory,networkId,updateMany)
+  useEffect (()=>{
+      if(factory){
+          factory.on("NewExchange",(_token,_exchange,_amount,_tokenAmount,event) =>{
+              updateExchange(factory,networkId,updateMany)
+          })
+      }
+      return ()=>{
+          if(factory){
+               factory.removeAllListeners("NewExchange")
+          }
+
+      }
+  },[factory,networkId,updateMany])
 
   return (
     <TokensContext.Provider value={useMemo(() => [state, { update,updateMany}], [state, update,updateMany])}>
@@ -174,6 +189,22 @@ export default function Provider({ children }) {
     </TokensContext.Provider>
   )
 }
+
+// NewExchange: event({_token: indexed(address), _exchange: indexed(
+//     address), _amount: uint256, _tokenAmount: uint256})
+
+// icoContract.on("SubmitIco", (_creater) => {
+//     if(judgeSender(_creater)){
+//         //todo 通知
+//         setSnacks({
+//             show:true,
+//             pos:'left',
+//             message:t('submit_success'),
+//             type:'success'
+//         });
+//     }
+//     refreshInfos();
+// });
 
 export function setNdaoExchangeAddress(_address){
     NDAO_INFO[EXCHANGE_ADDRESS] = _address

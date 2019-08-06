@@ -243,7 +243,7 @@ def ethToTokenSwapOutput(tokens_bought: uint256,  deadline: timestamp) -> wei_va
     # @param deadline Time after which this transaction can no longer be executed.
     # @return Amount of eth sold.
     """
-    assert msg.value > 0
+    assert tokens_bought > 0 and msg.value > 0
     return self.ethToTokenOutput(msg.value, tokens_bought, deadline, msg.sender, msg.sender)
 
 
@@ -257,7 +257,7 @@ def ethToTokenTransferOutput(tokens_bought: uint256, deadline: timestamp, recipi
     # @param deadline Time after which this transaction can no longer be executed.
     # @return Amount of eth sold.
     """
-    assert msg.value > 0
+    assert tokens_bought > 0 and msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
     return self.ethToTokenOutput(msg.value, tokens_bought, deadline, msg.sender, recipient)
 

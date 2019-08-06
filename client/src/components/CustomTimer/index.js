@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import {withStyles} from '@material-ui/core/styles';
 // import PropTypes from 'prop-types';
-// import * as signals from "signals";
 
 function calTime(allSeconds) {
     if (allSeconds <= 0)
@@ -26,10 +25,6 @@ function calTime(allSeconds) {
 
 class CountDownLabel extends Component {
     timer = 0
-    // static onTime = new signals.Signal()
-    // static onOver = new signals.Signal()
-    // static propTypes = {
-    // }
     constructor(props) {
         super(props);
         this.state = {
@@ -39,7 +34,8 @@ class CountDownLabel extends Component {
             label: this.props.label || "",
             color: this.props.color || "#333333",
             sstr: this.props.sstr || "s",
-            fontSize: this.props.fontSize || 18
+            fontSize: this.props.fontSize || 18,
+            cb:this.props.cb
         }
     }
     componentDidMount() {
@@ -61,6 +57,9 @@ class CountDownLabel extends Component {
                 clearInterval(this.timer);
                 if(curTime ===0 ){
                     this.setState({curTime});
+                    if(this.state.cb){
+                        this.state.cb()
+                    }
                 }
                 // CountDownLabel.onOver.dispatch();
             } else {

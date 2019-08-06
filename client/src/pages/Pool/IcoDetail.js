@@ -22,6 +22,7 @@ import { Spinner } from '../../theme'
 import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
 import { useEthPrice } from '../../contexts/EthPrice'
+import { isMobile } from 'react-device-detect'
 
 
 const GAS_MARGIN = utils.bigNumberify(1000)
@@ -31,9 +32,14 @@ const MessageWrapper = styled.div`
   justify-content: center;
   height: 20rem;
 `
-const ContentWrapper = styled.h4`
+const ContentWrapper = isMobile
+? styled.h5`
+    height: 0.4em;
+`
+:styled.h4`
     height: 0.6em;
 `
+
 const SpinnerWrapper = styled(Spinner)`
   font-size: 4rem;
   svg {
@@ -42,6 +48,16 @@ const SpinnerWrapper = styled(Spinner)`
     }
   }
 `
+
+// const useStyles = makeStyles( theme =>({
+//     root: {
+//         flexGrow: 1,
+//     },
+//     tabs:{
+//         marginBottom:theme.spacing(3)
+//     }
+// }));
+
 const useStyles = makeStyles(theme => ({
     container: {
         display: 'flex',
@@ -49,18 +65,17 @@ const useStyles = makeStyles(theme => ({
         flexDirection: 'column',
         alignItems: 'center',
         marginTop: theme.spacing(-3),
-        width: 550
+        // width: 550
     },
     ContentWrapper:{
         marginLeft:theme.spacing(1)
     },
     textField: {
-        marginLeft: theme.spacing(1),
-        marginRight: theme.spacing(1)
+        // marginLeft: theme.spacing(1),
+        // marginRight: theme.spacing(1)
     },
     submit: {
-        marginTop: theme.spacing(2),
-        width: "50%"
+        margin: theme.spacing(2)
     }
 }));
 
@@ -396,12 +411,30 @@ function IcoDetail({history,icoAddress}) {
     function getBaseInfo(classes){
         return(
             <div className={classes.ContentWrapper}>
-                <ContentWrapper>
+                {isMobile ? <>
+                    <ContentWrapper>
+                    {t('ico_address')}
+                    </ContentWrapper>
+                    <ContentWrapper>
+                        {infos.address}
+                    </ContentWrapper>
+                   </>
+                :<ContentWrapper>
                     {t('ico_address') + infos.address}
                 </ContentWrapper>
-                <ContentWrapper>
+               }
+               {isMobile ? <>
+                   <ContentWrapper>
+                   {t('ico_creater')}
+                   </ContentWrapper>
+                   <ContentWrapper>
+                       {infos.creater}
+                   </ContentWrapper>
+               </> : <ContentWrapper>
                     {t('ico_creater') + infos.creater}
-                </ContentWrapper>
+                    </ContentWrapper>
+               }
+
                 <ContentWrapper>
                     {t('ico_name') + infos.name}
                 </ContentWrapper>
@@ -427,7 +460,7 @@ function IcoDetail({history,icoAddress}) {
                     {t('ico_submitAt') + infos.submitAt}
                 </ContentWrapper>
                 <ContentWrapper>
-                   <CustomTimer maxTime={infos.timeLeft}  color="black" label={t('ico_timer')} sstr=" " fontSize={16} />
+                   <CustomTimer maxTime={infos.timeLeft}  color="black" label={t('ico_timer')} sstr=" " cb={refreshInfos} fontSize={isMobile?14:16} />
                 </ContentWrapper>
                 <ContentWrapper>
                     {t('ico_isEnd') + (infos.isEnd ? t('YES') : t('NO'))}
@@ -444,9 +477,18 @@ function IcoDetail({history,icoAddress}) {
                 {account && active &&  <ContentWrapper>
                      {t('my_deposit') + " " + myDeposit +  ' ETH'}
                  </ContentWrapper>}
-                { (infos.status === 'STATUS_SUCCESS' && exchangeAddress) && <ContentWrapper>
+                { (infos.status === 'STATUS_SUCCESS' && exchangeAddress && !isMobile) && <ContentWrapper>
                   {t('exchange_address') + exchangeAddress}
                 </ContentWrapper>}
+                { (infos.status === 'STATUS_SUCCESS' && exchangeAddress && isMobile) &&
+                <>
+                <ContentWrapper>
+                  {t('exchange_address')}
+                </ContentWrapper>
+                <ContentWrapper>
+                  {exchangeAddress}
+                </ContentWrapper>
+                </>}
             </div>
         )
     }
@@ -480,7 +522,7 @@ function IcoDetail({history,icoAddress}) {
         let valid = active && account
         return (
                 <form className = {classes.container}  onSubmit={onDeposit}  autoComplete = "off" >
-                    <FormControl margin="normal" required fullWidth>
+                    <FormControl margin="normal" required   style={{width:"95%"}}>
                         <TextField required id="outlined-deposit-required"
                             label={t('deposit_amount')} name='deposit_amount'
                             className={classes.textField}
@@ -497,7 +539,7 @@ function IcoDetail({history,icoAddress}) {
                         className={classes.submit}
                         type = 'submit'
                          disabled={!valid}
-                        style={{width:"30%"}}
+                        style={{width:isMobile ? "50%" :"40%"}}
                     >
                         <TouchIcon />
                         {t('deposit')}
@@ -540,7 +582,7 @@ function IcoDetail({history,icoAddress}) {
                 className={classes.submit}
                 type='submit'
                 disabled={!valid}
-                style={{width:"30%",marginTop:30}}
+                style={{width:isMobile ? "50%" :"40%",marginTop:30}}
             >
                 <CancelIcon />
                 {t('cancelIco')}
@@ -627,7 +669,7 @@ function IcoDetail({history,icoAddress}) {
                     // className={classes.submit}
                     type='submit'
                     disabled={!valid}
-                    style={{width:"30%",marginTop:35}}
+                    style={{width:isMobile ? "50%" :"40%",marginTop:35}}
                 >
                     <SubmitIcon  />
                     {t('submit_ico')}
@@ -641,7 +683,7 @@ function IcoDetail({history,icoAddress}) {
                             onClick = {doCancel}
                             disabled={infos.isFailed}
                             type='button'
-                            style={{width:"30%",marginTop:valid?25:35}}
+                            style={{width:isMobile ? "50%" :"40%",marginTop:valid?25:35}}
                         >
                             <CancelIcon />
                             {t('cancelIco')}

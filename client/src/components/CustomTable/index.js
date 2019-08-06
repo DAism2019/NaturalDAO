@@ -15,13 +15,30 @@ import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import { Link } from 'react-router-dom';
+import { isMobile } from 'react-device-detect'
+import { shortenAddress } from '../../utils'
 
 const useStyles1 = makeStyles(theme => ({
   root: {
     flexShrink: 0,
+    // itemAlign:"left",
     color: theme.palette.text.secondary,
-    marginLeft: theme.spacing(2.5),
+    // marginLeft: theme.spacing(2.5),
   },
+  rootMobile:{
+      flexShrink: 0,
+      // marginLeft: theme.spacing(0),
+      color: theme.palette.text.secondary,
+      // marginBottom:theme.spacing(3)
+  },
+  button:{
+      marginTop:theme.spacing(0),
+       // marginLeft: theme.spacing(-40)
+  },
+  buttonLeft:{
+      marginTop:theme.spacing(0),
+       marginLeft: theme.spacing(-32)
+  }
 }));
 
 function TablePaginationActions(props) {
@@ -44,34 +61,81 @@ function TablePaginationActions(props) {
   function handleLastPageButtonClick(event) {
     onChangePage(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   }
+  if(isMobile){
+      console.log("mobile")
+      return (
 
-  return (
-    <div className={classes.root}>
-      <IconButton
-        onClick={handleFirstPageButtonClick}
-        disabled={page === 0}
-        aria-label="First Page"
-      >
-        {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
-      </IconButton>
-      <IconButton onClick={handleBackButtonClick} disabled={page === 0} aria-label="Previous Page">
-        {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
-      </IconButton>
-      <IconButton
-        onClick={handleNextButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="Next Page"
-      >
-        {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
-      </IconButton>
-      <IconButton
-        onClick={handleLastPageButtonClick}
-        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="Last Page"
-      >
-        {theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
-      </IconButton>
-    </div>
+              <div className={classes.rootMobile}>
+                  <p>
+                      &nbsp;
+                  </p>
+                  <div style={{marginLeft:100}}>
+                      <IconButton
+                          className = {classes.buttonLeft}
+                        onClick={handleFirstPageButtonClick}
+                        disabled={page === 0}
+                        aria-label="First Page"
+
+                      >
+                        {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
+                      </IconButton>
+                      <IconButton
+                          className = {classes.button}
+                          onClick={handleBackButtonClick}
+                          disabled={page === 0}
+                          aria-label="Previous Page" >
+                        {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
+                      </IconButton>
+                      <IconButton
+                          className = {classes.button}
+                        onClick={handleNextButtonClick}
+                        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+                        aria-label="Next Page"
+                      >
+                        {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
+                      </IconButton>
+                      <IconButton
+                          className = {classes.button}
+                        onClick={handleLastPageButtonClick}
+                        disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+                        aria-label="Last Page"
+                      >
+                        {theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
+                      </IconButton>
+                  </div>
+
+              </div>
+
+
+      )
+  }else return (
+      <div className={classes.root}>
+          <IconButton
+            onClick={handleFirstPageButtonClick}
+            disabled={page === 0}
+            aria-label="First Page"
+          >
+            {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
+          </IconButton>
+          <IconButton onClick={handleBackButtonClick} disabled={page === 0} aria-label="Previous Page">
+            {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
+          </IconButton>
+          <IconButton
+            onClick={handleNextButtonClick}
+            disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+            aria-label="Next Page"
+          >
+            {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
+          </IconButton>
+          <IconButton
+            onClick={handleLastPageButtonClick}
+            disabled={page >= Math.ceil(count / rowsPerPage) - 1}
+            aria-label="Last Page"
+          >
+            {theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
+          </IconButton>
+      </div>
+
   );
 }
 
@@ -90,11 +154,11 @@ const useStyles2 = makeStyles(theme => ({
     marginTop: theme.spacing(3),
   },
   table: {
-    minWidth: 500,
+    width:"100%"
   },
   tableWrapper: {
     overflowX: 'auto',
-  },
+  }
 }));
 
 function getRow(row){
@@ -109,20 +173,21 @@ function getRowDetail( _data,_index){
         return (
             <TableCell key={_index} >
                 <Link  to={"/ico-detail/" + _data} >
-                    {_data}
+                    {isMobile ? shortenAddress(_data):_data}
                 </Link>
          </TableCell>
 
         )
     }else{
         return (
-            <TableCell  key={_index} padding='none' style={{width:"30%"}} >{_data}</TableCell>
+            <TableCell  key={_index} padding='none'  >{_data}</TableCell>
         )
     }
 }
 
 
 export default function CustomPaginationActionsTable({headData,bodyData}) {
+    // style={{width:"30%"}}
   const classes = useStyles2();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -162,21 +227,26 @@ export default function CustomPaginationActionsTable({headData,bodyData}) {
             )} */}
           </TableBody>
           <TableFooter>
-            <TableRow>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                colSpan={3}
-                count={bodyData.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                SelectProps={{
-                  inputProps: { 'aria-label': 'Rows per page' },
-                  native: true,
-                }}
-                onChangePage={handleChangePage}
-                onChangeRowsPerPage={handleChangeRowsPerPage}
-                ActionsComponent={TablePaginationActions}
-              />
+            <TableRow style={{height:80,marginBottom:-30}} >
+
+                    <TablePagination
+
+                      rowsPerPageOptions={[5, 10, 25]}
+                      colSpan={3}
+                      count={bodyData.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      SelectProps={{
+                        inputProps: { 'aria-label': 'Rows per page' },
+                        native: true,
+                      }}
+                      onChangePage={handleChangePage}
+                      onChangeRowsPerPage={handleChangeRowsPerPage}
+                      ActionsComponent={TablePaginationActions}
+                      style={{marginTop:-30}}
+                    />
+
+
             </TableRow>
           </TableFooter>
         </Table>

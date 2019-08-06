@@ -30,7 +30,7 @@ async function updatePrice(priceContract,state,update) {
            if(!state || !state.price || !state.price.eq(_price)){
                update(_price);
            }
-       }catch {
+       }catch{
 
        }
     }

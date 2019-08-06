@@ -203,7 +203,8 @@ def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, deadline: timestamp, 
     # Throws if eth_sold > msg.value
     eth_refund: wei_value = value - eth_sold
     send(self.beneficiary, eth_sold)
-    send(buyer, eth_refund)
+    if eth_refund > 0:
+        send(buyer, eth_refund)
     NDAO(self.ndaoAddress).mint(recipient, ndao_bought)
     log.NdaoPurchase(buyer, recipient, ndao_bought)
     return (eth_sold, eth_refund)

@@ -11,7 +11,7 @@ const InputPanel = styled.div`
   ${({ theme }) => theme.flexColumnNoWrap}
   box-shadow: 0 4px 8px 0 ${({ theme }) => lighten(0.9, theme.royalBlue)};
   position: relative;
-  border-radius: 1.25rem;
+  ${'' /* border-radius: 1.25rem; */}
   background-color: ${({ theme }) => theme.white};
   z-index: 1;
 `
@@ -20,7 +20,7 @@ const ContainerRow = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 1.25rem;
+  ${'' /* border-radius: 1.25rem; */}
   box-shadow: 0 0 0 0.5px ${({ error, theme }) => (error ? theme.salmonRed : theme.mercuryGray)};
   background-color: ${({ theme }) => theme.white};
   transition: box-shadow 200ms ease-in-out;

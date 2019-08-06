@@ -55,7 +55,7 @@ export default function TokenLogo({ address, size = '1rem', ...rest }) {
   //   path = `${TOKEN_ICON_API}/${address.toLowerCase()}.png`
   } else {
     return (
-      <Emoji {...rest} ref={ref}>
+      <Emoji {...rest} ref={ref} style={{marginTop:4}}>
         {/* <span role="img" aria-label="Thinking">
 
         </span> */}

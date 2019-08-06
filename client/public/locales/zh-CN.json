@@ -86,7 +86,7 @@
     "icoTimedelta": "请输入ICO募资持续时间",
     "icoDays": "天",
     "icoTokens": "请输入募资的代币总量",
-    "icoPrice": "当前ICO代币价格（1ETH兑换的ICO代币数量）",
+    "icoPrice": "ICO代币发行价格",
     "create": "创建",
     "query": "查询",
     "queryByIco":"输入ICO地址进行查询",

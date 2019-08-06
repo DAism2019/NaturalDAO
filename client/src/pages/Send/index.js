@@ -791,6 +791,7 @@ export default function Swap({ initialCurrency }) {
   return (
     <>
       <CurrencyInputPanel
+        type='input'
         title={t('input')}
         description={inputValueFormatted && independentField === OUTPUT ? estimatedText : ''}
         extraText={inputBalanceFormatted && formatBalance(inputBalanceFormatted)}
@@ -830,6 +831,7 @@ export default function Swap({ initialCurrency }) {
         </DownArrowBackground>
       </OversizedPanel>
       <CurrencyInputPanel
+        type='output'
         title={t('output')}
         description={outputValueFormatted && independentField === INPUT ? estimatedText : ''}
         extraText={outputBalanceFormatted && formatBalance(outputBalanceFormatted)}

@@ -44,7 +44,7 @@ const LiquidityContainer = styled.div`
 
 const LiquidityLabel = styled.span`
   flex: 1 0 auto;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   font-size:1rem;
 `
 
@@ -103,14 +103,14 @@ function ModeSelector({ location: { pathname }, history }) {
   useBodyKeyDown('ArrowUp', navigateLeft, modalIsOpen)
 
   return (
-    <OversizedPanel hideTop>
+    <OversizedPanel hideTop >
       <LiquidityContainer
         onClick={() => {
           setModalIsOpen(true)
         }}
       >
         <LiquidityLabel>{t(activeTabKey)}</LiquidityLabel>
-        <img src={Dropdown} alt="dropdown" style={{marginTop:"1rem"}}/>
+        <img src={Dropdown} alt="dropdown" style={{marginTop:"0.2rem"}}/>
       </LiquidityContainer>
       <Modal
         isOpen={modalIsOpen}

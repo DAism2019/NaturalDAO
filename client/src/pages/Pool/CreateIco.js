@@ -12,7 +12,7 @@ import { Button } from '../../theme'
 import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 import CustomSnackbar from '../../components/Snackbar'
-
+import { isMobile } from 'react-device-detect'
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -21,7 +21,7 @@ const useStyles = makeStyles(theme => ({
         flexDirection: 'column',
         alignItems: 'center',
         marginTop: theme.spacing(-3),
-        width: 550
+        // width: 550
     },
     textField: {
         marginLeft: theme.spacing(1),
@@ -34,9 +34,8 @@ const useStyles = makeStyles(theme => ({
         width: 200
     },
     submit: {
-        // itemAlign:'center',
-        marginTop: theme.spacing(2),
-        width: "50%"
+        margin: theme.spacing(2),
+        width:isMobile ? "80%" : "60%"
     }
 }));
 
@@ -216,7 +215,9 @@ function CreateIco({ history }) {
                             }}
                            margin="normal" type="number" variant="outlined"/>
                 </FormControl>
-                <Button type="submit" variant="contained" disabled={!isValid || clicked} color="primary" className={classes.submit}>
+                <Button type="submit" variant="contained" disabled={!isValid || clicked} color="primary"
+                    size="medium"
+                    className={classes.submit}>
                         {t('create')}
                     </Button>
 

@@ -20,7 +20,7 @@ def createIco():
     timedelta = 60 * 2
     # price : 1 eth => 1100000 tokens
     price = 10000 * 10 ** des
-    unicorn_txn = myContract.functions.createICO('HHCoins', 'HHC', des, goal, timedelta, price).buildTransaction({
+    unicorn_txn = myContract.functions.createICO('BBCoins', 'BBC', des, goal, timedelta, price).buildTransaction({
         'nonce': nonce,
         'gas': 500000
     })

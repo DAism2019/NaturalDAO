@@ -7,11 +7,11 @@ import FormControl from '@material-ui/core/FormControl'
 import Divider from '@material-ui/core/Divider'
 import SearchIcon from '@material-ui/icons/Search'
 import Fab from '@material-ui/core/Fab'
-import { isAddress } from '../../utils'
+import { isAddress  } from '../../utils'
 import { useFactoryContract } from '../../hooks'
 import CustomSnackbar from '../../components/Snackbar'
 import CustomTable from '../../components/CustomTable'
-
+import { isMobile } from 'react-device-detect'
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -20,7 +20,6 @@ const useStyles = makeStyles(theme => ({
         flexDirection: 'column',
         alignItems: 'center',
         marginTop: theme.spacing(-3),
-        width: 550
     },
     textField: {
         marginLeft: theme.spacing(1),
@@ -155,7 +154,7 @@ function QueryIco({history, location}) {
                 aria-label="Add"
                 className={classes.submit}
                 type = 'submit'
-                style={{width:"30%"}}
+                style={{width:isMobile ? "50%":"30%"}}
             >
                 <SearchIcon className={classes.extendedIcon} />
                 {t('query')}
@@ -198,7 +197,7 @@ function QueryIco({history, location}) {
            </form>
             {snacks.show && <CustomSnackbar type={snacks.type} message = {snacks.message} pos= {snacks.pos} cb={hideSnack}/>}
             <Divider />
-            {showTable && <CustomTable headData={headData} bodyData={bodyData} />}
+            {showTable && <CustomTable headData={headData} bodyData={bodyData} style={{width:"100%"}} /> }
 
     </>
    )
