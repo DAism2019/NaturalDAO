@@ -7,8 +7,10 @@ from vyper.interfaces import ERC20
 # the interface of Factory
 contract Factory:
     def getExchange(token_addr: address) -> address: constant
-    def buyNdaoInputSwap(min_ndao: uint256, deadline: timestamp) -> uint256: modifying
-    def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> (wei_value, wei_value): modifying
+    def buyNdaoInputSwap(
+        min_ndao: uint256, deadline: timestamp) -> uint256: modifying
+    def buyNdaoOutputSwapByExchange(
+        ndao_bought: uint256, refunder: address, deadline: timestamp) -> wei_value: modifying
 
 
 # the interface of Exchange
@@ -147,7 +149,8 @@ def ethToTokenSwapInput(min_tokens: uint256, deadline: timestamp) -> uint256:
     # @return Amount of Tokens bought.
     """
     assert msg.value > 0
-    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(1,deadline,value=msg.value)
+    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(
+        1, deadline, value=msg.value)
     return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, msg.sender, False)
 
 
@@ -164,7 +167,8 @@ def ethToTokenTransferInput(min_tokens: uint256, deadline: timestamp, recipient:
     """
     assert msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(1,deadline,value=msg.value)
+    ndao_sold: uint256 = self.factory.buyNdaoInputSwap(
+        1, deadline, value=msg.value)
     return self.ndaoToTokenInput(ndao_sold, min_tokens, deadline, msg.sender, recipient, False)
 
 
@@ -219,13 +223,11 @@ def ethToTokenOutput(eth_value: wei_value, tokens_bought: uint256,  deadline: ti
     assert deadline >= block.timestamp and tokens_bought > 0
     token_reserve: uint256 = self.token.balanceOf(self)
     ndao_reserve: uint256 = self.ndaoAmount
-    ndao_sold: uint256 = self.getOutputPrice(tokens_bought, ndao_reserve, token_reserve)
+    ndao_sold: uint256 = self.getOutputPrice(
+        tokens_bought, ndao_reserve, token_reserve)
     # need deal the refund
-    eth_sold: wei_value
-    eth_refund: wei_value
-    (eth_sold, eth_refund) = self.factory.buyNdaoOutputSwap(ndao_sold,deadline,value=eth_value)
-    if eth_refund > 0:
-        send(buyer, eth_refund)
+    eth_sold: wei_value = self.factory.buyNdaoOutputSwapByExchange(
+        ndao_sold, buyer, deadline, value=eth_value)
     self.ndaoAmount += ndao_sold
     flag: bool = self.token.transfer(recipient, tokens_bought)
     assert flag, 'transfer token failed'

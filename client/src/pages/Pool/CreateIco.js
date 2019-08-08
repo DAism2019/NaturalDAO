@@ -9,10 +9,18 @@ import {useTranslation} from 'react-i18next'
 import FormControl from '@material-ui/core/FormControl';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import { Button } from '../../theme'
+import { useTransactionAdder } from '../../contexts/Transactions'
 import { useFactoryContract } from '../../hooks'
 import { calculateGasMargin } from '../../utils'
 import CustomSnackbar from '../../components/Snackbar'
 import { isMobile } from 'react-device-detect'
+
+
+function checkOnlyChar(_str) {
+    let pattern = new RegExp("[A-Za-z]+");
+    return pattern.test(_str);
+}
+
 
 const useStyles = makeStyles(theme => ({
     container: {
@@ -65,6 +73,7 @@ function CreateIco({ history }) {
         message:'',
         cb2:null
     });
+    const addTransaction = useTransactionAdder()
     //listen event
     useEffect(()=>{
         let filter = contract.filters.ICOCreated(account || ethers.constants.AddressZero);
@@ -100,6 +109,14 @@ function CreateIco({ history }) {
         let estimate = contract.estimate.createICO
         let method = contract.createICO
         let {name,symbol,decimals,goal,timedelta,price} = values;
+        if(!checkOnlyChar(name) || !checkOnlyChar(symbol)){
+            return setSnacks({
+                show:true,
+                pos:'left',
+                message:t('only_letters'),
+                type:'error'
+            });
+        }
         if(decimals < 3 ||  decimals > 18){
             return;
         }
@@ -121,7 +138,7 @@ function CreateIco({ history }) {
                  value,
                  gasPrice:utils.parseUnits('10.0','gwei'),
                  gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
-              // addTransaction(response)
+                    addTransaction(response)
                     setClicked(false)
                     setSnacks({
                         show:true,
@@ -132,10 +149,23 @@ function CreateIco({ history }) {
             }).catch(err =>{
                     console.log(err);
                     setClicked(false)
+                    return setSnacks({
+                        show:true,
+                        pos:'left',
+                        message:t('invalid_number'),
+                        type:'error'
+                    });
+
+
             });
         }catch(err){
-            console.log(err);
             setClicked(false);
+            return setSnacks({
+                show:true,
+                pos:'left',
+                message:t('invalid_number'),
+                type:'error'
+            });
         }
     }
 

@@ -197,34 +197,47 @@ def buyNdaoInputTransfer(min_ndao: uint256, deadline: timestamp, recipient: addr
 
 
 @private
-def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, deadline: timestamp, buyer: address, recipient: address) -> (wei_value, wei_value):
+def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, deadline: timestamp, buyer: address, refunder: address, recipient: address) ->  wei_value:
     assert deadline >= block.timestamp
     eth_sold: wei_value = self.ethPrice.ethToNdaoOutPrice(ndao_bought)
     # Throws if eth_sold > msg.value
     eth_refund: wei_value = value - eth_sold
     send(self.beneficiary, eth_sold)
-    if eth_refund > 0:
-        send(buyer, eth_refund)
+    send(refunder, eth_refund)
     NDAO(self.ndaoAddress).mint(recipient, ndao_bought)
     log.NdaoPurchase(buyer, recipient, ndao_bought)
-    return (eth_sold, eth_refund)
+    return eth_sold
 
 
 @public
 @payable
-def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> (wei_value, wei_value):
+def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> wei_value:
     """
     # @param ndao_bought the amounts of ndao_bought
     # @return the amounts of eth_sold
     # @return the refund of eth
     """
     assert ndao_bought > 0 and msg.value > 0
-    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender)
+    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender, msg.sender)
 
 
 @public
 @payable
-def buyNdaoOutputTransfer(ndao_bought: uint256, deadline: timestamp, recipient: address) -> (wei_value, wei_value):
+def buyNdaoOutputSwapByExchange(ndao_bought: uint256, refunder: address, deadline: timestamp) -> wei_value:
+    """
+    # @param ndao_bought the amounts of ndao_bought
+    # @param refunder the address of refunder send
+    # @param deadline Time after which this transaction can no longer be executed
+    # @return the amounts of eth_sold
+    # @return the refund of eth
+    """
+    assert ndao_bought > 0 and msg.value > 0
+    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, refunder, msg.sender)
+
+
+@public
+@payable
+def buyNdaoOutputTransfer(ndao_bought: uint256, deadline: timestamp, recipient: address) -> wei_value:
     """
     # @param ndao_bought the amounts of ndao_bought
     # @param recipient The address that receives output Ndao.
@@ -233,7 +246,7 @@ def buyNdaoOutputTransfer(ndao_bought: uint256, deadline: timestamp, recipient: 
     """
     assert ndao_bought > 0 and msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
-    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender)
+    return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender, recipient)
 
 
 @private

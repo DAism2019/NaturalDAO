@@ -146,7 +146,9 @@
   "exchange_address":"Exchange Address:",
   "currentPoolTokenLimit":"Current Pool Token Limit",
   "beyond_limit":"Tokens of sold are beyond the maximum",
-  "token_can_sell":"The maximum of tokens that can be sold"
+  "token_can_sell":"The maximum of tokens that can be sold",
+  "invalid_number":"Please input a valid number",
+  "only_letters":"The name or symbol can only be letters"
 
 
 

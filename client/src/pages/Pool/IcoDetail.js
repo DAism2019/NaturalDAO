@@ -14,6 +14,7 @@ import RefreshIcon from '@material-ui/icons/Refresh'
 import Fab from '@material-ui/core/Fab'
 import {ethers,utils} from 'ethers'
 // import signal from 'signal-js';
+import { useTransactionAdder } from '../../contexts/Transactions'
 import styled from 'styled-components'
 import CustomSnackbar from '../../components/Snackbar'
 import { isAddress,calculateGasMargin} from '../../utils'
@@ -23,6 +24,7 @@ import CustomTimer from "../../components/CustomTimer"
 import Circle from '../../assets/images/circle.svg'
 import { useEthPrice } from '../../contexts/EthPrice'
 import { isMobile } from 'react-device-detect'
+import i18n from '../../i18n'
 
 
 const GAS_MARGIN = utils.bigNumberify(1000)
@@ -49,33 +51,37 @@ const SpinnerWrapper = styled(Spinner)`
   }
 `
 
-// const useStyles = makeStyles( theme =>({
-//     root: {
-//         flexGrow: 1,
-//     },
-//     tabs:{
-//         marginBottom:theme.spacing(3)
-//     }
-// }));
-
 const useStyles = makeStyles(theme => ({
     container: {
         display: 'flex',
         flexWrap: 'wrap',
         flexDirection: 'column',
         alignItems: 'center',
-        marginTop: theme.spacing(-3),
-        // width: 550
+        marginTop: theme.spacing(3)
+    },
+    containerDeposit: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        flexDirection: 'column',
+        alignItems: 'center',
+        marginTop: theme.spacing(-3)
     },
     ContentWrapper:{
         marginLeft:theme.spacing(1)
     },
     textField: {
-        // marginLeft: theme.spacing(1),
-        // marginRight: theme.spacing(1)
     },
     submit: {
         margin: theme.spacing(2)
+    },
+    refreshBtn:{
+        width:isMobile ? "45%":"25%",
+        marginLeft:isMobile ? theme.spacing(4):theme.spacing(10),
+        marginTop:theme.spacing(-1)
+    },
+    refreshBtnAlone:{
+        width:"45%",
+        margin:theme.spacing(0)
     }
 }));
 
@@ -144,6 +150,7 @@ function IcoDetail({history,icoAddress}) {
         pos:"left",
         message:''
     });
+    const addTransaction = useTransactionAdder()
     const judgeSender = useCallback((_sender) => {
         return active && account && _sender.toLowerCase() === account.toLowerCase()
     },[active,account]);
@@ -500,7 +507,17 @@ function IcoDetail({history,icoAddress}) {
         let method = icoContract.deposit
         let data = new FormData(event.target);
         let value = data.get("deposit_amount");
-        value = utils.parseEther(value);
+        try{
+           value = utils.parseEther(value);
+       }catch{
+           return setSnacks({
+               show:true,
+               pos:'left',
+               message:t('invalid_number'),
+               type:'error'
+           });
+       }
+
         let args = [];
         let estimatedGasLimit = await estimate(...args, { value });
         method(...args, {
@@ -508,12 +525,13 @@ function IcoDetail({history,icoAddress}) {
              gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
              gasPrice:utils.parseUnits('10.0','gwei')
             }).then(response => {
-            setSnacks({
-                show:true,
-                pos:'left',
-                message:t('has_send'),
-                type:'success'
-            });
+                addTransaction(response)
+                setSnacks({
+                    show:true,
+                    pos:'left',
+                    message:t('has_send'),
+                    type:'success'
+                });
         });
     }
 
@@ -521,15 +539,15 @@ function IcoDetail({history,icoAddress}) {
     function getDepositUI(classes){
         let valid = active && account
         return (
-                <form className = {classes.container}  onSubmit={onDeposit}  autoComplete = "off" >
-                    <FormControl margin="normal" required   style={{width:"95%"}}>
+                <form className = {classes.containerDeposit}  onSubmit={onDeposit}  autoComplete = "off" >
+                    <FormControl margin="normal" required fullWidth >
                         <TextField required id="outlined-deposit-required"
                             label={t('deposit_amount')} name='deposit_amount'
                             className={classes.textField}
                             InputProps={{
                                 endAdornment: <InputAdornment position="end">ETH</InputAdornment>
                             }}
-                            margin="normal" type="float" variant="outlined"/>
+                            margin="normal" variant="outlined"/>
                     </FormControl>
                     <Fab
                         variant="extended"
@@ -560,12 +578,13 @@ function IcoDetail({history,icoAddress}) {
              gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
              gasPrice:utils.parseUnits('10.0','gwei')
             }).then(response => {
-            setSnacks({
-                show:true,
-                pos:'left',
-                message:t('has_send'),
-                type:'success'
-            });
+                addTransaction(response)
+                setSnacks({
+                    show:true,
+                    pos:'left',
+                    message:t('has_send'),
+                    type:'success'
+                });
         });
     }
 
@@ -582,7 +601,7 @@ function IcoDetail({history,icoAddress}) {
                 className={classes.submit}
                 type='submit'
                 disabled={!valid}
-                style={{width:isMobile ? "50%" :"40%",marginTop:30}}
+                style={{width:isMobile ? "50%" :"40%"}}
             >
                 <CancelIcon />
                 {t('cancelIco')}
@@ -602,12 +621,13 @@ function IcoDetail({history,icoAddress}) {
             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
             gasPrice:utils.parseUnits('10.0','gwei')
             }).then(response => {
+                addTransaction(response)
                 setSnacks({
                     show:true,
                     pos:'left',
                     message:t('has_send'),
                     type:'success'
-            });
+                });
         });
     }
 
@@ -626,12 +646,13 @@ function IcoDetail({history,icoAddress}) {
             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
             gasPrice:utils.parseUnits('10.0','gwei')
             }).then(response => {
+                addTransaction(response)
                 setSnacks({
                     show:true,
                     pos:'left',
                     message:t('has_send'),
                     type:'success'
-            });
+                });
         });
     }
 
@@ -639,8 +660,8 @@ function IcoDetail({history,icoAddress}) {
     function getSubmitUI(classes){
         let valid = infos.goalReached;
         return(
-            <>
-            {valid && <ContentWrapper style={{marginLeft:8}}>
+            <div>
+            {(valid && i18n.language!=='en') && <ContentWrapper style={{marginLeft:8}}>
                 {t('eth_price') + priceOfUSD + " $"}
                 <span>
                     <Fab
@@ -651,25 +672,47 @@ function IcoDetail({history,icoAddress}) {
                         type='button'
                         // className={classes.submit}
                         onClick={doRefreshPrice}
-                        style={{width:"25%",marginLeft:80}}
+                        className = {classes.refreshBtn}
                     >
                         <RefreshIcon  />
                         {t('refreshPrice')}
                     </Fab>
                 </span>
 
-            </ContentWrapper>}
+             </ContentWrapper>}
+            {(valid && i18n.language ==='en') &&
+                <ContentWrapper style={{marginLeft:8}}>
+                    {t('eth_price') + priceOfUSD + " $"}
+                </ContentWrapper>
+             }
 
-            <form className = {classes.container}  onSubmit={doSubmit}  autoComplete = "off" style={{marginTop:-15}}>
+            <form className = {classes.container}
+                onSubmit={doSubmit}  autoComplete = "off" >
+                {(valid && i18n.language ==='en') &&
+                    <Fab
+                        variant="extended"
+                        size="small"
+                        color="secondary"
+                        aria-label="Add"
+                        type='button'
+                        // className={classes.submit}
+                        onClick={doRefreshPrice}
+                        className = {classes.refreshBtnAlone}
+                    >
+                        <RefreshIcon  />
+                        {t('refreshPrice')}
+                    </Fab>}
+
                 {valid && <Fab
                     variant="extended"
                     size="medium"
                     color="primary"
                     aria-label="Add"
-                    // className={classes.submit}
+                    className={classes.submit}
                     type='submit'
                     disabled={!valid}
-                    style={{width:isMobile ? "50%" :"40%",marginTop:35}}
+                    style={{width:isMobile ? "50%" :"40%"}}
+
                 >
                     <SubmitIcon  />
                     {t('submit_ico')}
@@ -683,13 +726,15 @@ function IcoDetail({history,icoAddress}) {
                             onClick = {doCancel}
                             disabled={infos.isFailed}
                             type='button'
-                            style={{width:isMobile ? "50%" :"40%",marginTop:valid?25:35}}
+                            // style={{width:isMobile ? "50%" :"40%",marginTop:valid?25:35}}
+                             className={classes.submit}
+                             style={{width:isMobile ? "50%" :"40%"}}
                         >
                             <CancelIcon />
                             {t('cancelIco')}
                         </Fab>
                 </form>
-            </>
+            </div>
         )
     }
 
@@ -704,12 +749,13 @@ function IcoDetail({history,icoAddress}) {
              gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
              gasPrice:utils.parseUnits('10.0','gwei')
             }).then(response => {
-            setSnacks({
-                show:true,
-                pos:'left',
-                message:t('has_send'),
-                type:'success'
-            });
+                addTransaction(response)
+                setSnacks({
+                    show:true,
+                    pos:'left',
+                    message:t('has_send'),
+                    type:'success'
+                });
         });
     }
 
@@ -726,7 +772,7 @@ function IcoDetail({history,icoAddress}) {
                 className={classes.submit}
                 type='submit'
                 disabled={!valid}
-                style={{width:"30%",marginTop:30}}
+                style={{width:isMobile ? "50%" :"40%"}}
             >
                 <WithDrawIcon className={classes.extendedIcon} />
                 {t('withdraw')}

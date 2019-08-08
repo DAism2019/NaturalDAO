@@ -115,7 +115,7 @@
     "withdraw":"提回ETH",
     "submit_ico":"提交ICO",
     "eth_price":"当前ETH价格(整点刷新):",
-    "refreshPrice":"刷新价格",
+    "refreshPrice":"立即刷新",
     "invalidAddress": "无效地址",
     "STATUS_STARTED":"已开始",
     "STATUS_SUCCESS":"成功",
@@ -137,5 +137,7 @@
     "exchange_address":"交易对地址:",
     "currentPoolTokenLimit":"当前交易对代币上限",
     "beyond_limit":"出售代币超限",
-    "token_can_sell":"当前可出售的最大代币数量:"
+    "token_can_sell":"当前可出售的最大代币数量:",
+    "invalid_number":"请输入有效的数字",
+    "only_letters":"名称和简称只能为字母"
 }

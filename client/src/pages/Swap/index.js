@@ -12,7 +12,7 @@ import OversizedPanel from '../../components/OversizedPanel'
 import ArrowDownBlue from '../../assets/images/arrow-down-blue.svg'
 import ArrowDownGrey from '../../assets/images/arrow-down-grey.svg'
 import { amountFormatter, calculateGasMargin } from '../../utils'
-import { useExchangeContract,useFactoryContract } from '../../hooks'
+import { useExchangeContract,useFactoryContract,useTestContract } from '../../hooks'
 import { useTokenDetails,setNdaoExchangeAddress} from '../../contexts/Tokens'
 import { useTransactionAdder } from '../../contexts/Transactions'
 import { useAddressBalance, useExchangeReserves } from '../../contexts/Balances'
@@ -265,9 +265,10 @@ function getSwapContract(swapType){
 export default function Swap({ initialCurrency }) {
   const { t } = useTranslation()
   const { networkId, account } = useWeb3Context()
-  const ndao_address = NDAO_ADDRESSES[networkId];
+  const ndao_address = NDAO_ADDRESSES[networkId]
   const addTransaction = useTransactionAdder()
   const ethPrice = useEthPrice();
+  const testContract = useTestContract();
   // analytics
   useEffect(() => {
     ReactGA.pageview(window.location.pathname + window.location.search)
@@ -774,11 +775,27 @@ export default function Swap({ initialCurrency }) {
         value = dependentValueMaximum
       }
     }
+    //test
+    // estimate = testContract.estimate.buyNdao
+    // method = testContract.buyNdao
+    // args = [independentValueParsed,deadline]
+    // value = dependentValueMaximum
+    // console.log(testContract.address)
+    try{
+        const estimatedGasLimit = await estimate(...args, { value })
+        // const estimatedGasLimit = ethers.utils.bigNumberify("400000")
+        // value = ethers.utils.parseEther('0.1');
+        method(...args,
+            { value,
+              gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+              gasPrice: ethers.utils.parseUnits('10.0','gwei')
+             }).then(response => {
+                   addTransaction(response)
+        })
+    }catch(err){
+        console.log(err)
+    }
 
-    const estimatedGasLimit = await estimate(...args, { value })
-    method(...args, { value, gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
-      addTransaction(response)
-    })
   }
 
   return (

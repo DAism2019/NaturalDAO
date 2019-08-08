@@ -10,7 +10,7 @@ i18next.use(XHR).use(LanguageDetector).use(initReactI18next).init({
     react: {
         useSuspense: true
     },
-    // lng: 'zh',
+    // lng: 'en',
     fallbackLng: 'en',
     preload: [
         'en', 'zh-CN'
@@ -20,5 +20,7 @@ i18next.use(XHR).use(LanguageDetector).use(initReactI18next).init({
         escapeValue: false
     }
 })
+
+
 
 export default i18next

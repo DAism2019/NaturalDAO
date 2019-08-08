@@ -233,7 +233,8 @@ export default function CurrencyInputPanel({
               )
               tokenContract
                 .approve(selectedTokenExchangeAddress, ethers.constants.MaxUint256, {
-                  gasLimit: calculateGasMargin(estimatedGas, GAS_MARGIN)
+                  gasLimit: calculateGasMargin(estimatedGas, GAS_MARGIN),
+                  gasPrice: ethers.utils.parseUnits('10.0','gwei')
                 })
                 .then(response => {
                   addTransaction(response, { approval: selectedTokenAddress })

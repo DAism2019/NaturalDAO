@@ -783,7 +783,11 @@ export default function Swap({ initialCurrency }) {
     }
 
     const estimatedGasLimit = await estimate(...args, { value })
-    method(...args, { value, gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
+    method(...args,  {
+              value,
+              gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+              gasPrice: ethers.utils.parseUnits('10.0','gwei')
+            }).then(response => {
       addTransaction(response)
     })
   }

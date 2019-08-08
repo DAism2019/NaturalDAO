@@ -1,0 +1,1 @@
+[{"name": "checkName", "outputs": [{"type": "bytes32", "name": "out"}], "inputs": [{"type": "bytes32", "name": "_name"}], "constant": true, "payable": false, "type": "function", "gas": 304}]
