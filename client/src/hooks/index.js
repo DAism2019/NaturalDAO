@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useWeb3Context } from 'web3-react'
 import ERC20_ABI from '../constants/abis/erc20'
-import TEST_ABI  from '../constants/abis/buyNdaoTest.json'
 import { getContract, getFactoryContract, getExchangeContract, getNdaoContract,
         getPriceContract, getMyPriceContract, isAddress } from '../utils'
 import copy from 'copy-to-clipboard'
@@ -97,19 +96,6 @@ export function useContract(address, ABI, withSignerIfPossible = true) {
       return null
     }
   }, [address, ABI, library, withSignerIfPossible, account])
-}
-
-const test_address = '0x87C1E0716cFc7C385E4E308c3Da0623B9B452046'
-export function useTestContract(withSignerIfPossible = true){
-    const { library, account } = useWeb3Context()
-
-    return useMemo(() => {
-      try {
-        return getContract(test_address, TEST_ABI, library, withSignerIfPossible ? account : undefined)
-      } catch {
-        return null
-      }
-    }, [test_address, library, withSignerIfPossible, account])
 }
 
 // returns null on errors

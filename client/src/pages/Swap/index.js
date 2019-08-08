@@ -12,7 +12,7 @@ import OversizedPanel from '../../components/OversizedPanel'
 import ArrowDownBlue from '../../assets/images/arrow-down-blue.svg'
 import ArrowDownGrey from '../../assets/images/arrow-down-grey.svg'
 import { amountFormatter, calculateGasMargin } from '../../utils'
-import { useExchangeContract,useFactoryContract,useTestContract } from '../../hooks'
+import { useExchangeContract,useFactoryContract } from '../../hooks'
 import { useTokenDetails,setNdaoExchangeAddress} from '../../contexts/Tokens'
 import { useTransactionAdder } from '../../contexts/Transactions'
 import { useAddressBalance, useExchangeReserves } from '../../contexts/Balances'
@@ -268,7 +268,6 @@ export default function Swap({ initialCurrency }) {
   const ndao_address = NDAO_ADDRESSES[networkId]
   const addTransaction = useTransactionAdder()
   const ethPrice = useEthPrice();
-  const testContract = useTestContract();
   // analytics
   useEffect(() => {
     ReactGA.pageview(window.location.pathname + window.location.search)
@@ -775,12 +774,6 @@ export default function Swap({ initialCurrency }) {
         value = dependentValueMaximum
       }
     }
-    //test
-    // estimate = testContract.estimate.buyNdao
-    // method = testContract.buyNdao
-    // args = [independentValueParsed,deadline]
-    // value = dependentValueMaximum
-    // console.log(testContract.address)
     try{
         const estimatedGasLimit = await estimate(...args, { value })
         // const estimatedGasLimit = ethers.utils.bigNumberify("400000")
