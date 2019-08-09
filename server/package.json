@@ -5,7 +5,7 @@
   "scripts": {
     "start": "source ../.env && node bin/www",
     "dev": "./node_modules/.bin/nodemon bin/www",
-    "prd": "pm2 start bin/www",
+    "prd": "source ../.env && pm2 start bin/www --log-date-format 'DD-MM HH:mm:ss.SSS'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
