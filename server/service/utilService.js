@@ -121,7 +121,6 @@ let util = {
     //写入价格合约
     writeContract: async (address, price, isProject) => {
         let result = util.convertPrice(price);
-        console.log(result.toString())
         if (!result || result < 0)
             return console.log("ETH价格获取失败");
         try {
