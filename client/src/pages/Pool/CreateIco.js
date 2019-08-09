@@ -121,6 +121,10 @@ function CreateIco({ history }) {
             return;
         }
         setClicked(true);
+        let _time = setTimeout(()=>{
+              setClicked(false);
+              clearTimeout(_time);
+        },1000);
         try{
             goal =  utils.parseEther(goal);
             timedelta = + timedelta;
@@ -139,7 +143,7 @@ function CreateIco({ history }) {
                  gasPrice:utils.parseUnits('10.0','gwei'),
                  gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN) }).then(response => {
                     addTransaction(response)
-                    setClicked(false)
+                    // setClicked(false)
                     setSnacks({
                         show:true,
                         pos:'left',
@@ -148,7 +152,7 @@ function CreateIco({ history }) {
                     });
             }).catch(err =>{
                     console.log(err);
-                    setClicked(false)
+                    // setClicked(false)
                     return setSnacks({
                         show:true,
                         pos:'left',
@@ -159,7 +163,7 @@ function CreateIco({ history }) {
 
             });
         }catch(err){
-            setClicked(false);
+            // setClicked(false);
             return setSnacks({
                 show:true,
                 pos:'left',

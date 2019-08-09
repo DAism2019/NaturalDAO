@@ -109,11 +109,17 @@ function calPrice(_priceBigNum){
 }
 
 function IcoDetail({history,icoAddress}) {
+    let hash = history.location.hash
+    let len = hash.length
+    if(len  && !icoAddress){
+        icoAddress = hash.substr(1,len)
+    }
     const contract = useFactoryContract();
     const icoContract = useTokenContract(icoAddress);
     const priceContract = usePriceContract();
     const {t} = useTranslation();
     const classes = useStyles();
+    const [clicked,setClicked] = useState(false)
     const { active, account } = useWeb3Context()
     const [myDeposit,setMyDeposit] = useState(0);
     const [showLoader, setShowLoader] = useState(true);
@@ -285,6 +291,7 @@ function IcoDetail({history,icoAddress}) {
                 status: 0
             });
         }else{
+            setShowLoader(true)
             async function getStatus() {
                 let status  = await contract.allIcoStatus(icoAddress);
                 status = + status;
@@ -517,21 +524,30 @@ function IcoDetail({history,icoAddress}) {
                type:'error'
            });
        }
+       setClicked(true);
+       let _time = setTimeout(()=>{
+             setClicked(false);
+             clearTimeout(_time);
+       },1000)
 
-        let args = [];
-        let estimatedGasLimit = await estimate(...args, { value });
-        method(...args, {
-             value,
-             gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
-             gasPrice:utils.parseUnits('10.0','gwei')
-            }).then(response => {
-                addTransaction(response)
-                setSnacks({
-                    show:true,
-                    pos:'left',
-                    message:t('has_send'),
-                    type:'success'
-                });
+       let args = [];
+       let estimatedGasLimit = await estimate(...args, { value });
+       method(...args, {
+           value,
+           gasLimit: calculateGasMargin(estimatedGasLimit, GAS_MARGIN),
+           gasPrice:utils.parseUnits('10.0','gwei')
+           }).then(response => {
+              addTransaction(response)
+                    // setClicked(false);
+              setSnacks({
+                  show:true,
+                  pos:'left',
+                  message:t('has_send'),
+                  type:'success'
+              });
+        }).catch((error) =>{
+               // console.log("error")
+               // setClicked(false);
         });
     }
 
@@ -556,7 +572,7 @@ function IcoDetail({history,icoAddress}) {
                         aria-label="Add"
                         className={classes.submit}
                         type = 'submit'
-                         disabled={!valid}
+                         disabled={!valid || clicked}
                         style={{width:isMobile ? "50%" :"40%"}}
                     >
                         <TouchIcon />

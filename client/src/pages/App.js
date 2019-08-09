@@ -1,11 +1,11 @@
 import React, { Suspense, lazy } from 'react'
 import styled from 'styled-components'
 import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
-
 import Web3ReactManager from '../components/Web3ReactManager'
 import Header from '../components/Header'
 import NavigationTabs from '../components/NavigationTabs'
 // import { isAddress } from '../utils'
+import { getPathBase } from '../utils'
 
 const Swap = lazy(() => import('./Swap'))
 const Send = lazy(() => import('./Send'))
@@ -41,12 +41,12 @@ export default function App() {
         <BodyWrapper>
           <Body>
             <Web3ReactManager>
-              <BrowserRouter>
+              <BrowserRouter basename={getPathBase()}>
                 <NavigationTabs />
                 {/* this Suspense is for route code-splitting */}
                 <Suspense fallback={null}>
                   <Switch>
-                      {/* <Route path="/" exact component={Profile} /> */}
+                      {/* <Route path="/" exact component={Swap} /> */}
                       <Route path="/swap" exact component={Swap} />
                       <Route path="/send" component={Send} />
                       {/* <Route path="/ico" component={Pool} /> */}
@@ -55,7 +55,7 @@ export default function App() {
                           '/create-ico',
                           '/query-ico',
                           '/ico-detail',
-                          '/ico-detail/:tokenAddress?'
+                          '/ico-detail#tokenAddress?'
                         ]}
                         component={Pool}
                       />
@@ -95,7 +95,7 @@ export default function App() {
                       ]}
                       component={Pool}
                     /> */}
-                    <Redirect to="/swap" />
+                    <Redirect to="/swap"/>
                   </Switch>
                 </Suspense>
               </BrowserRouter>

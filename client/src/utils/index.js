@@ -286,3 +286,11 @@ export function amountFormatter(amount, baseDecimals = 18, displayDecimals = 3, 
     }
   }
 }
+
+export function getPathBase() {
+    if (process.env.NODE_ENV === 'production'){
+        return '/exchange'
+    }else{
+        return ''
+    }
+}

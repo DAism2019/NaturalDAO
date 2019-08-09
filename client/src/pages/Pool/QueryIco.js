@@ -141,7 +141,7 @@ function QueryIco({history, location}) {
 
                 });
            }else{
-               history.push("/ico-detail/" + values.icoAddress);
+               history.push("/ico-detail#" + values.icoAddress);
            }
         }
     }

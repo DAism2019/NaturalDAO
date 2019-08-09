@@ -172,7 +172,7 @@ function getRowDetail( _data,_index){
     if(flag){
         return (
             <TableCell key={_index} >
-                <Link  to={"/ico-detail/" + _data} >
+                <Link  to={"/ico-detail#" + _data} >
                     {isMobile ? shortenAddress(_data):_data}
                 </Link>
          </TableCell>

@@ -28,7 +28,7 @@ export default function Pool() {
           <Route
                     exact
                       strict
-                      path="/ico-detail/:tokenAddress?"
+                      path="/ico-detail#tokenAddress?"
                       render={({ match }) => {
                         if (isAddress(match.params.tokenAddress)) {
                           return <IcoDetail icoAddress={match.params.tokenAddress} />
