@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
 import Paper from '@material-ui/core/Paper';
 import {makeStyles} from '@material-ui/core/styles';
 import Tabs from '@material-ui/core/Tabs';
@@ -18,23 +18,23 @@ const useStyles = makeStyles( theme =>({
     }
 }));
 
-const allPaths = [/\/swap/, /\/send/, /\/create-ico|\/query-ico|\/ico-detail.*/];
+const allPaths = [ /\/create-ico|\/query-ico|\/ico-detail.*/,/\/swap/, /\/send/];
 
 // 要修改以后加入 ICO详情时修改 匹配正则表达式
 function calValue(pathname) {
     let index = allPaths.findIndex(regex => pathname.match(regex));
-    if (index <= 0)
-        index = 0
+    if (index < 0)
+        index = 1
     return index
 }
 
 
 function calStr(newValue) {
     let str = newValue === 0
-        ? "/swap"
+        ? "/create-ico"
         : newValue === 1
-            ? "/send"
-            : "/create-ico"
+            ? "/swap"
+            : "/send"
     return str;
 }
 
@@ -44,13 +44,15 @@ function IconLabelTabs({location: {
     }, history}) {
     const classes = useStyles();
     const {t} = useTranslation()
-    let [value, ] = useState(0);
-    value = calValue(pathname);
+    const [value,setValue] = useState(1);
     function handleChange(event, newValue) {
         // setValue(newValue);
         history.push(calStr(newValue));
 
     }
+    useEffect(()=>{
+        setValue(calValue(pathname))
+    },[pathname])
     return (<div>
         <Paper square className={classes.root}>
             <Tabs value={value} onChange={handleChange}
@@ -58,9 +60,9 @@ function IconLabelTabs({location: {
                 centered
                 className ={classes.tabs}
                 indicatorColor="secondary" textColor="secondary">
+                <Tab icon={<IcoIcon />} label={t("Ico")}/>
                 <Tab icon={<SwapIcon />} label={t("swap")}/>
                 <Tab icon={<SendIcon />} label={t("send")}/>
-                <Tab icon={<IcoIcon />} label={t("Ico")}/>
             </Tabs>
         </Paper>
     </div>);
