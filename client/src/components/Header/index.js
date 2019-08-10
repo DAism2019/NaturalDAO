@@ -46,7 +46,7 @@ export default function Header() {
             <ReactSVG src={logo} style={{width:30}}/>
           </span>
 
-          <Link id="link" href="https://naturalDAO.io">
+          <Link id="link" href="https://naturaldao.io">
             <h1 id="title">NaturalDAO</h1>
           </Link>
         </Title>

@@ -90,6 +90,7 @@ export function useAddressBalance(address, tokenAddress,type) {
   return value
 }
 
+//获得某个交易对里的ndao数量
 export function useAddressNdao(exchangeAddress) {
   const { networkId, library } = useWeb3Context()
   const exchangeContract = useExchangeContract(exchangeAddress)
@@ -119,7 +120,7 @@ export function useAddressNdao(exchangeAddress) {
         stale = true
       }
     }
-}, [exchangeAddress, ndao_address, value, blockNumber, globalBlockNumber, networkId, library, update,exchangeContract])
+  }, [exchangeAddress, ndao_address, value, blockNumber, globalBlockNumber, networkId, library, update,exchangeContract])
 
   return value
 }

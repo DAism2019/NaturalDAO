@@ -101,10 +101,16 @@ export default function CustomizedSnackbars({type, message, pos,cb,cb2}) {
             horizontal: pos
         }}
         open={true}
-        autoHideDuration={5000}
+        autoHideDuration={3000}
         onClose={handleClose}>
-        <>
-        { type === 'success' &&  <MySnackbarContentWrapper
+        <MySnackbarContentWrapper
+               className={classes.margin}
+               onClose={handleClose}
+               variant={type}
+               message={message}
+             />
+        {/* <> */}
+        {/* { type === 'success' &&  <MySnackbarContentWrapper
                 className={classes.margin}
                onClose={handleClose}
                variant="success"
@@ -116,16 +122,16 @@ export default function CustomizedSnackbars({type, message, pos,cb,cb2}) {
                  className={classes.margin}
                  message={message}
               />}
-        {type ==='warning'  && <MySnackbarContentWrapper
+        { type ==='warning'  && <MySnackbarContentWrapper
                 onClose={handleClose}
                 variant="warning"
                 className={classes.margin}
                 message={message}/>}
-         {type === 'info' && <MySnackbarContentWrapper
+        { type === 'info' && <MySnackbarContentWrapper
                 onClose={handleClose}
                 variant="info"
                 className={classes.margin}
-                message={message}/>}
-    </>
+                message={message}/>} */}
+    {/* </> */}
 </Snackbar>);
 }

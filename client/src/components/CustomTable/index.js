@@ -62,7 +62,6 @@ function TablePaginationActions(props) {
     onChangePage(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   }
   if(isMobile){
-      console.log("mobile")
       return (
 
               <div className={classes.rootMobile}>

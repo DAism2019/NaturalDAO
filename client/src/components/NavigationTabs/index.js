@@ -6,8 +6,8 @@ import Tab from '@material-ui/core/Tab';
 import SendIcon from '@material-ui/icons/Send';
 import SwapIcon from '@material-ui/icons/SwapHoriz';
 import IcoIcon from '@material-ui/icons/MonetizationOn';
-import {withRouter} from "react-router-dom";
-import {useTranslation} from 'react-i18next'
+import { withRouter } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 const useStyles = makeStyles( theme =>({
     root: {
@@ -38,21 +38,18 @@ function calStr(newValue) {
     return str;
 }
 
-//方法也许不对，路由是不是重新加载
-function IconLabelTabs({location: {
-        pathname
-    }, history}) {
+
+function IconLabelTabs({location: { pathname }, history}) {
     const classes = useStyles();
-    const {t} = useTranslation()
+    const {t} = useTranslation();
     const [value,setValue] = useState(1);
     function handleChange(event, newValue) {
-        // setValue(newValue);
         history.push(calStr(newValue));
-
-    }
+    };
+    //这时是因为点击前进后退时无法刷新(未使用原来的hooks中的useBodyKeyDown)
     useEffect(()=>{
-        setValue(calValue(pathname))
-    },[pathname])
+        setValue(calValue(pathname));
+    },[pathname]);
     return (<div>
         <Paper square className={classes.root}>
             <Tabs value={value} onChange={handleChange}
@@ -68,4 +65,4 @@ function IconLabelTabs({location: {
     </div>);
 }
 
-export default withRouter(IconLabelTabs)
+export default withRouter(IconLabelTabs);

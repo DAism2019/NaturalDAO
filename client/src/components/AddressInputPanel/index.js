@@ -164,7 +164,7 @@ export default function AddressInputPanel({ title, initialInput = '', onChange =
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck="false"
-              placeholder="0x1234..."
+              placeholder="0x..."
               error={input !== '' && error}
               onChange={onInput}
               value={input}

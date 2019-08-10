@@ -44,8 +44,6 @@ let NDAO_INFO = {
 
 let NDAO = { }
 
-
-
 function init_token(){
     return reactLocalStorage.getObject(COOKIE_ID)
 }
@@ -190,22 +188,8 @@ export default function Provider({ children }) {
   )
 }
 
-// NewExchange: event({_token: indexed(address), _exchange: indexed(
-//     address), _amount: uint256, _tokenAmount: uint256})
 
-// icoContract.on("SubmitIco", (_creater) => {
-//     if(judgeSender(_creater)){
-//         //todo 通知
-//         setSnacks({
-//             show:true,
-//             pos:'left',
-//             message:t('submit_success'),
-//             type:'success'
-//         });
-//     }
-//     refreshInfos();
-// });
-
+//用来设置每个不同交易对时ndao的信息，为了方便统一计算
 export function setNdaoExchangeAddress(_address){
     NDAO_INFO[EXCHANGE_ADDRESS] = _address
 }
@@ -228,6 +212,7 @@ export function useTokenDetails(tokenAddress) {
       let stale = false
       getTokenDetailFromFactory(tokenAddress, networkId, library).then( _result =>{
           if (!stale){
+              //这里为了保持统一，仍然返回了tokenAddress，虽然没有什么意义
               // let _tokenAddress = _result[0];
               let resolvedName = _result[1];
               let resolvedSymbol = _result[2];
@@ -237,34 +222,18 @@ export function useTokenDetails(tokenAddress) {
               update(networkId, tokenAddress, resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress,maxPool)
           }
       }).catch(()=>null);
-
-      // const namePromise = getTokenName(tokenAddress, library).catch(() => null)
-      // const symbolPromise = getTokenSymbol(tokenAddress, library).catch(() => null)
-      // const decimalsPromise = getTokenDecimals(tokenAddress, library).catch(() => null)
-      // const exchangeAddressPromise = getTokenExchangeAddressFromFactory(tokenAddress, networkId, library).catch(
-      //   () => null
-      // )
-      //
-      // Promise.all([namePromise, symbolPromise, decimalsPromise, exchangeAddressPromise]).then(
-      //   ([resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress]) => {
-      //     if (!stale) {
-      //
-      //       update(networkId, tokenAddress, resolvedName, resolvedSymbol, resolvedDecimals, resolvedExchangeAddress)
-      //     }
-      //   }
-      // )
-
       return () => {
         stale = true
       }
     }
   }, [tokenAddress, name, symbol, decimals, exchangeAddress,maxPool, networkId, library, update])
-  //读取缓存后这里的bigNumber被转成16进制，所以要转回去
+  //注意:读取缓存后这里的bigNumber被转成16进制，所以要转回去,如果本身是更新得到的，不影响
   let _maxPool = maxPool ? ethers.utils.bigNumberify(maxPool) : null
   return { name, symbol, decimals, exchangeAddress,maxPool:_maxPool }
 }
 
-//todo 增加output 或者  input
+
+//区分是input还是output，因为output不包含ETH
 export function useAllTokenDetails(type,requireExchange = true) {
   const { networkId } = useWeb3Context()
   const [state] = useTokensContext()

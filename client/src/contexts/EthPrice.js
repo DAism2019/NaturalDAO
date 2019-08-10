@@ -27,6 +27,7 @@ async function updatePrice(priceContract,state,update) {
     if(priceContract){
         try{
            let _price = await priceContract.getEthPrice();
+           //防止无限更新，只更新一次,但是会查询两次
            if(!state || !state.price || !state.price.eq(_price)){
                update(_price);
            }

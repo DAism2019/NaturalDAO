@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {withStyles} from '@material-ui/core/styles';
 // import PropTypes from 'prop-types';
 
+//这个只是临时使用的，并且还是类组件
 function calTime(allSeconds) {
     if (allSeconds <= 0)
         allSeconds = 0;
@@ -24,7 +25,7 @@ function calTime(allSeconds) {
 }
 
 class CountDownLabel extends Component {
-    timer = 0
+    timer = 0;
     constructor(props) {
         super(props);
         this.state = {

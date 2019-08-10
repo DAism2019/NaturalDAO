@@ -1,5 +1,5 @@
 import React, { useState, useReducer, useEffect } from 'react'
-import ReactGA from 'react-ga'
+// import ReactGA from 'react-ga'
 import { useTranslation } from 'react-i18next'
 import { useWeb3Context } from 'web3-react'
 import { ethers } from 'ethers'
@@ -269,9 +269,9 @@ export default function Swap({ initialCurrency }) {
   const addTransaction = useTransactionAdder()
   const ethPrice = useEthPrice();
   // analytics
-  useEffect(() => {
-    ReactGA.pageview(window.location.pathname + window.location.search)
-  }, [])
+  // useEffect(() => {
+  //   ReactGA.pageview(window.location.pathname + window.location.search)
+  // }, [])
 
 
   // core swap state
@@ -595,10 +595,10 @@ export default function Swap({ initialCurrency }) {
   }
 
   function renderTransactionDetails() {
-    ReactGA.event({
-      category: 'TransactionDetail',
-      action: 'Open'
-    })
+    // ReactGA.event({
+    //   category: 'TransactionDetail',
+    //   action: 'Open'
+    // })
 
     const b = text => <BlueSpan>{text}</BlueSpan>
     // const hideMarket = (swapType === ETH_TO_NDAO || swapType === NDAO_TO_ETH);
@@ -710,10 +710,10 @@ export default function Swap({ initialCurrency }) {
     const deadline = Math.ceil(Date.now() / 1000) + DEADLINE_FROM_NOW
     let estimate, method, args, value
     if (independentField === INPUT) {
-      ReactGA.event({
-        category: `${swapType}`,
-        action: 'SwapInput'
-      })
+      // ReactGA.event({
+      //   category: `${swapType}`,
+      //   action: 'SwapInput'
+      // })
 
       if (swapType === ETH_TO_NDAO) {
         estimate = contract.estimate.buyNdaoInputSwap
@@ -742,10 +742,10 @@ export default function Swap({ initialCurrency }) {
         value = independentValueParsed
       }
     } else if (independentField === OUTPUT) {
-      ReactGA.event({
-        category: `${swapType}`,
-        action: 'SwapOutput'
-      })
+      // ReactGA.event({
+      //   category: `${swapType}`,
+      //   action: 'SwapOutput'
+      // })
 
       if (swapType === ETH_TO_NDAO) {
         estimate = contract.estimate.buyNdaoOutputSwap
