@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from 'react'
+import React, { Suspense, lazy } from 'react'
 // import ReactGA from 'react-ga'
 import { Switch, Route, Redirect } from 'react-router-dom'
 import { isAddress } from '../../utils'
@@ -11,10 +11,10 @@ const IcoDetail = lazy(() => import('./IcoDetail'))
 const CreateIco = lazy(() => import('./CreateIco'))
 const QueryIco = lazy(() => import('./QueryIco'))
 
-// export default function Pool() {
-//   useEffect(() => {
-//     ReactGA.pageview(window.location.pathname + window.location.search)
-//   }, [])
+export default function Pool() {
+  // useEffect(() => {
+  //   ReactGA.pageview(window.location.pathname + window.location.search)
+  // }, [])
 
   return (
     <>
