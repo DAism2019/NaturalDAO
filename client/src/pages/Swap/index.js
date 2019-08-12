@@ -914,7 +914,7 @@ export default function Swap({ initialCurrency }) {
                 <ExchangeRate>{t('token_can_sell')}</ExchangeRate>
                 {
                     (inputLimit && inputReserveToken)  ? `${amountFormatter(
-                        inputLimit.sub(inputReserveToken),
+                        inputLimit >= inputReserveToken ? inputLimit.sub(inputReserveToken) : 0,
                         inputDecimals,
                         Math.min(4, inputDecimals)
                       )} ${inputSymbol}`

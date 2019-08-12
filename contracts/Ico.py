@@ -5,7 +5,7 @@ from vyper.interfaces import ERC20
 implements: ERC20
 
 
-# define the Factory contract
+# define the interface of Factory contract
 contract Factory:
     def createExchange(): modifying
     def cancelIco(): modifying
@@ -40,7 +40,7 @@ finalSubmissionTime: public(timestamp)  # ICO  lastest time of submit
 isEnd: public(bool)  # ICO is end
 goalReached: public(bool)  # ICO is in goal
 isFailed: public(bool)  # ICO is failed
-tokenPrice: public(uint256)  # 1 eth = tokenPrice tokens
+tokenPrice: public(uint256)  # 1 eth => tokenPrice tokens
 depositAmount: public(wei_value)  # current amounts of deposit
 depositBalanceOfUser: public(map(address, wei_value))  # user deposit
 factory: public(Factory)  # Factory Contract instance
@@ -162,11 +162,11 @@ def mint(_to: address, _value: uint256):
 def _checkDeposit(sender: address, value: wei_value):
     """
     # @dev Receive the ether and mint proper tokens
-    # @param value The account of the ether.
+    # @param value The amount of the ether.
     # @param sender The address that prepare to be minted .
     """
     assert block.timestamp <= self.depositEnd, 'the ico has timeout'
-    assert not self.goalReached, 'the ico has completed'
+    assert not self.goalReached, 'the goal of ico has reached'
     if self.depositAmount + value >= self.depositGoal:
         self.goalReached = True
         _refund: wei_value = self.depositAmount + value - self.depositGoal
@@ -227,7 +227,7 @@ def submitICO():
     """
     # @dev  submit the ICO  only once by creater after the ico is out end time
     """
-    assert block.timestamp > self.depositEnd and block.timestamp < self.finalSubmissionTime
+    assert block.timestamp > self.depositEnd and block.timestamp <= self.finalSubmissionTime
     assert msg.sender == self.creater and (not self.isEnd)
     assert self.goalReached
     self.isEnd = True
@@ -244,6 +244,7 @@ def safeWithdrawal():
     """
     assert self.isEnd and self.isFailed, 'the ico has not ended or the ico is successful'
     amount: wei_value = self.depositBalanceOfUser[msg.sender]
+    assert amount > 0
     self.depositBalanceOfUser[msg.sender] = 0
     send(msg.sender, amount)
     log.RefundTransfer(msg.sender, amount)
@@ -283,7 +284,6 @@ def burnFrom(_to: address, _value: uint256):
     self._burn(_to, _value)
 
 
-
 @public
 @constant
 def getTokenInfo() -> (string[64], string[32], uint256):
@@ -295,7 +295,7 @@ def getTokenInfo() -> (string[64], string[32], uint256):
 
 @public
 @constant
-def icoInfo() -> (string[64], string[32], uint256, wei_value, timestamp, timestamp, timestamp, bool, bool, bool, uint256, wei_value, address):
+def getIcoInfo() -> (string[64], string[32], uint256, wei_value, timestamp, timestamp, timestamp, bool, bool, bool, uint256, wei_value, address):
     """
     # @dev Function to return the detail of ICO.
     """

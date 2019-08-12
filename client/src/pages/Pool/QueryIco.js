@@ -81,18 +81,24 @@ function QueryIco({history, location}) {
                     message:t("ico_not_find")
                 });
             }else{
-                //todo 设法优化一下，因为Vyper没法返回一次性所需的所有值
-                //可以试下Promise.all
+                //Vyper没法返回一次性所需的所有值，必须遍历
+                //可以试下Promise.all 进行优化
                 let allAddress = await contract.getAllIcoOfUser(values.creater);
-                let data = [];
-                for(let i=0;i<amount;i++){
-                    let _address = allAddress[i];
-                    let _symbol = await contract.allIcoSymbol(_address);
-                    let _status = await contract.allIcoStatus(_address);
-                    data.push([_address,_symbol,t(_calStatus(+ _status))]);
+                let allPromise = [];
+                for(let _address of allAddress){
+                    allPromise.push(contract.getShortInfoByIcoAddress(_address).catch(() => null))
                 }
-                setBodyData(data);
-                setShowTable(true);
+                Promise.all(allPromise).then(result =>{
+                    let allInfos = []
+                    for(let _result of result){
+                        allInfos.push([_result[0],_result[1],t(_calStatus(+ _result[2]))])
+                    }
+                    setBodyData(allInfos);
+                    setShowTable(true);
+                });
+                // data.push([_address,_symbol,t(_calStatus(+ _status))]);
+                // setBodyData(data);
+                // setShowTable(true);
             }
         }
     }
@@ -107,8 +113,11 @@ function QueryIco({history, location}) {
                 str = 'STATUS_FAILED';
                 break;
             case 1:
+                str = 'STATUS_STARTED';
+                break;
+            case 0:
             default:
-                str = 'STATUS_STARTED'
+                str = 'STATUS_NONE';
                 break;
         }
         return str;

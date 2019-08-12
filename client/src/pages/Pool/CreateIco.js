@@ -184,7 +184,7 @@ function CreateIco({ history }) {
             return  + ((_tokens/_goal).toFixed(fixedNumber));
         }
     }
-
+    //这里使用了闭包
     const handleChange = name => event => {
         setValues({
             ...values,

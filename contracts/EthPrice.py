@@ -1,6 +1,10 @@
 # @title The Eth And Ndao Price Interface V1
 # @author radarzhhua@gmail.com
 # @refernce Fiat Contract  url:https://fiatcontract.com/
+# Can use the Fiat Contract or MyFiat contract by setFiator
+
+
+# FiatContract interface
 contract FiatContract:
     def USD(_id: uint256) -> uint256: constant
     def requestUpdate(_id: uint256): modifying
@@ -9,7 +13,7 @@ contract FiatContract:
 # state variables
 # instance of FiatContract
 fiator: public(FiatContract)
-# owner that can set the  instance of FiatContract
+# owner that can set the instance of FiatContract
 owner: public(address)
 # decimals of NDAO token
 NDAO_DECIMALS: constant(uint256) = 18
@@ -23,6 +27,7 @@ def __init__():
 @public
 def setFiator(_faitor: address):
     """
+    # @dev set the instance of FiatContract
     # @param _faitor the address of FiatContract's instance
     """
     assert msg.sender == self.owner and _faitor != ZERO_ADDRESS
@@ -52,8 +57,8 @@ def updateEthPrice() -> bool:
 @constant
 def ethToNdaoInputPrice(eth_sold: wei_value) -> uint256:
     """
-    # @param eth_amount The amount of eth to be sold.
-    # @return return the amount of ndao output
+    # @param eth_amount The amounts of eth to be sold.
+    # @return The amount of ndao output
     """
     price: uint256 = self.getEthPrice()
     result: uint256 = as_unitless_number(
@@ -65,8 +70,8 @@ def ethToNdaoInputPrice(eth_sold: wei_value) -> uint256:
 @constant
 def ethToNdaoOutPrice(ndao_bought: uint256) -> wei_value:
     """
-    # @param ndao_bought The amount of ndao to be bought.
-    # @return return the amount of eth_sold
+    # @param ndao_bought The amount of ndao to buy.
+    # @return The amount of eth to be sold.
     """
     price: uint256 = self.getEthPrice()
     result: uint256 = (100 * price * ndao_bought / 10**NDAO_DECIMALS) + 1

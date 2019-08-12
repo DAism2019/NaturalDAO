@@ -170,7 +170,7 @@ function IcoDetail({history,icoAddress}) {
             address:icoContract.address
         };
         try{
-            let icoInfos = await icoContract.icoInfo();
+            let icoInfos = await icoContract.getIcoInfo();
             let _endTime = + icoInfos[5];
             let _submitTime = + icoInfos[6];
             result['endAt'] = convertTimetoTimeString(_endTime * 1000);

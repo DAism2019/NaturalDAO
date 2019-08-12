@@ -22,6 +22,7 @@ contract ICO:
               _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address): modifying
 
     def getTokenInfo() -> (string[64], string[32], uint256): constant
+    def symbol() -> string[32]: constant
 
 # the interface of EthPrice contract
 contract EthPriceContract:
@@ -59,15 +60,17 @@ beneficiary: public(address)  # the ethstore
 ndaoAddress: public(address)  # ndao_address
 ethPrice: public(EthPriceContract)  # the  instance of EthPriceContract
 allIcoStatus: public(map(address, uint256))  # status of ico
-allIcoSymbol: public(map(address, string[32]))  # symbol of ico (used by query)
-# all icos that created by user
+# vyper has no dynamic arrays, so we use two state varialbes to record the ico creater
+# all addresses of icos that created by user
 allIcoAddressOfUser: public(map(address, address[MAX_NUMBER]))
-# the ico amounts created by user
+# the amount of icos that created by user
 allIcoCountsOfUser: public(map(address, int128))
-allIcoCreater: public(map(address, address))  # the creater of ico
+# the creater of ico
+allIcoCreater: public(map(address, address))
 # the lastest submit time of ICO after ico end
 submitssionDelta: public(timedelta)
-setter: public(address)  # set the submitssionDelta
+# set the submitssionDelta .The default value is three days.
+setter: public(address)
 
 
 @public
@@ -103,7 +106,7 @@ def setSubmitssionDelta(_newDelta: timedelta):
 @public
 def initializeFactory(_exchangeTemplate: address, _beneficiary: address, _ndaoAddress: address, _priceAddress: address, _icoTemplate: address):
     """
-    # @dev set templates address
+    # @dev set templates address and ethshore address
     """
     assert self.exchangeTemplate == ZERO_ADDRESS and self.beneficiary == ZERO_ADDRESS
     assert self.ndaoAddress == ZERO_ADDRESS and self.ethPrice == ZERO_ADDRESS
@@ -137,8 +140,8 @@ def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depos
     index: int128 = self.allIcoCountsOfUser[msg.sender]
     self.allIcoCountsOfUser[msg.sender] = index + 1
     self.allIcoAddressOfUser[msg.sender][index] = ico
+    assert self.allIcoStatus[ico] == STATUS_NONE
     self.allIcoStatus[ico] = STATUS_STARTED
-    self.allIcoSymbol[ico] = _symbol
     self.allIcoCreater[ico] = msg.sender
     log.ICOCreated(msg.sender, ico)
 
@@ -162,13 +165,13 @@ def getAllIcoOfUser(creater: address) -> address[MAX_NUMBER]:
     return self.allIcoAddressOfUser[creater]
 
 
-# risk:How to encapsulates the following six methods and relative events or variables in a isolated contract!
+# risk:How to encapsulates the following seven methods and relative events or variables in a isolated contract!
 @private
 def _buyNdaoInput(value: wei_value, min_ndao: uint256, deadline: timestamp, buyer: address, recipient: address) -> uint256:
     assert deadline >= block.timestamp and min_ndao > 0
-    send(self.beneficiary, value)
     amount: uint256 = self.ethPrice.ethToNdaoInputPrice(value)
     assert amount >= min_ndao
+    send(self.beneficiary, value)
     NDAO(self.ndaoAddress).mint(recipient, amount)
     log.NdaoPurchase(buyer, recipient, amount)
     return amount
@@ -197,10 +200,10 @@ def buyNdaoInputTransfer(min_ndao: uint256, deadline: timestamp, recipient: addr
 
 
 @private
-def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, deadline: timestamp, buyer: address, refunder: address, recipient: address) ->  wei_value:
+def _buyNdaoOutput(value: wei_value, ndao_bought: uint256, deadline: timestamp, buyer: address, refunder: address, recipient: address) -> wei_value:
     assert deadline >= block.timestamp
     eth_sold: wei_value = self.ethPrice.ethToNdaoOutPrice(ndao_bought)
-    # Throws if eth_sold > msg.value
+    # Reverts if  eth_sold > msg.value
     eth_refund: wei_value = value - eth_sold
     send(self.beneficiary, eth_sold)
     send(refunder, eth_refund)
@@ -215,7 +218,6 @@ def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> wei_value:
     """
     # @param ndao_bought the amounts of ndao_bought
     # @return the amounts of eth_sold
-    # @return the refund of eth
     """
     assert ndao_bought > 0 and msg.value > 0
     return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, msg.sender, msg.sender)
@@ -225,11 +227,12 @@ def buyNdaoOutputSwap(ndao_bought: uint256, deadline: timestamp) -> wei_value:
 @payable
 def buyNdaoOutputSwapByExchange(ndao_bought: uint256, refunder: address, deadline: timestamp) -> wei_value:
     """
+    # @dev Function used by exchange in order to enable ETO_TO_TOKEN module
+    #       (the exchange contract is designed to can not recieve ETH without data)
     # @param ndao_bought the amounts of ndao_bought
     # @param refunder the address of refunder send
     # @param deadline Time after which this transaction can no longer be executed
     # @return the amounts of eth_sold
-    # @return the refund of eth
     """
     assert ndao_bought > 0 and msg.value > 0
     return self._buyNdaoOutput(msg.value, ndao_bought, deadline, msg.sender, refunder, msg.sender)
@@ -242,7 +245,6 @@ def buyNdaoOutputTransfer(ndao_bought: uint256, deadline: timestamp, recipient: 
     # @param ndao_bought the amounts of ndao_bought
     # @param recipient The address that receives output Ndao.
     # @return the amounts of eth_sold
-    # @return the refund of eth
     """
     assert ndao_bought > 0 and msg.value > 0
     assert recipient != self and recipient != ZERO_ADDRESS
@@ -321,9 +323,21 @@ def getTokenWithId(token_id: uint256) -> address:
 
 @public
 @constant
+def getShortInfoByIcoAddress(token_address: address) -> (address, string[32], uint256):
+    """
+    # @dev return the short info of ico by address
+    """
+    assert token_address != ZERO_ADDRESS
+    _symbol: string[32] = ICO(token_address).symbol()
+    _status: uint256 = self.allIcoStatus[token_address]
+    return (token_address, _symbol, _status)
+
+
+@public
+@constant
 def getTokenDetailById(token_id: uint256) -> (address, string[64], string[32], uint256, address, uint256):
     """
-    # @dev return detail of token by id
+    # @dev return the detail of token by id
     """
     assert token_id <= self.tokenCount
     token_address: address = self.getTokenWithId(token_id)
@@ -340,7 +354,7 @@ def getTokenDetailById(token_id: uint256) -> (address, string[64], string[32], u
 @constant
 def getTokenDetailByAddress(token_address: address) -> (address, string[64], string[32], uint256, address, uint256):
     """
-    # @dev return detail of token by address
+    # @dev return the detail of token by address
     """
     assert self.token_to_exchange[token_address] != ZERO_ADDRESS
     _name: string[64]
