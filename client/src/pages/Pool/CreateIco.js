@@ -84,11 +84,9 @@ function CreateIco({ history }) {
                message:t('create_success'),
                type:'success',
                cb2:()=>{
-                    history.push('/ico-detail/' + _ico);
+                    history.push('/ico-detail#' + _ico);
                }
            });
-           //todo 测试谁在前面
-           // history.replace('/ico-detail/' + _ico);
         });
         return function cleanup() {
               contract.removeAllListeners("ICOCreated");

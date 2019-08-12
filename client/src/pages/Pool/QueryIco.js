@@ -13,6 +13,9 @@ import CustomSnackbar from '../../components/Snackbar'
 import CustomTable from '../../components/CustomTable'
 import { isMobile } from 'react-device-detect'
 
+let oldInfos = []
+
+
 const useStyles = makeStyles(theme => ({
     container: {
         display: 'flex',
@@ -46,8 +49,9 @@ function QueryIco({history, location}) {
         creater: '',
         icoAddress: ''
     });
-    const [bodyData,setBodyData] = React.useState([]);
-    const [showTable,setShowTable] = React.useState(false);
+    //这里使用一个useEffect，根据账号来判断是否显示
+    const [bodyData,setBodyData] = React.useState(oldInfos);
+    const [showTable,setShowTable] = React.useState(oldInfos.length > 0);
     const [snacks,setSnacks] =  React.useState({
         show: false,
         type: 'success',
@@ -74,6 +78,7 @@ function QueryIco({history, location}) {
             let amount = await contract.allIcoCountsOfUser(values.creater);
             amount = + amount;
             if(amount <= 0){
+                oldInfos = []
                 setSnacks({
                     show: true,
                     type: 'info',
@@ -85,7 +90,8 @@ function QueryIco({history, location}) {
                 //可以试下Promise.all 进行优化
                 let allAddress = await contract.getAllIcoOfUser(values.creater);
                 let allPromise = [];
-                for(let _address of allAddress){
+                for(let i = 0;i < amount;i++){
+                    let _address = allAddress[i];
                     allPromise.push(contract.getShortInfoByIcoAddress(_address).catch(() => null))
                 }
                 Promise.all(allPromise).then(result =>{
@@ -94,6 +100,7 @@ function QueryIco({history, location}) {
                         allInfos.push([_result[0],_result[1],t(_calStatus(+ _result[2]))])
                     }
                     setBodyData(allInfos);
+                    oldInfos = allInfos;
                     setShowTable(true);
                 });
                 // data.push([_address,_symbol,t(_calStatus(+ _status))]);
@@ -150,6 +157,7 @@ function QueryIco({history, location}) {
 
                 });
            }else{
+               // oldInfos = []
                history.push("/ico-detail#" + values.icoAddress);
            }
         }

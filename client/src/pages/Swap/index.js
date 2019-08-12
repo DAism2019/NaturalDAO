@@ -69,11 +69,17 @@ const ExchangeRateWrapper = styled.div`
   font-size: 0.75rem;
   padding: 0.5rem 1rem;
 `
+const ExchangeRateWrapperError = styled(ExchangeRateWrapper)`
+  color: ${({ theme }) => theme.salmonRed};
+`
 
 const ExchangeRate = styled.span`
   flex: 1 1 auto;
   width: 0;
   color: ${({ theme }) => theme.chaliceGray};
+`
+const ExchangeRateError = styled(ExchangeRate)`
+  color: ${({ theme }) => theme.salmonRed};
 `
 
 const Flex = styled.div`
@@ -356,11 +362,6 @@ export default function Swap({ initialCurrency }) {
     }
   }, [independentValue, independentDecimals, t])
 
-  useEffect(()=>{
-
-  },[]);
-
-
   // calculate slippage from target rate
   const { minimum: dependentValueMinumum, maximum: dependentValueMaximum } = calculateSlippageBounds(
     dependentValue,
@@ -424,7 +425,7 @@ export default function Swap({ initialCurrency }) {
                 }
                 dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
             } catch(err) {
-              setIndependentError(t('insufficientLiquidity'))
+              // setIndependentError(t('insufficientLiquidity'))
             }
             return () => {
               dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
@@ -447,7 +448,7 @@ export default function Swap({ initialCurrency }) {
                 }
                 dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
             } catch(err) {
-              setIndependentError(t('insufficientLiquidity'))
+              // setIndependentError(t('insufficientLiquidity'))
             }
             return () => {
               dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
@@ -470,7 +471,7 @@ export default function Swap({ initialCurrency }) {
 
           dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
         } catch {
-          setIndependentError(t('insufficientLiquidity'))
+          // setIndependentError(t('insufficientLiquidity'))
         }
         return () => {
           dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
@@ -493,7 +494,7 @@ export default function Swap({ initialCurrency }) {
 
           dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
         } catch {
-          setIndependentError(t('insufficientLiquidity'))
+          // setIndependentError(t('insufficientLiquidity'))
         }
         return () => {
           dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
@@ -538,7 +539,7 @@ export default function Swap({ initialCurrency }) {
             dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: calculatedDependentValue })
           }
         } catch {
-          setIndependentError(t('insufficientLiquidity'))
+          // setIndependentError(t('insufficientLiquidity'))
         }
         return () => {
           dispatchSwapState({ type: 'UPDATE_DEPENDENT', payload: '' })
@@ -790,7 +791,7 @@ export default function Swap({ initialCurrency }) {
     }
 
   }
-
+  let _beyondFlag = inputLimit && inputReserveToken && inputLimit.lte(inputReserveToken)
   return (
     <>
       <CurrencyInputPanel type='input'
@@ -910,17 +911,30 @@ export default function Swap({ initialCurrency }) {
                  </ExchangeRateWrapper>
         }
         {
-           tokenInputFlag &&   <ExchangeRateWrapper>
-                <ExchangeRate>{t('token_can_sell')}</ExchangeRate>
+            (tokenInputFlag && !_beyondFlag)  && <ExchangeRateWrapper>
+                  <ExchangeRate>{t('token_can_sell')}</ExchangeRate>
+                  {
+                      (inputLimit && inputReserveToken)  ? `${amountFormatter(
+                          inputLimit.gte(inputReserveToken) ? inputLimit.sub(inputReserveToken) : inputLimit.sub(inputLimit),
+                          inputDecimals,
+                          Math.min(4, inputDecimals)
+                        )} ${inputSymbol}`
+                      : ' - '
+                  }
+                   </ExchangeRateWrapper>
+        }
+        {
+           (tokenInputFlag && _beyondFlag )  && <ExchangeRateWrapperError>
+                <ExchangeRateError>{t('token_can_sell')}</ExchangeRateError>
                 {
                     (inputLimit && inputReserveToken)  ? `${amountFormatter(
-                        inputLimit >= inputReserveToken ? inputLimit.sub(inputReserveToken) : 0,
+                        inputLimit.gte(inputReserveToken) ? inputLimit.sub(inputReserveToken) : inputLimit.sub(inputLimit),
                         inputDecimals,
                         Math.min(4, inputDecimals)
                       )} ${inputSymbol}`
                     : ' - '
                 }
-                 </ExchangeRateWrapper>
+                 </ExchangeRateWrapperError>
         }
       </OversizedPanel>
       {renderSummary()}

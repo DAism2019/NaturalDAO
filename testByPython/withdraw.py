@@ -4,7 +4,7 @@ from os.path import dirname, abspath
 from privateKey import my_address, private_key
 
 
-icoAddress = '0xF315691d1E44888BD8134FBCcDa1D4DC0c220882'
+icoAddress = '0x61b758Fa46e0DAeba0202B1dE5071Ed91D82c141'
 
 
 def withdraw():
@@ -19,11 +19,17 @@ def withdraw():
         'gasPrice': w3.toWei(10, 'gwei'),
         'gas': 400000
     })
-    signed_txn = w3.eth.account.signTransaction(
-        unicorn_txn, private_key=private_key)
-    hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    print("提币交易已经发送，请耐心等待并查询,hash值为:", w3.toHex(hash))
-    myDeposit = myContract.functions.depositBalanceOfUser(my_address).call()
-    print("我的投资金额度为:",myDeposit)
+    try:
+        signed_txn = w3.eth.account.signTransaction(
+            unicorn_txn, private_key=private_key)
+        hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+        print("提币交易已经发送，请耐心等待并查询,hash值为:", w3.toHex(hash))
+        myDeposit = myContract.functions.depositBalanceOfUser(my_address).call()
+        print("我的投资金额度为:",myDeposit)
+    except Exception:
+        print("交易失败")
+
+
+
 
 withdraw()
