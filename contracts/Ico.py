@@ -45,11 +45,29 @@ depositAmount: public(wei_value)  # current amounts of deposit
 depositBalanceOfUser: public(map(address, wei_value))  # user deposit
 factory: public(Factory)  # Factory Contract instance
 creater: public(address)   # ICO creater
+reservedToken:public(uint256)  # the tokens of creater that reversed
+
+
+@private
+def mint(_to: address, _value: uint256):
+    """
+    # @dev Mint an amount of the token and assigns it to an account.
+           This encapsulates the modification of balances such that the
+           proper events are emitted.
+    # @notice It can only be called internally at depositing or at the ending of a successful ico
+           when the ico is not ended
+    # @param _to The account that will receive the created tokens.
+    # @param _value The amount that will be created.
+    """
+    assert _to != ZERO_ADDRESS
+    self.total_supply += _value
+    self.balanceOf[_to] += _value
+    log.Transfer(ZERO_ADDRESS, _to, _value)
 
 
 @public
 def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256,
-          _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address):
+          _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address,_reserved:uint256):
     """
     # @dev init the contract.
     # @notice the method is called once right after the contract is deployed
@@ -60,6 +78,7 @@ def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGo
     # @param _deltaOfEnd the duration of ICO (second)
     # @param _deltaOfSubmitssion the duration between depositEnd and finalSubmissionTime
     # @param token_price the amount of token that one ether can exchange
+    # @param _reserved the tokens of creater that reversed
     """
     assert self.factory == ZERO_ADDRESS and _creater != ZERO_ADDRESS
     self.name = _name
@@ -71,7 +90,9 @@ def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGo
     self.finalSubmissionTime = self.depositEnd + _deltaOfSubmitssion
     self.tokenPrice = token_price
     self.creater = _creater
+    self.reservedToken = _reserved
     self.factory = Factory(msg.sender)
+    self.mint(_creater,_reserved)
 
 
 @public
@@ -139,23 +160,6 @@ def approve(_spender: address, _value: uint256) -> bool:
     self.allowances[msg.sender][_spender] = _value
     log.Approval(msg.sender, _spender, _value)
     return True
-
-
-@private
-def mint(_to: address, _value: uint256):
-    """
-    # @dev Mint an amount of the token and assigns it to an account.
-           This encapsulates the modification of balances such that the
-           proper events are emitted.
-    # @notice It can only be called internally at depositing or at the ending of a successful ico
-           when the ico is not ended
-    # @param _to The account that will receive the created tokens.
-    # @param _value The amount that will be created.
-    """
-    assert _to != ZERO_ADDRESS
-    self.total_supply += _value
-    self.balanceOf[_to] += _value
-    log.Transfer(ZERO_ADDRESS, _to, _value)
 
 
 @private
@@ -295,9 +299,9 @@ def getTokenInfo() -> (string[64], string[32], uint256):
 
 @public
 @constant
-def getIcoInfo() -> (string[64], string[32], uint256, wei_value, timestamp, timestamp, timestamp, bool, bool, bool, uint256, wei_value, address):
+def getIcoInfo() -> (string[64], string[32], uint256, wei_value, timestamp, timestamp, timestamp, bool, bool, bool, uint256, wei_value, address,uint256):
     """
     # @dev Function to return the detail of ICO.
     """
     return (self.name, self.symbol, self.decimals, self.depositGoal, self.depositStart, self.depositEnd, self.finalSubmissionTime,
-            self.isEnd, self.goalReached, self.isFailed, self.tokenPrice, self.depositAmount, self.creater)
+            self.isEnd, self.goalReached, self.isFailed, self.tokenPrice, self.depositAmount, self.creater,self.reservedToken)

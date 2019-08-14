@@ -39,7 +39,7 @@ const ContentWrapper = isMobile
     height: 0.4em;
 `
 :styled.h4`
-    height: 0.6em;
+    height: 0.4em;
 `
 
 const SpinnerWrapper = styled(Spinner)`
@@ -131,6 +131,7 @@ function IcoDetail({history,icoAddress}) {
         name: '',
         symbol: '',
         decimals: 0,
+        reversedTokens:0,
         goal:0,
         startAt:0,
         endAt:0,
@@ -185,10 +186,11 @@ function IcoDetail({history,icoAddress}) {
             result['isEnd'] = icoInfos[7];
             result['goalReached'] = icoInfos[8];
             result['isFailed'] = icoInfos[9];
-            let _price = + icoInfos[10].div(utils.parseUnits("1", result['decimals']));
-            result['price'] = '1 ETH = '  + _price + " " + result['symbol']
+            let _price = + (icoInfos[10].div(utils.parseUnits("1", result['decimals'])));
+            result['price'] = _price;
             result['depositAmount'] = utils.formatEther(icoInfos[11]);
             result['creater'] = icoInfos[12];
+            result['reversedTokens'] = utils.formatUnits(icoInfos[13],result['decimals']);
             let _left = _endTime - Math.floor(Date.now()/1000);
             if (_left <= 0)
                 _left = 0;
@@ -459,7 +461,16 @@ function IcoDetail({history,icoAddress}) {
                     {t('ico_decimals') + infos.decimals}
                 </ContentWrapper>
                 <ContentWrapper>
+                    {t('reversedTokens') + utils.commify( + infos.reversedTokens) + ' ' + infos.symbol}
+                </ContentWrapper>
+                <ContentWrapper>
+                    {t('ico_tokens') +  utils.commify((+ infos.goal ) *  (+ infos.price)) + ' ' + infos.symbol}
+                </ContentWrapper>
+                <ContentWrapper>
                     {t('ico_goal') + infos.goal + 'ETH'}
+                </ContentWrapper>
+                <ContentWrapper>
+                    {t('ico_tokenPrice').replace('{%symbol}',infos.symbol) + '1 ETH = ' +  infos.price + ' ' + infos.symbol }
                 </ContentWrapper>
                 <ContentWrapper>
                     {t('depositAmount') + infos.depositAmount + 'ETH'}
@@ -482,9 +493,7 @@ function IcoDetail({history,icoAddress}) {
                 <ContentWrapper>
                     {t('ico_goalReached') + (infos.goalReached ? t('YES') : t('NO'))}
                 </ContentWrapper>
-                <ContentWrapper>
-                    {t('ico_tokenPrice').replace('{%symbol}',infos.symbol) + infos.price}
-                </ContentWrapper>
+
                 <ContentWrapper>
                     {t('ico_status') + t(infos.status)}
                 </ContentWrapper>

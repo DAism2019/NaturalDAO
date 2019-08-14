@@ -1,8 +1,8 @@
 {
-    "Factory.py": "0x2872cc7C3e4D3828bb8843Ed1016f9CF778360d5",
-    "NDAOToken.py": "0x05CDdBb91b37542600419222ca9fE2baA5731400",
-    "Ico.py": "0x745A73745Adc1a5387066F4910eF8F6b79cbEcFa",
-    "Exchange.py": "0x3e8Ecb53A0a8272aC21f288fe0Ac6D4C3af84867",
-    "EthPrice.py": "0x42E634783C83ababe1Cad9BBF458041e2e45bf1A",
-    "MyFiat.py": "0x781b72360C9cAE40bAd87b5DcD8A2f83F3091C64"
+    "Factory.py": "0x1521D78Ce1b01103ed4e7a13941d7dc412aFC48B",
+    "NDAOToken.py": "0x1e841839b8c3341d84e6f8ef6d5fcbf117b85f58",
+    "Ico.py": "0xc904054d1d274f2b2f07e857566b5c15fcd09e57",
+    "Exchange.py": "0x6b3bF9C4662B45DcFA3Deb45291645B9D586a4a9",
+    "EthPrice.py": "0x1e5f0322d497f7708e376bbdf4f2945ef00d320d",
+    "MyFiat.py": "0x620a3dA48a72729704cB0424c1e978f069F3651a"
 }

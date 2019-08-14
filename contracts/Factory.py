@@ -19,7 +19,7 @@ contract Exchange:
 # the interface of ICO contract
 contract ICO:
     def setup(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256,
-              _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address): modifying
+              _deltaOfEnd: timedelta, _deltaOfSubmitssion: timedelta, token_price: uint256, _creater: address,_reserved:uint256): modifying
 
     def getTokenInfo() -> (string[64], string[32], uint256): constant
     def symbol() -> string[32]: constant
@@ -122,7 +122,7 @@ def initializeFactory(_exchangeTemplate: address, _beneficiary: address, _ndaoAd
 
 
 @public
-def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256, _delta: timedelta, _price: uint256):
+def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depositGoal: uint256, _delta: timedelta, _price: uint256,_reserved:uint256):
     """
     # @dev create a ICO of ERC20 token
     # @param _name the name of token
@@ -136,7 +136,7 @@ def createICO(_name: string[64], _symbol: string[32], _decimals: uint256, _depos
     assert self.allIcoCountsOfUser[msg.sender] < MAX_NUMBER
     ico: address = create_forwarder_to(self.icoTemplate)
     ICO(ico).setup(_name, _symbol, _decimals, _depositGoal,
-                   _delta, self.submitssionDelta, _price, msg.sender)
+                   _delta, self.submitssionDelta, _price, msg.sender,_reserved)
     index: int128 = self.allIcoCountsOfUser[msg.sender]
     self.allIcoCountsOfUser[msg.sender] = index + 1
     self.allIcoAddressOfUser[msg.sender][index] = ico

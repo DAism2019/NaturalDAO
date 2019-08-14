@@ -104,7 +104,7 @@
     "depositAmount":"ICO已募数量:",
     "ico_isEnd":"ICO是否结束:",
     "ico_goalReached":"ICO募资目标是否完成:",
-    "ico_tokenPrice":"ICO代币发行价格:",
+    "ico_tokenPrice":"ICO代币募资价格:",
     "ico_creater":"ICO创建者:",
     "ico_status":"ICO状态:",
     "ico_timer":"ICO结束倒计时:",
@@ -139,5 +139,7 @@
     "beyond_limit":"出售代币超限",
     "token_can_sell":"当前可出售的最大代币数量:",
     "invalid_number":"请输入有效的数字",
-    "only_letters":"名称和简称只能为字母"
+    "only_letters":"名称和简称只能为字母",
+    "reversedTokens":"ICO保留代币数量:",
+    "ico_tokens":"ICO代币计划发行数量:"
 }

@@ -33,7 +33,8 @@ const useStyles = makeStyles(theme => ({
     },
     textField: {
         marginLeft: theme.spacing(1),
-        marginRight: theme.spacing(1)
+        marginRight: theme.spacing(1),
+        marginBottom:theme.spacing(-0.2),
     },
     dense: {
         marginTop: theme.spacing(2)
@@ -42,7 +43,7 @@ const useStyles = makeStyles(theme => ({
         width: 200
     },
     submit: {
-        margin: theme.spacing(2),
+        margin: theme.spacing(isMobile ? 2 : 3),
         width:isMobile ? "80%" : "60%"
     }
 }));
@@ -56,7 +57,7 @@ function CreateIco({ history }) {
     const classes = useStyles();
     const { active, account,error } = useWeb3Context()
     const contract = useFactoryContract()
-    const [clicked,setClicked] = useState(false)
+    // const [clicked,setClicked] = useState(false)
     const [values, setValues] = useState({
         name: '',
         symbol: '',
@@ -64,7 +65,8 @@ function CreateIco({ history }) {
         goal:'',
         timedelta:'',
         price:'',
-        tokens:''
+        tokens:'',
+        reversedTokens:0
     });
     const [snacks,setSnacks] = useState({
         show: false,
@@ -106,7 +108,7 @@ function CreateIco({ history }) {
         event.preventDefault();
         let estimate = contract.estimate.createICO
         let method = contract.createICO
-        let {name,symbol,decimals,goal,timedelta,price} = values;
+        let {name,symbol,decimals,goal,timedelta,price,reversedTokens} = values;
         if(!checkOnlyChar(name) || !checkOnlyChar(symbol)){
             return setSnacks({
                 show:true,
@@ -118,11 +120,11 @@ function CreateIco({ history }) {
         if(decimals < 3 ||  decimals > 18){
             return;
         }
-        setClicked(true);
-        let _time = setTimeout(()=>{
-              setClicked(false);
-              clearTimeout(_time);
-        },1000);
+        // setClicked(true);
+        // let _time = setTimeout(()=>{
+        //       setClicked(false);
+        //       clearTimeout(_time);
+        // },1000);
         try{
             goal =  utils.parseEther(goal);
             timedelta = + timedelta;
@@ -133,7 +135,8 @@ function CreateIco({ history }) {
             let _des = _ten.pow(decimals);
             let _devider = _ten.pow(fixedNumber);
             price = _des.mul(price).div(_devider);
-            let args = [name,symbol,decimals,goal,timedelta,price];
+            let _reserved = _des.mul(reversedTokens);
+            let args = [name,symbol,decimals,goal,timedelta,price,_reserved];
             let value = ethers.constants.Zero;
             const estimatedGasLimit = await estimate(...args, { value });
             method(...args, {
@@ -216,6 +219,13 @@ function CreateIco({ history }) {
                                 </MenuItem>))
                             }
                         </TextField>
+                        <TextField required id="outlined-timedelta-required"
+                            name="reversedTokens" label={t('reversedTokens')} value={values.reversedTokens}
+                            onChange={handleChange('reversedTokens')} className={classes.textField}
+                            InputProps={{
+                                  endAdornment: <InputAdornment  position="end">{values.symbol}</InputAdornment>
+                            }}
+                           margin="normal" type="number" variant="outlined"/>
                         <TextField required id="outlined-goal-required"
                             name="icoGoal" label={t('icoGoal')} value={values.goal}
                             onChange={handleChange('goal')} className={classes.textField}
@@ -247,7 +257,7 @@ function CreateIco({ history }) {
                             }}
                            margin="normal" type="number" variant="outlined"/>
                 </FormControl>
-                <Button type="submit" variant="contained" disabled={!isValid || clicked} color="primary"
+                <Button type="submit" variant="contained" disabled={!isValid} color="primary"
                     size="medium"
                     className={classes.submit}>
                         {t('create')}
