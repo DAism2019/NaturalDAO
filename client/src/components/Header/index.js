@@ -4,7 +4,8 @@ import ReactSVG from 'react-svg'
 import { Link } from '../../theme'
 import Web3Status from '../Web3Status'
 import { darken } from 'polished'
-import logo from "../../assets/images/natualDao.svg"
+import logo from "../../assets/images/logo1.svg"
+// import logo from "../../assets/images/natualDao.svg"
 
 const HeaderElement = styled.div`
   margin: 1.25rem;
@@ -41,14 +42,15 @@ export default function Header() {
     <>
       <HeaderElement>
         <Title>
-          <span id="image" role="img" aria-label="Unicorn Emoji">
+          <span id="image" role="img" aria-label="Unicorn Emoji" style={{marginTop:-10}}>
             {/* 🦄 */}
-            <ReactSVG src={logo} style={{width:30}}/>
+         <Link id="link" href="https://naturaldao.io">   <ReactSVG src={logo} style={{width:100}}/>
+           </Link>
           </span>
 
-          <Link id="link" href="https://naturaldao.io">
+          {/* <Link id="link" href="https://naturaldao.io">
             <h1 id="title">NaturalDAO</h1>
-          </Link>
+          </Link> */}
         </Title>
       </HeaderElement>
 
