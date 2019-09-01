@@ -20,7 +20,7 @@ const Web3StatusGeneric = styled.button`
   ${({ theme }) => theme.flexRowNoWrap}
   width: 100%;
   font-size: 0.9rem;
-  height: 2rem;
+  height: 2.5rem;
   align-items: center;
   padding: 0.5rem;
   border-radius: 2rem;
